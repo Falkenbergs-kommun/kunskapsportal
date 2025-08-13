@@ -1,15 +1,67 @@
 import type { CollectionConfig } from 'payload'
 import { embed } from '../qdrant'
+import { generateContentEndpoint } from '../endpoints/generateContent'
+import { generateMetadataEndpoint } from '../endpoints/generateMetadata'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
     useAsTitle: 'title',
+    preview: (doc) => {
+      return `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${doc.id}`
+    },
+    livePreview: {
+      url: ({ data }) => `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${data.id}`,
+    },
+    defaultColumns: ['title', 'documentType', 'department', 'documentStatus', 'updatedAt'],
   },
+  versions: {
+    maxPerDoc: 50,
+    drafts: true,
+  },
+  timestamps: true,
   hooks: {
     afterChange: [
+      async ({ doc, req, previousDoc }) => {
+        if (process.env.QDRANT_ENABLED !== 'true') {
+          return
+        }
+
+        try {
+          // Only embed documents with 'active' status
+          if (doc.documentStatus === 'active') {
+            await embed(doc, req.payload.config)
+            req.payload.logger.info(`Embedded active article ${doc.id} in Qdrant`)
+          } else {
+            // If document is no longer active, remove it from Qdrant
+            const { deleteFromQdrant } = await import('../qdrant')
+            await deleteFromQdrant(doc.id)
+            req.payload.logger.info(`Removed non-active article ${doc.id} from Qdrant`)
+          }
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          req.payload.logger.error(
+            `Failed to update article ${doc.id} in Qdrant. Reason: ${message}`,
+          )
+        }
+      },
+    ],
+    afterDelete: [
       async ({ doc, req }) => {
-        await embed(doc, req.payload.config)
+        if (process.env.QDRANT_ENABLED !== 'true') {
+          return
+        }
+
+        try {
+          const { deleteFromQdrant } = await import('../qdrant')
+          await deleteFromQdrant(doc.id)
+          req.payload.logger.info(`Removed deleted article ${doc.id} from Qdrant`)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          req.payload.logger.error(
+            `Failed to remove deleted article ${doc.id} from Qdrant. Reason: ${message}`,
+          )
+        }
       },
     ],
   },
@@ -23,20 +75,36 @@ export const Articles: CollectionConfig = {
       type: 'tabs',
       tabs: [
         {
+          label: 'Source',
+          fields: [
+            {
+              name: 'source_documents',
+              label: 'Source Documents',
+              type: 'upload',
+              relationTo: 'media',
+              hasMany: true,
+              required: false,
+              admin: {
+                description: 'Upload documents to be used as a source for the content.',
+              },
+            },
+            {
+              name: 'generate_with_ai',
+              type: 'ui',
+              admin: {
+                components: {
+                  Field: '@/components/GenerateWithAIButton', // Direct component reference
+                },
+              },
+            },
+          ],
+        },
+        {
           label: 'Content',
           fields: [
             {
               name: 'content',
               type: 'richText',
-            },
-            {
-              name: 'source_documents',
-              type: 'upload',
-              relationTo: 'media',
-              required: false,
-              admin: {
-                description: 'Upload documents to be used as a source for the content.',
-              },
             },
           ],
         },
@@ -44,16 +112,192 @@ export const Articles: CollectionConfig = {
           label: 'Metadata',
           fields: [
             {
-              name: 'meta',
-              type: 'group',
+              name: 'generate_metadata',
+              type: 'ui',
+              admin: {
+                components: {
+                  Field: '@/components/GenerateMetadataButton',
+                },
+              },
+            },
+            {
+              type: 'collapsible',
+              label: 'Classification',
               fields: [
+                {
+                  name: 'documentType',
+                  type: 'select',
+                  required: false, // Made optional to avoid validation errors during AI content generation
+                  options: [
+                    { label: 'Policy', value: 'policy' },
+                    { label: 'Procedure', value: 'procedure' },
+                    { label: 'Regulation', value: 'regulation' },
+                    { label: 'Guideline', value: 'guideline' },
+                    { label: 'Decision', value: 'decision' },
+                    { label: 'Report', value: 'report' },
+                    { label: 'Template', value: 'template' },
+                    { label: 'FAQ', value: 'faq' },
+                  ],
+                },
+                {
+                  name: 'department',
+                  type: 'select',
+                  required: false, // Made optional to avoid validation errors during AI content generation
+                  options: [
+                    { label: 'Kommunstyrelsen', value: 'municipal_board' },
+                    { label: 'Tekniska förvaltningen', value: 'technical_services' },
+                    { label: 'Socialförvaltningen', value: 'social_services' },
+                    { label: 'Utbildningsförvaltningen', value: 'education' },
+                    { label: 'Miljöförvaltningen', value: 'environment' },
+                    { label: 'Byggförvaltningen', value: 'building_permits' },
+                    { label: 'HR-avdelningen', value: 'human_resources' },
+                  ],
+                },
+                {
+                  name: 'documentStatus',
+                  type: 'select',
+                  defaultValue: 'draft',
+                  options: [
+                    { label: 'Draft', value: 'draft' },
+                    { label: 'Under Review', value: 'review' },
+                    { label: 'Approved', value: 'approved' },
+                    { label: 'Active', value: 'active' },
+                    { label: 'Archived', value: 'archived' },
+                    { label: 'Superseded', value: 'superseded' },
+                  ],
+                },
+                {
+                  name: 'targetAudience',
+                  type: 'select',
+                  hasMany: true,
+                  options: [
+                    { label: 'Citizens', value: 'citizens' },
+                    { label: 'Municipal Staff', value: 'staff' },
+                    { label: 'Elected Officials', value: 'officials' },
+                    { label: 'Businesses', value: 'businesses' },
+                    { label: 'Other Municipalities', value: 'municipalities' },
+                  ],
+                },
+                {
+                  name: 'securityLevel',
+                  type: 'select',
+                  defaultValue: 'internal',
+                  options: [
+                    { label: 'Public', value: 'public' },
+                    { label: 'Internal', value: 'internal' },
+                    { label: 'Confidential', value: 'confidential' },
+                    { label: 'Restricted', value: 'restricted' },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Legal & Compliance',
+              fields: [
+                {
+                  name: 'legalBasis',
+                  type: 'array',
+                  fields: [
+                    {
+                      name: 'law',
+                      type: 'text',
+                      label: 'Law/Regulation',
+                    },
+                    {
+                      name: 'chapter',
+                      type: 'text',
+                      label: 'Chapter/Section',
+                    },
+                    {
+                      name: 'url',
+                      type: 'url',
+                      label: 'Legal Reference URL',
+                    },
+                  ],
+                },
+                {
+                  name: 'gdprRelevant',
+                  type: 'checkbox',
+                  label: 'Contains Personal Data',
+                },
+                {
+                  name: 'accessibilityCompliant',
+                  type: 'checkbox',
+                  label: 'WCAG 2.1 AA Compliant',
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Content Organization',
+              fields: [
+                {
+                  name: 'keywords',
+                  type: 'array',
+                  fields: [
+                    {
+                      name: 'keyword',
+                      type: 'text',
+                    },
+                  ],
+                },
+                {
+                  name: 'relatedDocuments',
+                  type: 'relationship',
+                  relationTo: 'articles',
+                  hasMany: true,
+                },
+                {
+                  name: 'language',
+                  type: 'select',
+                  defaultValue: 'sv',
+                  options: [
+                    { label: 'Svenska', value: 'sv' },
+                    { label: 'English', value: 'en' },
+                    { label: 'Lätt svenska', value: 'sv-simple' },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Lifecycle Management',
+              fields: [
+                {
+                  name: 'effectiveDate',
+                  type: 'date',
+                  label: 'Effective Date',
+                },
+                {
+                  name: 'reviewDate',
+                  type: 'date',
+                  label: 'Next Review Date',
+                },
+                {
+                  name: 'expiryDate',
+                  type: 'date',
+                  label: 'Expiry Date',
+                },
                 {
                   name: 'author',
                   type: 'text',
+                  label: 'Author Name',
                 },
                 {
-                  name: 'publishedDate',
-                  type: 'date',
+                  name: 'authorEmail',
+                  type: 'email',
+                  label: 'Author Email',
+                },
+                {
+                  name: 'reviewer',
+                  type: 'text',
+                  label: 'Reviewer',
+                },
+                {
+                  name: 'approver',
+                  type: 'text',
+                  label: 'Approver',
                 },
               ],
             },
@@ -62,4 +306,5 @@ export const Articles: CollectionConfig = {
       ],
     },
   ],
+  endpoints: [generateContentEndpoint, generateMetadataEndpoint],
 }

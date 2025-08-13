@@ -165,6 +165,10 @@ export interface Media {
 export interface Article {
   id: number;
   title: string;
+  /**
+   * Upload documents to be used as a source for the content.
+   */
+  source_documents?: (number | Media)[] | null;
   content?: {
     root: {
       type: string;
@@ -180,16 +184,50 @@ export interface Article {
     };
     [k: string]: unknown;
   } | null;
-  /**
-   * Upload documents to be used as a source for the content.
-   */
-  source_documents?: (number | null) | Media;
-  meta?: {
-    author?: string | null;
-    publishedDate?: string | null;
-  };
+  documentType?:
+    | ('policy' | 'procedure' | 'regulation' | 'guideline' | 'decision' | 'report' | 'template' | 'faq')
+    | null;
+  department?:
+    | (
+        | 'municipal_board'
+        | 'technical_services'
+        | 'social_services'
+        | 'education'
+        | 'environment'
+        | 'building_permits'
+        | 'human_resources'
+      )
+    | null;
+  documentStatus?: ('draft' | 'review' | 'approved' | 'active' | 'archived' | 'superseded') | null;
+  targetAudience?: ('citizens' | 'staff' | 'officials' | 'businesses' | 'municipalities')[] | null;
+  securityLevel?: ('public' | 'internal' | 'confidential' | 'restricted') | null;
+  legalBasis?:
+    | {
+        law?: string | null;
+        chapter?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  gdprRelevant?: boolean | null;
+  accessibilityCompliant?: boolean | null;
+  keywords?:
+    | {
+        keyword?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  relatedDocuments?: (number | Article)[] | null;
+  language?: ('sv' | 'en' | 'sv-simple') | null;
+  effectiveDate?: string | null;
+  reviewDate?: string | null;
+  expiryDate?: string | null;
+  author?: string | null;
+  authorEmail?: string | null;
+  reviewer?: string | null;
+  approver?: string | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -298,16 +336,41 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface ArticlesSelect<T extends boolean = true> {
   title?: T;
-  content?: T;
   source_documents?: T;
-  meta?:
+  content?: T;
+  documentType?: T;
+  department?: T;
+  documentStatus?: T;
+  targetAudience?: T;
+  securityLevel?: T;
+  legalBasis?:
     | T
     | {
-        author?: T;
-        publishedDate?: T;
+        law?: T;
+        chapter?: T;
+        url?: T;
+        id?: T;
       };
+  gdprRelevant?: T;
+  accessibilityCompliant?: T;
+  keywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  relatedDocuments?: T;
+  language?: T;
+  effectiveDate?: T;
+  reviewDate?: T;
+  expiryDate?: T;
+  author?: T;
+  authorEmail?: T;
+  reviewer?: T;
+  approver?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
