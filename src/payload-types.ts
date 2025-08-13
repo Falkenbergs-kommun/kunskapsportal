@@ -146,6 +146,15 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  /**
+   * Automatically detected document type
+   */
+  documentType?: string | null;
+  /**
+   * Status of document conversion to PDF
+   */
+  conversionStatus?: ('none' | 'pending' | 'success' | 'failed') | null;
+  conversionError?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -198,6 +207,9 @@ export interface Article {
         | 'human_resources'
       )
     | null;
+  /**
+   * Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".
+   */
   documentStatus?: ('draft' | 'review' | 'approved' | 'active' | 'archived' | 'superseded') | null;
   targetAudience?: ('citizens' | 'staff' | 'officials' | 'businesses' | 'municipalities')[] | null;
   securityLevel?: ('public' | 'internal' | 'confidential' | 'restricted') | null;
@@ -318,6 +330,9 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  documentType?: T;
+  conversionStatus?: T;
+  conversionError?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

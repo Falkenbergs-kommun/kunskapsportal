@@ -13,7 +13,7 @@ export const Articles: CollectionConfig = {
     livePreview: {
       url: ({ data }) => `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${data.id}`,
     },
-    defaultColumns: ['title', 'documentType', 'department', 'documentStatus', 'updatedAt'],
+    defaultColumns: ['title', '_status', 'documentStatus', 'documentType', 'department', 'updatedAt'],
   },
   versions: {
     maxPerDoc: 50,
@@ -21,22 +21,50 @@ export const Articles: CollectionConfig = {
   },
   timestamps: true,
   hooks: {
+    beforeChange: [
+      async ({ data, operation, req }) => {
+        // Handle publish/draft integration with document status
+        if (operation === 'update' || operation === 'create') {
+          const isBeingPublished = data._status === 'published'
+          const isBeingDrafted = data._status === 'draft'
+          
+          // Auto-set document status based on Payload's publish status
+          if (isBeingPublished && (!data.documentStatus || data.documentStatus === 'draft')) {
+            data.documentStatus = 'active'
+            req.payload.logger.info(`Auto-setting documentStatus to 'active' when publishing article`)
+          }
+          
+          if (isBeingDrafted && data.documentStatus === 'active') {
+            data.documentStatus = 'draft'
+            req.payload.logger.info(`Auto-setting documentStatus to 'draft' when unpublishing article`)
+          }
+        }
+        
+        return data
+      }
+    ],
     afterChange: [
-      async ({ doc, req, previousDoc }) => {
+      async ({ doc, req, previousDoc, operation }) => {
         if (process.env.QDRANT_ENABLED !== 'true') {
           return
         }
 
         try {
-          // Only embed documents with 'active' status
-          if (doc.documentStatus === 'active') {
+          // Only embed documents that are:
+          // 1. Published (not draft)
+          // 2. Have 'active' document status
+          const shouldEmbed = doc._status === 'published' && doc.documentStatus === 'active'
+          
+          if (shouldEmbed) {
             await embed(doc, req.payload.config)
-            req.payload.logger.info(`Embedded active article ${doc.id} in Qdrant`)
+            req.payload.logger.info(`Embedded published & active article ${doc.id} in Qdrant`)
           } else {
-            // If document is no longer active, remove it from Qdrant
+            // Remove from Qdrant if no longer published or not active
             const { deleteFromQdrant } = await import('../qdrant')
             await deleteFromQdrant(doc.id)
-            req.payload.logger.info(`Removed non-active article ${doc.id} from Qdrant`)
+            
+            const reason = doc._status !== 'published' ? 'unpublished' : 'not active'
+            req.payload.logger.info(`Removed ${reason} article ${doc.id} from Qdrant`)
           }
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : String(error)
@@ -161,10 +189,13 @@ export const Articles: CollectionConfig = {
                     { label: 'Draft', value: 'draft' },
                     { label: 'Under Review', value: 'review' },
                     { label: 'Approved', value: 'approved' },
-                    { label: 'Active', value: 'active' },
+                    { label: 'Active (Published in Knowledge Base)', value: 'active' },
                     { label: 'Archived', value: 'archived' },
                     { label: 'Superseded', value: 'superseded' },
                   ],
+                  admin: {
+                    description: 'Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".'
+                  }
                 },
                 {
                   name: 'targetAudience',

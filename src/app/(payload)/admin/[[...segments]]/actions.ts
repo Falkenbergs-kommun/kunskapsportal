@@ -76,44 +76,90 @@ export async function generateContentFromDocuments(articleId: string) {
         continue
       }
 
-      const buffer = Buffer.from(await response.arrayBuffer())
-      console.log(`[AI] Document downloaded into buffer, size: ${buffer.length} bytes.`)
+      let buffer = Buffer.from(await response.arrayBuffer())
+      let currentMimeType = doc.mimeType || 'application/octet-stream'
+      console.log(`[AI] Document downloaded into buffer, size: ${buffer.length} bytes. Type: ${currentMimeType}`)
 
-      const pdfExtractor = process.env.PDF_EXTRACTOR || 'gemini'
+      // Check if document needs conversion to PDF (prefer Mistral OCR)
+      const { documentConverter } = await import('../../../../services/documentConverter')
+      const shouldConvertToPdf = documentConverter.needsConversion(currentMimeType, true)
+      if (shouldConvertToPdf) {
+        console.log(`[AI] Converting ${documentConverter.getDocumentTypeName(currentMimeType)} to PDF...`)
+        
+        const conversionResult = await documentConverter.convertToPdf(buffer, currentMimeType, doc.filename)
+        
+        if (conversionResult.success && conversionResult.pdfBuffer) {
+          buffer = conversionResult.pdfBuffer
+          currentMimeType = 'application/pdf'
+          console.log(`[AI] Conversion successful. New PDF size: ${buffer.length} bytes`)
+          
+          // Update media document with conversion status
+          try {
+            await payload.update({
+              collection: 'media',
+              id: doc.id,
+              data: {
+                conversionStatus: 'success'
+              }
+            })
+          } catch (updateError) {
+            console.warn(`[AI] Could not update conversion status:`, updateError)
+          }
+        } else {
+          console.error(`[AI] Conversion failed: ${conversionResult.error}`)
+          
+          // Update media document with error status
+          try {
+            await payload.update({
+              collection: 'media',
+              id: doc.id,
+              data: {
+                conversionStatus: 'failed',
+                conversionError: conversionResult.error
+              }
+            })
+          } catch (updateError) {
+            console.warn(`[AI] Could not update conversion status:`, updateError)
+          }
+          
+          continue // Skip this document and try the next one
+        }
+      }
+
+      const pdfExtractor = process.env.PDF_EXTRACTOR || 'mistral'
       let documentContent = ''
 
       if (pdfExtractor === 'mistral') {
-        const supportedTypes = ['application/pdf']
-        if (!doc.mimeType || !supportedTypes.includes(doc.mimeType)) {
-          console.warn(
-            `[AI] Skipping document ${doc.id} - unsupported type for Mistral: ${doc.mimeType}`,
-          )
+        // Mistral OCR only works with PDFs, so conversion above ensures this
+        if (currentMimeType !== 'application/pdf') {
+          console.warn(`[AI] Mistral OCR requires PDF format, but got: ${currentMimeType}`)
           continue
         }
-        console.log(`[AI] Processing document with Mistral OCR...`)
+        console.log(`[AI] Processing PDF document with Mistral OCR...`)
         documentContent = await processDocumentWithMistral(
           buffer,
-          doc.mimeType,
+          currentMimeType,
           `Extrahera och strukturera innehållet från detta dokument som heter "${doc.filename || 'Untitled'}".
            Formatera som markdown med tydliga rubriker och organisation.
            Bevara originalspråket (svenska).`,
           payload, // Pass payload instance for image uploads
         )
       } else {
+        // Gemini fallback - can handle some formats directly
         const supportedTypes = [
           'application/pdf',
           'text/plain',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/msword', // .doc
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
         ]
-        if (!doc.mimeType || !supportedTypes.includes(doc.mimeType)) {
-          console.warn(`[AI] Skipping document ${doc.id} - unsupported file type: ${doc.mimeType}`)
+        if (!currentMimeType || !supportedTypes.includes(currentMimeType)) {
+          console.warn(`[AI] Skipping document ${doc.id} - unsupported file type: ${currentMimeType}`)
           continue
         }
 
         // Process with Gemini
         console.log(`[AI] Sending document to Gemini for processing...`)
-        documentContent = await processDocumentWithGemini(buffer, doc.mimeType || 'application/pdf')
+        documentContent = await processDocumentWithGemini(buffer, currentMimeType)
       }
 
       // Add to combined content with a separator
