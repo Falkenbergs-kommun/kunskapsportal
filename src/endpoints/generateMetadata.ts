@@ -17,6 +17,7 @@ const metadataSchema = {
         'procedure',
         'regulation',
         'guideline',
+        'instruction',
         'decision',
         'report',
         'template',
@@ -90,13 +91,26 @@ const metadataSchema = {
       },
       description: 'Legal foundation for the document',
     },
+    version: {
+      type: 'string',
+      description: 'Document version number (e.g., 1.6, 2.0)',
+    },
+    reviewInterval: {
+      type: 'string',
+      enum: ['as_needed', 'annual', 'biannual', 'triannual', 'five_years'],
+      description: 'How often the document should be reviewed',
+    },
+    appliesTo: {
+      type: 'string',
+      description: 'Organizations, departments, or activities this document covers',
+    },
     author: {
       type: 'string',
       description: 'Document author name',
     },
     reviewer: {
       type: 'string',
-      description: 'Person responsible for reviewing',
+      description: 'Person or department responsible for reviewing this document',
     },
   },
 }
@@ -177,9 +191,9 @@ Content:
 ${markdown}
 
 Instructions:
-- Classify the document type based on its content and purpose
+- Classify the document type based on its content and purpose (policy, procedure, regulation, guideline, instruction/anvisning, decision, report, template, faq)
 - Determine the most appropriate municipal department based on subject matter
-- Set appropriate document status (likely 'draft' for new documents)
+- Set appropriate document status (likely 'draft' for new documents)  
 - Identify target audience based on content complexity and subject
 - Set security level (default to 'internal' unless clearly public-facing)
 - Determine if document contains personal data (GDPR relevant)
@@ -187,6 +201,9 @@ Instructions:
 - Extract 5-8 relevant keywords in Swedish
 - Identify any Swedish laws, regulations, or municipal bylaws referenced
 - Suggest appropriate author/reviewer roles
+- Suggest a version number (start with 1.0 for new documents)
+- Determine appropriate review interval (as_needed, annual, biannual, triannual, five_years)
+- Identify what organizations, departments, or activities this document applies to (appliesTo)
 
 Consider Swedish municipal structure:
 - Kommunstyrelsen: Overall governance, strategy

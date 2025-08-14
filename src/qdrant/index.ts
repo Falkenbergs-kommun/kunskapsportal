@@ -165,6 +165,9 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
                 keywords: doc.keywords?.map((k: any) => k.keyword).filter(Boolean) || [],
                 
                 // Lifecycle metadata  
+                version: doc.version || null,
+                reviewInterval: doc.reviewInterval || null,
+                appliesTo: doc.appliesTo || null,
                 author: doc.author || null,
                 authorEmail: doc.authorEmail || null,
                 reviewer: doc.reviewer || null,

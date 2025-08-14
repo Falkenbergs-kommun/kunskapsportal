@@ -162,9 +162,9 @@ export async function generateContentFromDocuments(articleId: string) {
         documentContent = await processDocumentWithGemini(buffer, currentMimeType)
       }
 
-      // Add to combined content with a separator
-      combinedContent += `\n\n# ${doc.filename || 'Document'}\n\n${documentContent}\n\n---\n`
-      console.log(`[AI] Received content from Gemini for document ${doc.id}.`)
+      // Add to combined content without showing filename
+      combinedContent += `\n\n${documentContent}\n\n---\n`
+      console.log(`[AI] Received content from document ${doc.filename || doc.id}.`)
     }
 
     // Update the article with the generated content

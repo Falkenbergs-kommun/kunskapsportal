@@ -157,13 +157,14 @@ export const Articles: CollectionConfig = {
                   type: 'select',
                   required: false, // Made optional to avoid validation errors during AI content generation
                   options: [
-                    { label: 'Policy', value: 'policy' },
-                    { label: 'Procedure', value: 'procedure' },
-                    { label: 'Regulation', value: 'regulation' },
-                    { label: 'Guideline', value: 'guideline' },
-                    { label: 'Decision', value: 'decision' },
-                    { label: 'Report', value: 'report' },
-                    { label: 'Template', value: 'template' },
+                    { label: 'Policy (Policy)', value: 'policy' },
+                    { label: 'Procedure (Procedur)', value: 'procedure' },
+                    { label: 'Regulation (Förordning)', value: 'regulation' },
+                    { label: 'Guideline (Riktlinje)', value: 'guideline' },
+                    { label: 'Instruction (Anvisning)', value: 'instruction' },
+                    { label: 'Decision (Beslut)', value: 'decision' },
+                    { label: 'Report (Rapport)', value: 'report' },
+                    { label: 'Template (Mall)', value: 'template' },
                     { label: 'FAQ', value: 'faq' },
                   ],
                 },
@@ -296,14 +297,43 @@ export const Articles: CollectionConfig = {
               label: 'Lifecycle Management',
               fields: [
                 {
+                  name: 'version',
+                  type: 'text',
+                  label: 'Document Version',
+                  admin: {
+                    description: 'Version number (e.g., 1.6, 2.0)',
+                  }
+                },
+                {
                   name: 'effectiveDate',
                   type: 'date',
-                  label: 'Effective Date',
+                  label: 'Date of Establishment (Datum för fastställelse)',
                 },
                 {
                   name: 'reviewDate',
                   type: 'date',
                   label: 'Next Review Date',
+                },
+                {
+                  name: 'reviewInterval',
+                  type: 'select',
+                  label: 'Review Interval (Revideringsintervall)',
+                  options: [
+                    { label: 'As needed (Vid behov)', value: 'as_needed' },
+                    { label: 'Annually (Årligen)', value: 'annual' },
+                    { label: 'Every 2 years (Vartannat år)', value: 'biannual' },
+                    { label: 'Every 3 years (Var tredje år)', value: 'triannual' },
+                    { label: 'Every 5 years (Var femte år)', value: 'five_years' },
+                  ],
+                  defaultValue: 'as_needed'
+                },
+                {
+                  name: 'appliesTo',
+                  type: 'textarea',
+                  label: 'Document Applies To (Dokumentet gäller för)',
+                  admin: {
+                    description: 'Organizations, departments, or activities this document covers (e.g., "Verksamheter som utför SoL, LSS, HSL")',
+                  }
                 },
                 {
                   name: 'expiryDate',
@@ -323,7 +353,10 @@ export const Articles: CollectionConfig = {
                 {
                   name: 'reviewer',
                   type: 'text',
-                  label: 'Reviewer',
+                  label: 'Review Responsible (Revideringsansvarig)',
+                  admin: {
+                    description: 'Person or department responsible for reviewing this document',
+                  }
                 },
                 {
                   name: 'approver',

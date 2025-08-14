@@ -194,7 +194,7 @@ export interface Article {
     [k: string]: unknown;
   } | null;
   documentType?:
-    | ('policy' | 'procedure' | 'regulation' | 'guideline' | 'decision' | 'report' | 'template' | 'faq')
+    | ('policy' | 'procedure' | 'regulation' | 'guideline' | 'instruction' | 'decision' | 'report' | 'template' | 'faq')
     | null;
   department?:
     | (
@@ -230,11 +230,23 @@ export interface Article {
     | null;
   relatedDocuments?: (number | Article)[] | null;
   language?: ('sv' | 'en' | 'sv-simple') | null;
+  /**
+   * Version number (e.g., 1.6, 2.0)
+   */
+  version?: string | null;
   effectiveDate?: string | null;
   reviewDate?: string | null;
+  reviewInterval?: ('as_needed' | 'annual' | 'biannual' | 'triannual' | 'five_years') | null;
+  /**
+   * Organizations, departments, or activities this document covers (e.g., "Verksamheter som utför SoL, LSS, HSL")
+   */
+  appliesTo?: string | null;
   expiryDate?: string | null;
   author?: string | null;
   authorEmail?: string | null;
+  /**
+   * Person or department responsible for reviewing this document
+   */
   reviewer?: string | null;
   approver?: string | null;
   updatedAt: string;
@@ -376,8 +388,11 @@ export interface ArticlesSelect<T extends boolean = true> {
       };
   relatedDocuments?: T;
   language?: T;
+  version?: T;
   effectiveDate?: T;
   reviewDate?: T;
+  reviewInterval?: T;
+  appliesTo?: T;
   expiryDate?: T;
   author?: T;
   authorEmail?: T;

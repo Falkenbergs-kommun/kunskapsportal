@@ -19,6 +19,7 @@ interface Article {
   id: string
   title: string
   content: any
+  source_documents?: (string | MediaRecord)[]
   createdAt: string
   updatedAt: string
 }
@@ -28,8 +29,157 @@ interface MediaRecord {
   url: string
   filename: string
   alt: string
+  mimeType?: string
+  filesize?: number
   width?: number
   height?: number
+}
+
+// Component to render source documents as downloadable links
+function SourceDocuments({ documents }: { documents: (string | MediaRecord)[] }) {
+  if (!documents || documents.length === 0) {
+    return null
+  }
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType?.includes('pdf')) return '📄'
+    if (mimeType?.includes('word')) return '📝'
+    if (mimeType?.includes('powerpoint') || mimeType?.includes('presentation')) return '📊'
+    if (mimeType?.includes('excel') || mimeType?.includes('spreadsheet')) return '📈'
+    if (mimeType?.includes('text')) return '📃'
+    if (mimeType?.includes('image')) return '🖼️'
+    return '📎'
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  return (
+    <div style={{ 
+      marginTop: '3rem',
+      padding: '1.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '0.5rem',
+      border: '1px solid #e2e8f0'
+    }}>
+      <h3 style={{
+        fontSize: '1.125rem',
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        📁 Source Documents
+      </h3>
+      
+      <div style={{ 
+        display: 'grid', 
+        gap: '0.75rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))'
+      }}>
+        {documents.map((doc, index) => {
+          // Handle both populated objects and string IDs
+          const document = typeof doc === 'string' ? null : doc
+          if (!document) return null
+
+          return (
+            <a
+              key={index}
+              href={document.url}
+              download={document.filename}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.875rem',
+                backgroundColor: 'white',
+                borderRadius: '0.375rem',
+                border: '1px solid #d1d5db',
+                textDecoration: 'none',
+                color: '#374151',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6'
+                e.currentTarget.style.borderColor = '#9ca3af'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white'
+                e.currentTarget.style.borderColor = '#d1d5db'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <span style={{ fontSize: '1.5rem' }}>
+                {getFileIcon(document.mimeType || '')}
+              </span>
+              
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  color: '#111827',
+                  marginBottom: '0.25rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {document.filename}
+                </div>
+                
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  {document.mimeType && (
+                    <span>
+                      {document.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}
+                    </span>
+                  )}
+                  {document.filesize && (
+                    <>
+                      <span>•</span>
+                      <span>{formatFileSize(document.filesize)}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <span style={{
+                fontSize: '0.75rem',
+                color: '#6b7280',
+                fontWeight: '500'
+              }}>
+                ⬇️
+              </span>
+            </a>
+          )
+        })}
+      </div>
+      
+      <p style={{
+        marginTop: '1rem',
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        textAlign: 'center'
+      }}>
+        Click on any document to download the original file
+      </p>
+    </div>
+  )
 }
 
 // Component to fetch and display media images
@@ -150,7 +300,7 @@ export default function ArticlePreview() {
   const fetchArticle = async (id: string) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/articles/${id}?depth=0`, {
+      const response = await fetch(`/api/articles/${id}?depth=2`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -787,6 +937,11 @@ export default function ArticlePreview() {
           }}>
             {renderLexicalContent(article.content)}
           </div>
+          
+          {/* Source Documents Section */}
+          {article.source_documents && article.source_documents.length > 0 && (
+            <SourceDocuments documents={article.source_documents} />
+          )}
         </article>
         
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>
