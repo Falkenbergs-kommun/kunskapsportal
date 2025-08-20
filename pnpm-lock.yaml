@@ -11,6 +11,9 @@ importers:
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
+      '@innovixx/payload-icon-picker-field':
+        specifier: 1.0.0-beta.6
+        version: 1.0.0-beta.6(next@15.4.4(@babel/core@7.28.0)(@playwright/test@1.54.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.77.4))(payload@3.50.0(graphql@16.11.0)(typescript@5.7.3))(react@19.1.0)
       '@mistralai/mistralai':
         specifier: ^1.7.5
         version: 1.7.5(zod@4.0.17)
@@ -1341,6 +1344,13 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
+
+  '@innovixx/payload-icon-picker-field@1.0.0-beta.6':
+    resolution: {integrity: sha512-w+C2LZyRTmOcMO9T30aDFAUe+uDUpjdc713ZyxHxnUqZuYbm0vIaeJewoZJfkxx3Cv2EshP69L5czJYvqhBgww==}
+    peerDependencies:
+      next: ^15.0.0
+      payload: ^3.2.2
+      react: ^19.0.0
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -6742,6 +6752,12 @@ snapshots:
 
   '@img/sharp-win32-x64@0.34.3':
     optional: true
+
+  '@innovixx/payload-icon-picker-field@1.0.0-beta.6(next@15.4.4(@babel/core@7.28.0)(@playwright/test@1.54.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.77.4))(payload@3.50.0(graphql@16.11.0)(typescript@5.7.3))(react@19.1.0)':
+    dependencies:
+      next: 15.4.4(@babel/core@7.28.0)(@playwright/test@1.54.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.77.4)
+      payload: 3.50.0(graphql@16.11.0)(typescript@5.7.3)
+      react: 19.1.0
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:

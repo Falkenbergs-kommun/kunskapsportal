@@ -22,13 +22,19 @@ export function NavWorkspaces({
     emoji: React.ReactNode
     pages: {
       name: string
+      url?: string
       emoji: React.ReactNode
+      pages?: {
+        name: string
+        url?: string
+        emoji: React.ReactNode
+      }[]
     }[]
   }[]
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
+      <SidebarGroupLabel>Departments</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {workspaces.map((workspace) => (
@@ -42,25 +48,53 @@ export function NavWorkspaces({
                 </SidebarMenuButton>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuAction
-                    className="bg-sidebar-accent text-sidebar-accent-foreground left-2 data-[state=open]:rotate-90"
+                    className="bg-sidebar-accent text-sidebar-accent-foreground -ml-2 data-[state=open]:rotate-90"
                     showOnHover
                   >
                     <ChevronRight />
                   </SidebarMenuAction>
                 </CollapsibleTrigger>
-                <SidebarMenuAction showOnHover>
-                  <Plus />
-                </SidebarMenuAction>
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {workspace.pages.map((page) => (
                       <SidebarMenuSubItem key={page.name}>
-                        <SidebarMenuSubButton asChild>
-                          <a href="#">
-                            <span>{page.emoji}</span>
-                            <span>{page.name}</span>
-                          </a>
-                        </SidebarMenuSubButton>
+                        {page.pages && page.pages.length > 0 ? (
+                          <Collapsible>
+                            <SidebarMenuSubButton>
+                              <span>{page.emoji}</span>
+                              <span>{page.name}</span>
+                            </SidebarMenuSubButton>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuAction
+                                className="bg-sidebar-accent text-sidebar-accent-foreground -ml-2 data-[state=open]:rotate-90"
+                                showOnHover
+                              >
+                                <ChevronRight />
+                              </SidebarMenuAction>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                {page.pages.map((subPage) => (
+                                  <SidebarMenuSubItem key={subPage.name}>
+                                    <SidebarMenuSubButton asChild>
+                                      <a href={subPage.url || '#'}>
+                                        <span>{subPage.emoji}</span>
+                                        <span>{subPage.name}</span>
+                                      </a>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ) : (
+                          <SidebarMenuSubButton asChild>
+                            <a href={page.url || '#'}>
+                              <span>{page.emoji}</span>
+                              <span>{page.name}</span>
+                            </a>
+                          </SidebarMenuSubButton>
+                        )}
                       </SidebarMenuSubItem>
                     ))}
                   </SidebarMenuSub>

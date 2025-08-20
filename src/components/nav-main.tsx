@@ -1,8 +1,9 @@
 'use client'
-import { useSidebar } from '@/components/ui/sidebar-chat'
 import { Home, Search, Sparkles, type LucideIcon } from 'lucide-react'
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { SidebarMenuAction } from './ui/sidebar-chat'
 
 export function NavMain({
   items,
@@ -38,16 +39,36 @@ export function NavMain({
       <SidebarMenuItem>
         <SidebarMenuButton onClick={triggerRightSidebar} className="cursor-pointer">
           <Sparkles />
-          <span>Fråga AI (ctrl+m)</span>
+          <span>Fråga AI</span>
         </SidebarMenuButton>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarMenuAction>
+              <kbd className="text-xs">⌘M</kbd>
+            </SidebarMenuAction>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ask AI (⌘M)</p>
+          </TooltipContent>
+        </Tooltip>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <a href="/search">
-            <Search />
-            <span>Sök (ctrl+k)</span>
-          </a>
+        <SidebarMenuButton className="cursor-pointer">
+          <Search />
+          <span>Sök</span>
         </SidebarMenuButton>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarMenuAction>
+              <kbd className="text-xs">⌘K</kbd>
+            </SidebarMenuAction>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Press ⌘K to search</p>
+          </TooltipContent>
+        </Tooltip>
       </SidebarMenuItem>
     </SidebarMenu>
   )

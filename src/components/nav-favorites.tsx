@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, Link, MoreHorizontal, StarOff, Trash2 } from 'lucide-react'
+import { ArrowUpRight, Link, MoreHorizontal, Star, StarOff, Trash2 } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -32,7 +32,10 @@ export function NavFavorites({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Favorites</SidebarGroupLabel>
+      <SidebarGroupLabel className="border-b">
+        <Star className="mr-2" />
+        Favorites
+      </SidebarGroupLabel>
       <SidebarMenu>
         {favorites.map((item) => (
           <SidebarMenuItem key={item.name}>

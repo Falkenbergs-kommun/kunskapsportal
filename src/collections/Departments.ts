@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 export const Departments: CollectionConfig = {
   slug: 'departments',
+  access: {
+    read: () => true, // Allow public read access
+  },
   admin: {
     useAsTitle: 'name',
     description: 'Main organizational areas and their sub-departments.',

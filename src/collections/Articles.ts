@@ -11,9 +11,17 @@ export const Articles: CollectionConfig = {
       return `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${doc.id}`
     },
     livePreview: {
-      url: ({ data }) => `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${data.id}`,
+      url: ({ data }) =>
+        `${process.env.PAYLOAD_URL || 'http://localhost:3000'}/preview/articles/${data.id}`,
     },
-    defaultColumns: ['title', '_status', 'documentStatus', 'documentType', 'department', 'updatedAt'],
+    defaultColumns: [
+      'title',
+      '_status',
+      'documentStatus',
+      'documentType',
+      'department',
+      'updatedAt',
+    ],
   },
   versions: {
     maxPerDoc: 50,
@@ -27,21 +35,25 @@ export const Articles: CollectionConfig = {
         if (operation === 'update' || operation === 'create') {
           const isBeingPublished = data._status === 'published'
           const isBeingDrafted = data._status === 'draft'
-          
+
           // Auto-set document status based on Payload's publish status
           if (isBeingPublished && (!data.documentStatus || data.documentStatus === 'draft')) {
             data.documentStatus = 'active'
-            req.payload.logger.info(`Auto-setting documentStatus to 'active' when publishing article`)
+            req.payload.logger.info(
+              `Auto-setting documentStatus to 'active' when publishing article`,
+            )
           }
-          
+
           if (isBeingDrafted && data.documentStatus === 'active') {
             data.documentStatus = 'draft'
-            req.payload.logger.info(`Auto-setting documentStatus to 'draft' when unpublishing article`)
+            req.payload.logger.info(
+              `Auto-setting documentStatus to 'draft' when unpublishing article`,
+            )
           }
         }
-        
+
         return data
-      }
+      },
     ],
     afterChange: [
       async ({ doc, req, previousDoc, operation }) => {
@@ -54,7 +66,7 @@ export const Articles: CollectionConfig = {
           // 1. Published (not draft)
           // 2. Have 'active' document status
           const shouldEmbed = doc._status === 'published' && doc.documentStatus === 'active'
-          
+
           if (shouldEmbed) {
             await embed(doc, req.payload.config)
             req.payload.logger.info(`Embedded published & active article ${doc.id} in Qdrant`)
@@ -62,7 +74,7 @@ export const Articles: CollectionConfig = {
             // Remove from Qdrant if no longer published or not active
             const { deleteFromQdrant } = await import('../qdrant')
             await deleteFromQdrant(doc.id)
-            
+
             const reason = doc._status !== 'published' ? 'unpublished' : 'not active'
             req.payload.logger.info(`Removed ${reason} article ${doc.id} from Qdrant`)
           }
@@ -94,11 +106,6 @@ export const Articles: CollectionConfig = {
     ],
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
     {
       type: 'tabs',
       tabs: [
@@ -149,6 +156,11 @@ export const Articles: CollectionConfig = {
               },
             },
             {
+              name: 'title',
+              type: 'text',
+              required: true,
+            },
+            {
               type: 'collapsible',
               label: 'Classification',
               fields: [
@@ -195,8 +207,9 @@ export const Articles: CollectionConfig = {
                     { label: 'Superseded', value: 'superseded' },
                   ],
                   admin: {
-                    description: 'Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".'
-                  }
+                    description:
+                      'Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".',
+                  },
                 },
                 {
                   name: 'targetAudience',
@@ -302,7 +315,7 @@ export const Articles: CollectionConfig = {
                   label: 'Document Version',
                   admin: {
                     description: 'Version number (e.g., 1.6, 2.0)',
-                  }
+                  },
                 },
                 {
                   name: 'effectiveDate',
@@ -325,15 +338,16 @@ export const Articles: CollectionConfig = {
                     { label: 'Every 3 years (Var tredje år)', value: 'triannual' },
                     { label: 'Every 5 years (Var femte år)', value: 'five_years' },
                   ],
-                  defaultValue: 'as_needed'
+                  defaultValue: 'as_needed',
                 },
                 {
                   name: 'appliesTo',
                   type: 'textarea',
                   label: 'Document Applies To (Dokumentet gäller för)',
                   admin: {
-                    description: 'Organizations, departments, or activities this document covers (e.g., "Verksamheter som utför SoL, LSS, HSL")',
-                  }
+                    description:
+                      'Organizations, departments, or activities this document covers (e.g., "Verksamheter som utför SoL, LSS, HSL")',
+                  },
                 },
                 {
                   name: 'expiryDate',
@@ -356,7 +370,7 @@ export const Articles: CollectionConfig = {
                   label: 'Review Responsible (Revideringsansvarig)',
                   admin: {
                     description: 'Person or department responsible for reviewing this document',
-                  }
+                  },
                 },
                 {
                   name: 'approver',

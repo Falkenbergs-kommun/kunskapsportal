@@ -175,7 +175,6 @@ export interface Media {
  */
 export interface Article {
   id: number;
-  title: string;
   /**
    * Upload documents to be used as a source for the content.
    */
@@ -195,6 +194,7 @@ export interface Article {
     };
     [k: string]: unknown;
   } | null;
+  title: string;
   documentType?:
     | ('policy' | 'procedure' | 'regulation' | 'guideline' | 'instruction' | 'decision' | 'report' | 'template' | 'faq')
     | null;
@@ -385,9 +385,9 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
-  title?: T;
   source_documents?: T;
   content?: T;
+  title?: T;
   documentType?: T;
   department?: T;
   documentStatus?: T;

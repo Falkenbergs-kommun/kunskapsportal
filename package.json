@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@innovixx/payload-icon-picker-field": "1.0.0-beta.6",
     "@mistralai/mistralai": "^1.7.5",
     "@payloadcms/db-postgres": "3.50.0",
     "@payloadcms/next": "3.50.0",

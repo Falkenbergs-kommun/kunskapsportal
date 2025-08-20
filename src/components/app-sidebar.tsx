@@ -133,127 +133,77 @@ const data = {
       emoji: '✅',
     },
   ],
-  workspaces: [
-    {
-      name: 'Personal Life Management',
-      emoji: '🏠',
-      pages: [
-        {
-          name: 'Daily Journal & Reflection',
-          url: '#',
-          emoji: '📔',
-        },
-        {
-          name: 'Health & Wellness Tracker',
-          url: '#',
-          emoji: '🍏',
-        },
-        {
-          name: 'Personal Growth & Learning Goals',
-          url: '#',
-          emoji: '🌟',
-        },
-      ],
-    },
-    {
-      name: 'Professional Development',
-      emoji: '💼',
-      pages: [
-        {
-          name: 'Career Objectives & Milestones',
-          url: '#',
-          emoji: '🎯',
-        },
-        {
-          name: 'Skill Acquisition & Training Log',
-          url: '#',
-          emoji: '🧠',
-        },
-        {
-          name: 'Networking Contacts & Events',
-          url: '#',
-          emoji: '🤝',
-        },
-      ],
-    },
-    {
-      name: 'Creative Projects',
-      emoji: '🎨',
-      pages: [
-        {
-          name: 'Writing Ideas & Story Outlines',
-          url: '#',
-          emoji: '✍️',
-        },
-        {
-          name: 'Art & Design Portfolio',
-          url: '#',
-          emoji: '🖼️',
-        },
-        {
-          name: 'Music Composition & Practice Log',
-          url: '#',
-          emoji: '🎵',
-        },
-      ],
-    },
-    {
-      name: 'Home Management',
-      emoji: '🏡',
-      pages: [
-        {
-          name: 'Household Budget & Expense Tracking',
-          url: '#',
-          emoji: '💰',
-        },
-        {
-          name: 'Home Maintenance Schedule & Tasks',
-          url: '#',
-          emoji: '🔧',
-        },
-        {
-          name: 'Family Calendar & Event Planning',
-          url: '#',
-          emoji: '📅',
-        },
-      ],
-    },
-    {
-      name: 'Travel & Adventure',
-      emoji: '🧳',
-      pages: [
-        {
-          name: 'Trip Planning & Itineraries',
-          url: '#',
-          emoji: '🗺️',
-        },
-        {
-          name: 'Travel Bucket List & Inspiration',
-          url: '#',
-          emoji: '🌎',
-        },
-        {
-          name: 'Travel Journal & Photo Gallery',
-          url: '#',
-          emoji: '📸',
-        },
-      ],
-    },
-  ],
+  workspaces: [], // Will be replaced with dynamic data
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [workspaces, setWorkspaces] = React.useState(data.workspaces)
+
+  React.useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('/api/departments?limit=1000')
+        const result = await response.json()
+        
+        // Build hierarchical structure with max 3 levels
+        const buildHierarchy = (items: any[], parentId: string | null = null, level: number = 0): any[] => {
+          if (level >= 3) return [] // Max 3 levels
+          
+          const children = items.filter((item: any) => {
+            if (parentId === null) {
+              return item.parent === null
+            }
+            return item.parent && item.parent.id === parentId
+          })
+          
+          return children.map((item: any) => {
+            const childPages = buildHierarchy(items, item.id, level + 1)
+            
+            if (level === 0) {
+              // Top level departments become workspaces
+              return {
+                name: item.name,
+                emoji: '',
+                pages: childPages.map((child: any) => ({
+                  name: child.name,
+                  url: `/${item.slug}/${child.slug || child.name.toLowerCase().replace(/ /g, '-')}`,
+                  emoji: '',
+                  pages: child.pages || []
+                }))
+              }
+            } else {
+              // Sub-departments become pages
+              return {
+                name: item.name,
+                slug: item.slug,
+                emoji: '',
+                pages: childPages || []
+              }
+            }
+          })
+        }
+
+        const hierarchicalDepartments = buildHierarchy(result.docs)
+        setWorkspaces(hierarchicalDepartments)
+      } catch (error) {
+        console.error('Error fetching departments:', error)
+      }
+    }
+
+    fetchDepartments()
+  }, [])
+
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
-        <img src="/logo.svg" className="px-8 mt-8" />
-        <div className="mx-auto text-xl font-bold">Kunskapsportalen</div>
+        <img src="/logo.svg" className="mx-6 mt-8 mb-2" />
+        <div className="px-6 text-xl font-bold">Kunskapsportalen</div>
         {/* <SearchForm /> */}
         <NavMain items={data.navMain} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="mt-4">
         <NavFavorites favorites={data.favorites} />
-        <NavWorkspaces workspaces={data.workspaces} />
+        <NavWorkspaces workspaces={workspaces} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarRail />
