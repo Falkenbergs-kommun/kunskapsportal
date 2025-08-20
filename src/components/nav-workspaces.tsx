@@ -19,15 +19,13 @@ export function NavWorkspaces({
 }: {
   workspaces: {
     name: string
-    emoji: React.ReactNode
+    url: string
     pages: {
       name: string
       url?: string
-      emoji: React.ReactNode
       pages?: {
         name: string
         url?: string
-        emoji: React.ReactNode
       }[]
     }[]
   }[]
@@ -41,8 +39,7 @@ export function NavWorkspaces({
             <Collapsible key={workspace.name}>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="#">
-                    <span>{workspace.emoji}</span>
+                  <a href={workspace.url}>
                     <span>{workspace.name}</span>
                   </a>
                 </SidebarMenuButton>
@@ -60,9 +57,10 @@ export function NavWorkspaces({
                       <SidebarMenuSubItem key={page.name}>
                         {page.pages && page.pages.length > 0 ? (
                           <Collapsible>
-                            <SidebarMenuSubButton>
-                              <span>{page.emoji}</span>
-                              <span>{page.name}</span>
+                            <SidebarMenuSubButton asChild>
+                              <a href={page.url}>
+                                <span>{page.name}</span>
+                              </a>
                             </SidebarMenuSubButton>
                             <CollapsibleTrigger asChild>
                               <SidebarMenuAction
@@ -78,7 +76,6 @@ export function NavWorkspaces({
                                   <SidebarMenuSubItem key={subPage.name}>
                                     <SidebarMenuSubButton asChild>
                                       <a href={subPage.url || '#'}>
-                                        <span>{subPage.emoji}</span>
                                         <span>{subPage.name}</span>
                                       </a>
                                     </SidebarMenuSubButton>
@@ -90,7 +87,6 @@ export function NavWorkspaces({
                         ) : (
                           <SidebarMenuSubButton asChild>
                             <a href={page.url || '#'}>
-                              <span>{page.emoji}</span>
                               <span>{page.name}</span>
                             </a>
                           </SidebarMenuSubButton>
