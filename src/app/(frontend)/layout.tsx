@@ -28,8 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div>
           <SidebarProvider>
+            <AppSidebar id="left" />
             <SidebarProviderChat>
-              <AppSidebar id="left" />
               <SidebarInset>
                 <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
                   <SidebarTrigger className="-ml-1" />
@@ -50,12 +50,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4">
                   {children}
-                  {Array.from({ length: 24 }).map((_, index) => (
+                  {/* {Array.from({ length: 24 }).map((_, index) => (
                     <div key={index} className="bg-muted/50 aspect-video h-12 w-full rounded-lg" />
-                  ))}
+                  ))} */}
                 </div>
               </SidebarInset>
-              <ChatSidebar side="right" collapsible="icon" />
+              <ChatSidebar side="right" />
             </SidebarProviderChat>
           </SidebarProvider>
         </div>

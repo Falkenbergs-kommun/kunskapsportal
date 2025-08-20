@@ -1,5 +1,5 @@
 import { Sidebar, SidebarProvider, SidebarTrigger } from './ui/sidebar-chat'
 
 export function ChatSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  return <Sidebar {...props}>CHAT APP</Sidebar>
+  return <Sidebar {...props}>{/* <SidebarTrigger /> */}</Sidebar>
 }
