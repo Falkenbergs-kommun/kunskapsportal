@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { Home, Search, Sparkles, type LucideIcon } from 'lucide-react'
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
@@ -16,24 +17,21 @@ export function NavMain({
   }[]
 }) {
   const triggerRightSidebar = () => {
-    // Simulate the keyboard shortcut for right sidebar
-    // Adjust the key combination based on what your right sidebar uses
     const event = new KeyboardEvent('keydown', {
-      key: 'm', // or whatever key you use
-      ctrlKey: true, // or metaKey: true for Mac
+      key: 'm',
+      metaKey: true, // Use metaKey for Command on Mac
       bubbles: true,
     })
-
     document.dispatchEvent(event)
   }
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/">
+          <Link href="/">
             <Home />
             <span>Home</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>

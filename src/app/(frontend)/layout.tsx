@@ -6,14 +6,7 @@ export const metadata = {
 import { cookies } from 'next/headers'
 import { AppSidebar } from '@/components/app-sidebar'
 import { ChatSidebar } from '@/components/chat-sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { DynamicBreadcrumb } from '@/components/dynamic-breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import {
@@ -23,6 +16,7 @@ import {
 } from '@/components/ui/sidebar-chat'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { FavoritesProvider } from '@/contexts/favorites-context'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -33,11 +27,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body>
         <div>
-          <TooltipProvider>
-            <SidebarProvider defaultOpen={defaultOpen}>
-              <AppSidebar id="left" />
-              <SidebarProviderChat defaultOpen={defaultChatOpen}>
-                <SidebarInset>
+          <FavoritesProvider>
+            <TooltipProvider>
+              <SidebarProvider defaultOpen={defaultOpen}>
+                <AppSidebar id="left" />
+                <SidebarProviderChat defaultOpen={defaultChatOpen}>
+                  <SidebarInset>
                   <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -48,17 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       </TooltipContent>
                     </Tooltip>
                     <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
-                      <BreadcrumbList>
-                        <BreadcrumbItem className="hidden md:block">
-                          <BreadcrumbLink href="#">Building Your Application</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator className="hidden md:block" />
-                        <BreadcrumbItem>
-                          <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                        </BreadcrumbItem>
-                      </BreadcrumbList>
-                    </Breadcrumb>
+                    <DynamicBreadcrumb />
                     <div className="flex-1" />
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -77,10 +62,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </div>
                 </SidebarInset>
 
-                <ChatSidebar side="right" />
-              </SidebarProviderChat>
-            </SidebarProvider>
-          </TooltipProvider>
+                  <ChatSidebar side="right" />
+                </SidebarProviderChat>
+              </SidebarProvider>
+            </TooltipProvider>
+          </FavoritesProvider>
         </div>
       </body>
     </html>

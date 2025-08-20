@@ -1,6 +1,7 @@
 'use client'
 
-import { ArrowUpRight, Link, MoreHorizontal, Star, StarOff, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowUpRight, Link as LinkIcon, MoreHorizontal, Star, StarOff } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -16,19 +17,26 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useFavorites } from '@/contexts/favorites-context'
 
-export function NavFavorites({
-  favorites,
-}: {
-  favorites: {
-    name: string
-    url: string
-    emoji: string
-  }[]
-}) {
+export function NavFavorites() {
   const { isMobile } = useSidebar()
+  const { favorites, removeFavorite, isLoading } = useFavorites()
+
+  const handleRemoveFavorite = (url: string) => {
+    removeFavorite(url)
+  }
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(window.location.origin + url)
+  }
+
+  const handleOpenInNewTab = (url: string) => {
+    window.open(url, '_blank')
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -37,54 +45,55 @@ export function NavFavorites({
         Favorites
       </SidebarGroupLabel>
       <SidebarMenu>
-        {favorites.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url} title={item.name}>
-                <span>{item.emoji}</span>
-                <span>{item.name}</span>
-              </a>
+        {isLoading ? (
+          <>
+            <SidebarMenuSkeleton />
+            <SidebarMenuSkeleton />
+          </>
+        ) : favorites.length > 0 ? (
+          favorites.map((item) => (
+            <SidebarMenuItem key={item.url}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url} title={item.title}>
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuAction showOnHover>
+                    <MoreHorizontal />
+                    <span className="sr-only">More</span>
+                  </SidebarMenuAction>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56 rounded-lg"
+                  side={isMobile ? 'bottom' : 'right'}
+                  align={isMobile ? 'end' : 'start'}
+                >
+                  <DropdownMenuItem onClick={() => handleRemoveFavorite(item.url)}>
+                    <StarOff className="text-muted-foreground" />
+                    <span>Remove from Favorites</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleCopyLink(item.url)}>
+                    <LinkIcon className="text-muted-foreground" />
+                    <span>Copy Link</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleOpenInNewTab(item.url)}>
+                    <ArrowUpRight className="text-muted-foreground" />
+                    <span>Open in New Tab</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          ))
+        ) : (
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled className="text-sidebar-foreground/50">
+              <span>No favorites yet</span>
             </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuAction showOnHover>
-                  <MoreHorizontal />
-                  <span className="sr-only">More</span>
-                </SidebarMenuAction>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 rounded-lg"
-                side={isMobile ? 'bottom' : 'right'}
-                align={isMobile ? 'end' : 'start'}
-              >
-                <DropdownMenuItem>
-                  <StarOff className="text-muted-foreground" />
-                  <span>Remove from Favorites</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link className="text-muted-foreground" />
-                  <span>Copy Link</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <ArrowUpRight className="text-muted-foreground" />
-                  <span>Open in New Tab</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </SidebarMenuItem>
-        ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        )}
       </SidebarMenu>
     </SidebarGroup>
   )

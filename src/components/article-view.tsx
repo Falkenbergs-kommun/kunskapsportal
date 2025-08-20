@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { FavoriteStar } from '@/components/favorite-star'
 
 const mockArticle = {
   id: '12345',
@@ -148,9 +149,16 @@ export default function ArticleView() {
       )}
 
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-4" data-testid="text-article-title">
-          {article.title}
-        </h1>
+        <div className="flex items-start justify-between mb-4">
+          <h1 className="text-4xl font-bold text-slate-900 flex-1" data-testid="text-article-title">
+            {article.title}
+          </h1>
+          <FavoriteStar 
+            title={article.title}
+            emoji="📄"
+            className="ml-4 mt-1"
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
           {article.department && (
