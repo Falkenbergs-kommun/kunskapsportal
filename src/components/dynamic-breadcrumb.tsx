@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
@@ -31,7 +32,7 @@ export function DynamicBreadcrumb() {
       }
 
       const segments = pathname.split('/').filter(Boolean)
-      
+
       if (segments.length === 0) return
 
       try {
@@ -48,38 +49,39 @@ export function DynamicBreadcrumb() {
             setCurrentPage(dept.name)
           }
         } else if (segments.length === 2) {
-          // Level 2: /ksf/samhallsutveckling  
-          const dept = departments.find((d: any) => 
-            d.slug === segments[1] && 
-            d.parent && 
-            d.parent.slug === segments[0]
+          // Level 2: /ksf/samhallsutveckling
+          const dept = departments.find(
+            (d: any) => d.slug === segments[1] && d.parent && d.parent.slug === segments[0],
           )
           if (dept) {
-            setBreadcrumbs([{
-              name: dept.parent.name,
-              url: `/${segments[0]}`
-            }])
+            setBreadcrumbs([
+              {
+                name: dept.parent.name,
+                url: `/${segments[0]}`,
+              },
+            ])
             setCurrentPage(dept.name)
           }
         } else if (segments.length === 3) {
           // Level 3: /ksf/samhallsutveckling/ne
-          const dept = departments.find((d: any) =>
-            d.slug === segments[2] &&
-            d.parent &&
-            d.parent.slug === segments[1] &&
-            d.parent.parent &&
-            d.parent.parent.slug === segments[0]
+          const dept = departments.find(
+            (d: any) =>
+              d.slug === segments[2] &&
+              d.parent &&
+              d.parent.slug === segments[1] &&
+              d.parent.parent &&
+              d.parent.parent.slug === segments[0],
           )
           if (dept) {
             setBreadcrumbs([
               {
                 name: dept.parent.parent.name,
-                url: `/${segments[0]}`
+                url: `/${segments[0]}`,
               },
               {
                 name: dept.parent.name,
-                url: `/${segments[0]}/${segments[1]}`
-              }
+                url: `/${segments[0]}/${segments[1]}`,
+              },
             ])
             setCurrentPage(dept.name)
           }
@@ -95,12 +97,16 @@ export function DynamicBreadcrumb() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {breadcrumbs.map((crumb, index) => [
-          <BreadcrumbItem key={crumb.url} className="hidden md:block">
-            <BreadcrumbLink href={crumb.url}>{crumb.name}</BreadcrumbLink>
-          </BreadcrumbItem>,
-          <BreadcrumbSeparator key={`sep-${index}`} className="hidden md:block" />
-        ]).flat()}
+        {breadcrumbs
+          .map((crumb, index) => [
+            <BreadcrumbItem key={crumb.url} className="hidden md:block">
+              <BreadcrumbLink asChild>
+                <Link href={crumb.url}>{crumb.name}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>,
+            <BreadcrumbSeparator key={`sep-${index}`} className="hidden md:block" />,
+          ])
+          .flat()}
         {currentPage && (
           <BreadcrumbItem>
             <BreadcrumbPage>{currentPage}</BreadcrumbPage>

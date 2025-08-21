@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowUpRight, Link as LinkIcon, MoreHorizontal, Star, StarOff } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import {
   DropdownMenu,
@@ -25,6 +26,11 @@ import { useFavorites } from '@/contexts/favorites-context'
 export function NavFavorites() {
   const { isMobile } = useSidebar()
   const { favorites, removeFavorite, isLoading } = useFavorites()
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleRemoveFavorite = (url: string) => {
     removeFavorite(url)
@@ -45,7 +51,7 @@ export function NavFavorites() {
         Favorites
       </SidebarGroupLabel>
       <SidebarMenu>
-        {isLoading ? (
+        {isClient && isLoading ? (
           <>
             <SidebarMenuSkeleton />
             <SidebarMenuSkeleton />
