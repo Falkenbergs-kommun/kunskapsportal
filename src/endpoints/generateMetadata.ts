@@ -30,7 +30,7 @@ const metadataSchema: Schema = {
     documentType: {
       type: SchemaType.STRING,
       description:
-        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
+        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'riktlinje', 'anvisning', 'plan', 'protokoll', 'rapport', 'beslut', 'avtal', 'mall', 'faq'",
     },
     department: {
       type: SchemaType.STRING,
@@ -40,13 +40,13 @@ const metadataSchema: Schema = {
     targetAudience: {
       type: SchemaType.ARRAY,
       description:
-        "Identifiera målgrupp(er). Välj från: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.",
+        "Identifiera målgrupp(er). Välj från: 'medborgare', 'kommunanstallda', 'fortroendevalda', 'foretag', 'andra-kommuner'.",
       items: { type: SchemaType.STRING },
     },
     securityLevel: {
       type: SchemaType.STRING,
       description:
-        "Bestäm säkerhetsnivån. Välj från: 'public', 'internal', 'confidential', 'restricted'.",
+        "Bestäm säkerhetsnivån. Välj från: 'offentlig', 'intern', 'konfidentiell', 'begransad'.",
     },
     legalBasis: {
       type: SchemaType.ARRAY,
@@ -117,7 +117,7 @@ const metadataSchema: Schema = {
     },
     language: {
       type: SchemaType.STRING,
-      description: "Bestäm dokumentets språk. Välj från: 'sv', 'en', 'sv-simple'.",
+      description: "Bestäm dokumentets språk. Välj från: 'sv', 'en', 'sv-lattlast'.",
     },
   },
   required: [

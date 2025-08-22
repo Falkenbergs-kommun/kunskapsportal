@@ -1,131 +1,221 @@
+'use client'
+
+import { User } from '@/payload-types'
+import { useState } from 'react'
+import { Dialog, DialogPanel } from '@headlessui/react'
+import {
+  Bars3Icon,
+  BookOpenIcon,
+  ChatBubbleLeftRightIcon,
+  CloudArrowUpIcon,
+  SparklesIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import Link from 'next/link'
+
+const navigation = [
+  { name: 'Funktioner', href: '#features' },
+  { name: 'Hur det fungerar', href: '#how-it-works' },
+  { name: 'Vanliga frågor', href: '#faq' },
+]
+
+const features = [
+  {
+    name: 'AI-drivet innehållsskapande',
+    description:
+      'Omvandla automatiskt statiska dokument (PDF, Word) till strukturerade, redigerbara artiklar. Vår AI extraherar text och bilder med bibehållen kontext.',
+    icon: CloudArrowUpIcon,
+  },
+  {
+    name: 'Automatisk metadata & klassificering',
+    description:
+      'Glöm manuell taggning. Systemet analyserar innehåll för att generera titlar, sammanfattningar och nyckelord, vilket säkerställer enhetlighet och sökbarhet.',
+    icon: SparklesIcon,
+  },
+  {
+    name: 'Semantisk sök & chattbot',
+    description:
+      'Ställ frågor i naturligt språk och få svar från de mest relevanta dokumenten, även om du inte använder exakta nyckelord.',
+    icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    name: 'Strukturerad navigering',
+    description:
+      'Innehållet är organiserat i en tydlig hierarki av avdelningar, vilket gör det enkelt att bläddra och hitta information intuitivt.',
+    icon: BookOpenIcon,
+  },
+]
+
+const faqs = [
+  {
+    id: 1,
+    question: 'Vad är denna plattform?',
+    answer:
+      'Detta är en AI-driven kunskapsbas utformad för att omvandla kommunens statiska dokument till en dynamisk, intelligent och lätt sökbar resurs.',
+  },
+  {
+    id: 2,
+    question: 'Vilka typer av dokument kan jag ladda upp?',
+    answer:
+      'Systemet stöder ett brett utbud av format, inklusive PDF, Microsoft Word (.docx) och PowerPoint (.pptx). Allt innehåll bearbetas för att extrahera text och bilder.',
+  },
+  {
+    id: 3,
+    question: 'Hur fungerar AI-chattboten?',
+    answer:
+      'Chattboten använder semantisk sök för att förstå dina frågor. Den hittar sedan den mest relevanta informationen från alla publicerade artiklar för att ge dig ett direkt svar.',
+  },
+  {
+    id: 4,
+    question: 'Vem är systemet till för?',
+    answer:
+      'Det är utformat för alla anställda inom kommunen för att enkelt komma åt och hantera intern kunskap, från policys och riktlinjer till rapporter och rutiner.',
+  },
+]
+
 export default function WelcomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
-    <div className="p-8">
-      <h1>Välkommen till den AI-drivna kunskapsbasen!</h1>
-      <p>
-        Detta system är utformat för att omvandla dina statiska dokument till en dynamisk,
-        intelligent och lätt sökbar kunskapsbas. Genom att utnyttja avancerad AI automatiseras hela
-        innehållslivscykeln – från skapande och klassificering till upptäckt.
-      </p>
-      <h2>Kärnflödet</h2>
-      <p>Att få in din information i kunskapsbasen är en enkel, AI-assisterad process:</p>
-      <ol>
-        <li>
-          <strong>Ladda upp källdokument</strong>: Börja med att skapa en ny "Artikel" och ladda upp
-          dina källfiler. Systemet stöder ett brett utbud av format, inklusive{' '}
-          <strong>PDF, Microsoft Word (.docx) och PowerPoint (.pptx)</strong>. Alla
-          icke-PDF-dokument konverteras automatiskt för optimal bearbetning.
-        </li>
-        <li>
-          <strong>Generera innehåll med AI</strong>: Klicka på knappen{' '}
-          <strong>"Generera med AI"</strong>. Systemet använder kraftfull OCR och språkmodeller (som
-          Mistral) för att läsa dina dokument, extrahera all text och alla bilder och strukturera
-          informationen till en ren, redigerbar artikel i rich-text-redigeraren.
-        </li>
-        <li>
-          <strong>Generera metadata med AI</strong>: När innehållet har genererats, klicka på{' '}
-          <strong>"Generera metadata med AI"</strong>. Systemet analyserar artikelns innehåll för
-          att automatiskt föreslå en koncis <strong>Titel</strong>, en hjälpsam{' '}
-          <strong>Sammanfattning</strong>, relevanta <strong>Nyckelord</strong> och rätt{' '}
-          <strong>Dokumenttyp</strong> baserat på svenska kommunala standarder.
-        </li>
-        <li>
-          <strong>Granska & Publicera</strong>: Granska det AI-genererade innehållet och metadata,
-          gör eventuella önskade redigeringar och publicera artikeln. När den är publicerad blir
-          artikeln omedelbart sökbar för alla användare.
-        </li>
-      </ol>
-      <hr />
-      <h2>Huvudfunktioner förklarade</h2>
-      <p>
-        Denna plattform är byggd på en samling kraftfulla funktioner som är utformade för att göra
-        kunskapshantering sömlös och intelligent.
-      </p>
-      <h3>🧠 AI-driven innehållsskapande</h3>
-      <p>Systemet använder den senaste AI:n för att bearbeta dina uppladdade dokument.</p>
-      <ul>
-        <li>
-          <strong>Stöd för flera format</strong>: Hanterar olika dokumenttyper och konverterar dem
-          vid behov för analys.
-        </li>
-        <li>
-          <strong>Intelligent OCR</strong>: <code>MistralOcrService</code> extraherar inte bara text
-          utan även inbäddade bilder från dina dokument, vilket bevarar hela kontexten från
-          originalfilen.
-        </li>
-        <li>
-          <strong>Strukturerad output</strong>: AI:n kopierar inte bara text; den förstår
-          dokumentets struktur och formaterar den med lämpliga rubriker, listor och tabeller direkt
-          i redigeraren.
-        </li>
-      </ul>
-      <h3>🏷️ Automatisk metadata & klassificering</h3>
-      <p>
-        Glöm manuell taggning. <code>generateMetadataEndpoint</code> använder AI (Googles Gemini)
-        för att analysera artikelinnehåll och föreslå kritisk metadata, vilket säkerställer
-        konsistens och sökbarhet över hela kunskapsbasen. Detta inkluderar:
-      </p>
-      <ul>
-        <li>Titel och sammanfattning</li>
-        <li>Dokumenttyp (t.ex. Policy, Riktlinje, Rapport)</li>
-        <li>Nyckelord för sökoptimering</li>
-        <li>Relevant rättslig grund och målgrupp</li>
-      </ul>
-      <h3>🔍 Avancerad semantisk sökning</h3>
-      <p>Publicerade artiklar lagras inte bara; de förstås.</p>
-      <ul>
-        <li>
-          <strong>Vektorinbäddningar</strong>: Vid publicering omvandlas artikelinnehåll till
-          numeriska representationer (inbäddningar) med hjälp av OpenAI:s modeller.
-        </li>
-        <li>
-          <strong>Qdrant vektordatabas</strong>: Dessa inbäddningar lagras i en <code>Qdrant</code>{' '}
-          vektordatabas, vilket möjliggör "semantisk sökning."
-        </li>
-        <li>
-          <strong>Fråga, sök inte</strong>: Detta innebär att användare kan ställa frågor på
-          naturligt språk (t.ex. "Vad är vår policy för distansarbete?") och få svar från de mest
-          relevanta dokumenten, även om de exakta nyckelorden inte används.
-        </li>
-      </ul>
-      <h3>🗂️ Strukturerad bläddring & navigering</h3>
-      <p>
-        Innehållet är organiserat i en hierarkisk struktur av <strong>avdelningar</strong>.
-      </p>
-      <ul>
-        <li>
-          <strong>Hierarkisk sidofält</strong>: Komponenterna <code>AppSidebar</code> och{' '}
-          <code>NavWorkspaces</code> bygger automatiskt en navigeringsmeny på flera nivåer från
-          avdelningsstrukturen, vilket gör att användare kan bläddra i informationen intuitivt.
-        </li>
-        <li>
-          <strong>Dynamiska brödsmulor</strong>: Komponenterna <code>DynamicBreadcrumb</code> ger
-          tydlig navigeringskontext och visar användarna exakt var de befinner sig i kunskapsbasens
-          struktur.
-        </li>
-      </ul>
-      <h3>✨ Modern frontend & användarupplevelse</h3>
-      <p>Det användarvänliga gränssnittet är byggt för tydlighet och användarvänlighet.</p>
-      <ul>
-        <li>
-          <strong>Rena artikel- och avdelningsvyer</strong>: Komponenterna <code>ArticleView</code>{' '}
-          och <code>DepartmentView</code> ger rena, läsbara layouter för att konsumera information.
-        </li>
-        <li>
-          <strong>Live förhandsgranskning</strong>: Redaktörer kan se sina ändringar i en
-          realtidsförhandsgranskning medan de redigerar, vilket säkerställer att det slutliga
-          resultatet är perfekt.
-        </li>
-        <li>
-          <strong>Favoriter</strong>: Användare kan bokmärka viktiga sidor för snabb åtkomst med
-          hjälp av <code>FavoritesProvider</code>.
-        </li>
-        <li>
-          <strong>AI Chat Sidofält</strong>: Ett inbyggt chattgränssnitt (
-          <code>sidebar-chat.tsx</code>) låter användare interagera direkt med kunskapsbasens AI,
-          ställa frågor och få omedelbara svar baserade på de indexerade dokumenten.
-        </li>
-      </ul>
+    <div className="w-full">
+      <main>
+        {/* Hero section */}
+        <div>
+          <div className="py-8 sm:py-12">
+            <div className="mx-auto max-w-4xl px-4 lg:px-6">
+              <div className="mx-auto max-w-2xl text-center">
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white">
+                  En smartare kunskapsbas för en modern kommun
+                </h1>
+                <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
+                  Från statiska dokument till dynamisk kunskap. Sök, fråga och hitta svar snabbare
+                  än någonsin med hjälp av AI.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature section */}
+        <div id="features" className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16 lg:px-6">
+          <div className="mx-auto max-w-4xl ">
+            <h2 className="text-base font-semibold leading-7 text-gray-500">Allt du behöver</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
+              En intelligent plattform för kunskapshantering
+            </p>
+            <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
+              Vår plattform är byggd för att göra kunskap tillgänglig och användbar, inte bara
+              lagrad.
+            </p>
+          </div>
+          <div className="mx-auto mt-12 max-w-4xl sm:mt-16 lg:mt-20">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+              {features.map((feature) => (
+                <div key={feature.name} className="relative pl-16">
+                  <dt className="text-base font-semibold leading-7 text-gray-900 dark:text-white">
+                    <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 dark:bg-white">
+                      <feature.icon
+                        aria-hidden="true"
+                        className="h-6 w-6 text-white dark:text-black"
+                      />
+                    </div>
+                    {feature.name}
+                  </dt>
+                  <dd className="mt-2 text-base leading-7 text-gray-600 dark:text-gray-400">
+                    {feature.description}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+
+        {/* How it works section */}
+        <div id="how-it-works" className="mx-auto my-20 max-w-4xl px-4 sm:my-24 lg:px-6">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-gray-500">Steg-för-steg</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
+              Från dokument till sökbar kunskap
+            </p>
+            <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
+              Processen är enkel och nästan helt automatiserad.
+            </p>
+          </div>
+          <div className="relative mx-auto mt-12 max-w-2xl sm:mt-16 lg:mt-20 lg:max-w-none">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white dark:bg-white dark:text-black">
+                  1
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  Ladda upp
+                </h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Börja med att ladda upp dina befintliga dokument i format som PDF, Word eller
+                  PowerPoint.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white dark:bg-white dark:text-black">
+                  2
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  Generera med AI
+                </h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Med ett klick analyserar AI:n dokumenten, extraherar allt innehåll och skapar en
+                  strukturerad artikel.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white dark:bg-white dark:text-black">
+                  3
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  Publicera & Sök
+                </h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Efter en snabb granskning publicerar du artikeln, som omedelbart blir sökbar för
+                  alla användare.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQs */}
+        <div
+          id="faq"
+          className="mx-auto max-w-4xl divide-y divide-gray-900/10 px-4 pb-8 sm:pb-16 sm:pt-12 lg:px-6 lg:pb-20"
+        >
+          <h2 className="text-2xl font-bold leading-10 tracking-tight text-gray-900 dark:text-white">
+            Vanliga frågor
+          </h2>
+          <dl className="mt-10 space-y-8 divide-y divide-gray-900/10 dark:divide-white/10">
+            {faqs.map((faq) => (
+              <div key={faq.id} className="pt-8 lg:grid lg:grid-cols-12 lg:gap-8">
+                <dt className="text-base font-semibold leading-7 text-gray-900 lg:col-span-5 dark:text-white">
+                  {faq.question}
+                </dt>
+                <dd className="mt-4 lg:col-span-7 lg:mt-0">
+                  <p className="text-base leading-7 text-gray-600 dark:text-gray-400">
+                    {faq.answer}
+                  </p>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="mx-auto mt-16 max-w-4xl px-4 lg:px-6">
+        <div className="border-t border-gray-900/10 py-16 dark:border-white/10">
+          <p className="text-center text-xs leading-5 text-gray-500 dark:text-gray-400">
+            &copy; {new Date().getFullYear()} Kommunens Kunskapsbas. Alla rättigheter förbehållna.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

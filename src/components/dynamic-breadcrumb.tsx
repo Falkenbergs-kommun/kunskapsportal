@@ -35,7 +35,7 @@ export function DynamicBreadcrumb() {
     const generateBreadcrumbs = async () => {
       if (pathname === '/') {
         setBreadcrumbs([])
-        setCurrentPage('Home')
+        setCurrentPage('')
         return
       }
 

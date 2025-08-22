@@ -220,7 +220,7 @@ export interface Article {
     | null;
   department?: (number | null) | Department;
   /**
-   * Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".
+   * Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv".
    */
   documentStatus?: ('draft' | 'review' | 'approved' | 'active' | 'archived' | 'superseded') | null;
   targetAudience?: ('citizens' | 'staff' | 'officials' | 'businesses' | 'municipalities')[] | null;
@@ -236,21 +236,21 @@ export interface Article {
   gdprRelevant?: boolean | null;
   accessibilityCompliant?: boolean | null;
   /**
-   * Version number (e.g., 1.6, 2.0)
+   * Versionsnummer (t.ex. 1.6, 2.0)
    */
   version?: string | null;
   effectiveDate?: string | null;
   reviewDate?: string | null;
   reviewInterval?: ('as_needed' | 'annual' | 'biannual' | 'triannual' | 'five_years') | null;
   /**
-   * Organizations, departments, or activities this document covers (e.g., "Verksamheter som utför SoL, LSS, HSL")
+   * Organisationer, avdelningar eller aktiviteter som detta dokument omfattar (t.ex. "Verksamheter som utför SoL, LSS, HSL")
    */
   appliesTo?: string | null;
   expiryDate?: string | null;
   author?: string | null;
   authorEmail?: string | null;
   /**
-   * Person or department responsible for reviewing this document
+   * Person eller avdelning ansvarig för att granska detta dokument
    */
   reviewer?: string | null;
   approver?: string | null;

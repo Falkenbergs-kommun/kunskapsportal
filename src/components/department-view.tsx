@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Search, FileText, Calendar, User, Building } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -90,14 +91,14 @@ export default function DepartmentView({
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-slate-900 mb-1">
-                        <a
+                        <Link
                           href={`/${getDepartmentFullPath(article.department || null)}/${
                             article.slug
                           }`}
                           className="hover:text-blue-600 transition-colors"
                         >
                           {article.title}
-                        </a>
+                        </Link>
                       </h3>
                       <p className="text-slate-600 text-sm leading-relaxed">
                         {/* {article.summary} */}
