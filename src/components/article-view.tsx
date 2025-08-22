@@ -45,12 +45,13 @@ export default function ArticleView({ article }: { article: Article }) {
     if (!content || !content.content) return null
 
     return content.content.map((node: any, index: number) => {
+      const key = `${node.type}-${index}`
       switch (node.type) {
         case 'heading':
           const HeadingTag = `h${node.attrs.level}` as keyof React.JSX.IntrinsicElements
           return (
             <HeadingTag
-              key={index}
+              key={key}
               className={cn(
                 'font-bold text-slate-900 mb-4',
                 node.attrs.level === 2 && 'text-2xl mt-8',
@@ -63,7 +64,7 @@ export default function ArticleView({ article }: { article: Article }) {
           )
         case 'paragraph':
           return (
-            <p key={index} className="text-slate-700 leading-relaxed mb-4">
+            <p key={key} className="text-slate-700 leading-relaxed mb-4">
               {node.content?.[0]?.text || ''}
             </p>
           )
@@ -244,7 +245,7 @@ export default function ArticleView({ article }: { article: Article }) {
                 const fileExtension = doc.filename?.split('.').pop()?.toUpperCase()
                 return (
                   <a
-                    key={index}
+                    key={`${doc.url}-${index}`}
                     href={doc.url || ''}
                     className="inline-flex items-center text-blue-600 hover:underline"
                     data-testid={`link-source-doc-${index}`}

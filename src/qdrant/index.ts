@@ -91,8 +91,8 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
 
   // For debugging, save the markdown to a file
   const debugDir = path.resolve(process.cwd(), 'debug')
-  await fs.mkdir(debugDir, { recursive: true })
-  await fs.writeFile(path.join(debugDir, `${doc.id}.md`), markdown)
+  // await fs.mkdir(debugDir, { recursive: true })
+  // await fs.writeFile(path.join(debugDir, `${doc.id}.md`), markdown)
 
   // Delete existing points for this article
   await qdrant.delete(COLLECTION_NAME, {
@@ -113,19 +113,19 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
   if (chunks.length > 0) {
     const embeddingBatchSize = 10 // Process embeddings in smaller batches to avoid rate limits
     const qdrantBatchSize = 50 // Smaller batch size for Qdrant to avoid 413 errors
-    
+
     for (let i = 0; i < chunks.length; i += embeddingBatchSize) {
       const batchChunks = chunks.slice(i, i + embeddingBatchSize)
-      
+
       // Generate embeddings for this batch with rate limiting
       const batchEmbeddings = []
       for (const chunk of batchChunks) {
         const embedding = await getEmbedding(chunk)
         batchEmbeddings.push(embedding)
-        
+
         // Add small delay to respect rate limits
         if (batchChunks.length > 1) {
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
         }
       }
 
@@ -147,7 +147,7 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
                 chunkIndex: globalChunkIndex,
                 totalChunks: chunks.length,
                 chunkPosition: `${globalChunkIndex + 1} of ${chunks.length}`,
-                
+
                 // Document metadata
                 documentType: doc.documentType || null,
                 department: doc.department || null,
@@ -155,16 +155,16 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
                 targetAudience: doc.targetAudience || [],
                 securityLevel: doc.securityLevel || null,
                 language: doc.language || 'sv',
-                
+
                 // Legal and compliance
                 gdprRelevant: doc.gdprRelevant || false,
                 accessibilityCompliant: doc.accessibilityCompliant || false,
                 legalBasis: doc.legalBasis || [],
-                
+
                 // Content organization
                 keywords: doc.keywords?.map((k: any) => k.keyword).filter(Boolean) || [],
-                
-                // Lifecycle metadata  
+
+                // Lifecycle metadata
                 version: doc.version || null,
                 reviewInterval: doc.reviewInterval || null,
                 appliesTo: doc.appliesTo || null,
@@ -175,7 +175,7 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
                 effectiveDate: doc.effectiveDate || null,
                 reviewDate: doc.reviewDate || null,
                 expiryDate: doc.expiryDate || null,
-                
+
                 // Payload built-in timestamps
                 createdAt: doc.createdAt || null,
                 updatedAt: doc.updatedAt || null,
@@ -190,7 +190,7 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
 
 export const deleteFromQdrant = async (articleId: string): Promise<void> => {
   await ensureCollection()
-  
+
   // Delete all points for this article
   await qdrant.delete(COLLECTION_NAME, {
     filter: {

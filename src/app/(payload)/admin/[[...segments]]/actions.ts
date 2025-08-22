@@ -539,7 +539,29 @@ export async function generateCoverPhoto(articleId: string) {
       throw new Error('Article not found.')
     }
 
-    const prompt = `Create a visually appealing, abstract, and professional wallpaper background image for a knowledge base article titled "${article.title}". The style should be modern, clean, and minimalist, using a soft color palette. It should evoke a sense of knowledge, clarity, and organization. Do not include any text. The image should be suitable as a background banner.`
+    // Function to serialize Lexical content to a plain text string
+    const lexicalToText = (nodes: any[]): string => {
+      let text = ''
+      for (const node of nodes) {
+        if (node.type === 'text') {
+          text += node.text
+        } else if (node.children && Array.isArray(node.children)) {
+          text += lexicalToText(node.children) + ' ' // Add space between nodes
+        }
+      }
+      return text
+    }
+
+    // Extract the first 200 characters of the article content to provide more context
+    const contentSnippet =
+      article.content && article.content.root && Array.isArray(article.content.root.children)
+        ? lexicalToText(article.content.root.children).substring(0, 200).trim()
+        : ''
+
+    const prompt = `Create a visually appealing, abstract, and professional wallpaper background image for a knowledge base article.
+    - Title: "${article.title}"
+    - Content hint: "${contentSnippet}..."
+    The style should be modern, clean, and minimalist, using a soft color palette. It should evoke a sense of knowledge, clarity, and organization. Do not include any text or words. The image should be suitable as a background banner.`
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 
