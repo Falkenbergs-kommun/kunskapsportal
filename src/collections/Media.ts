@@ -45,6 +45,13 @@ export const Media: CollectionConfig = {
   ],
   upload: {
     mimeTypes: [
+      // Images
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/svg+xml',
+
       // PDF documents
       'application/pdf',
 

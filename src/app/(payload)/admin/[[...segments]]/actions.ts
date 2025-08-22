@@ -9,19 +9,37 @@ import { editorConfigFactory } from '@payloadcms/richtext-lexical'
 import type { Media } from '../../../../payload-types'
 
 // Helper function to parse markdown tables
-function parseMarkdownTableFromText(tableText: string): { headers: string[], rows: string[][] } | null {
-  const lines = tableText.split('\n').map(line => line.trim()).filter(line => line)
+function parseMarkdownTableFromText(
+  tableText: string,
+): { headers: string[]; rows: string[][] } | null {
+  const lines = tableText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line)
   if (lines.length < 3) return null
-  
+
   const [headerLine, separatorLine, ...dataLines] = lines
   // Check for common separator patterns: ---, :-- or :--:
-  if (!separatorLine.includes('---') && !separatorLine.includes(':--') && !separatorLine.includes(':-:')) return null
-  
-  const headers = headerLine.split('|').map(cell => cell.trim()).filter(cell => cell)
-  const rows = dataLines.map(line => 
-    line.split('|').map(cell => cell.trim()).filter(cell => cell)
-  ).filter(row => row.length > 0)
-  
+  if (
+    !separatorLine.includes('---') &&
+    !separatorLine.includes(':--') &&
+    !separatorLine.includes(':-:')
+  )
+    return null
+
+  const headers = headerLine
+    .split('|')
+    .map((cell) => cell.trim())
+    .filter((cell) => cell)
+  const rows = dataLines
+    .map((line) =>
+      line
+        .split('|')
+        .map((cell) => cell.trim())
+        .filter((cell) => cell),
+    )
+    .filter((row) => row.length > 0)
+
   return { headers, rows }
 }
 
@@ -78,36 +96,44 @@ export async function generateContentFromDocuments(articleId: string) {
 
       let buffer = Buffer.from(await response.arrayBuffer())
       let currentMimeType = doc.mimeType || 'application/octet-stream'
-      console.log(`[AI] Document downloaded into buffer, size: ${buffer.length} bytes. Type: ${currentMimeType}`)
+      console.log(
+        `[AI] Document downloaded into buffer, size: ${buffer.length} bytes. Type: ${currentMimeType}`,
+      )
 
       // Check if document needs conversion to PDF (prefer Mistral OCR)
       const { documentConverter } = await import('../../../../services/documentConverter')
       const shouldConvertToPdf = documentConverter.needsConversion(currentMimeType, true)
       if (shouldConvertToPdf) {
-        console.log(`[AI] Converting ${documentConverter.getDocumentTypeName(currentMimeType)} to PDF...`)
-        
-        const conversionResult = await documentConverter.convertToPdf(buffer, currentMimeType, doc.filename)
-        
+        console.log(
+          `[AI] Converting ${documentConverter.getDocumentTypeName(currentMimeType)} to PDF...`,
+        )
+
+        const conversionResult = await documentConverter.convertToPdf(
+          buffer,
+          currentMimeType,
+          doc.filename,
+        )
+
         if (conversionResult.success && conversionResult.pdfBuffer) {
           buffer = conversionResult.pdfBuffer
           currentMimeType = 'application/pdf'
           console.log(`[AI] Conversion successful. New PDF size: ${buffer.length} bytes`)
-          
+
           // Update media document with conversion status
           try {
             await payload.update({
               collection: 'media',
               id: doc.id,
               data: {
-                conversionStatus: 'success'
-              }
+                conversionStatus: 'success',
+              },
             })
           } catch (updateError) {
             console.warn(`[AI] Could not update conversion status:`, updateError)
           }
         } else {
           console.error(`[AI] Conversion failed: ${conversionResult.error}`)
-          
+
           // Update media document with error status
           try {
             await payload.update({
@@ -115,13 +141,13 @@ export async function generateContentFromDocuments(articleId: string) {
               id: doc.id,
               data: {
                 conversionStatus: 'failed',
-                conversionError: conversionResult.error
-              }
+                conversionError: conversionResult.error,
+              },
             })
           } catch (updateError) {
             console.warn(`[AI] Could not update conversion status:`, updateError)
           }
-          
+
           continue // Skip this document and try the next one
         }
       }
@@ -153,7 +179,9 @@ export async function generateContentFromDocuments(articleId: string) {
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
         ]
         if (!currentMimeType || !supportedTypes.includes(currentMimeType)) {
-          console.warn(`[AI] Skipping document ${doc.id} - unsupported file type: ${currentMimeType}`)
+          console.warn(
+            `[AI] Skipping document ${doc.id} - unsupported file type: ${currentMimeType}`,
+          )
           continue
         }
 
@@ -169,65 +197,92 @@ export async function generateContentFromDocuments(articleId: string) {
 
     // Update the article with the generated content
     console.log('[AI] All documents processed. Updating article content...')
-    
+
     // Convert markdown using the official Payload converter but fix image references first
     let processedMarkdown = combinedContent
-    
+
     // Extract PAYLOAD_MEDIA references
-    const mediaReferences: Array<{id: string, filename: string}> = []
-    processedMarkdown = processedMarkdown.replace(/\[PAYLOAD_MEDIA:([^:]+):([^\]]+)\]/g, (match, id, filename) => {
-      mediaReferences.push({ id, filename })
-      return '' // Remove from markdown for now
-    })
-    
+    const mediaReferences: Array<{ id: string; filename: string }> = []
+    processedMarkdown = processedMarkdown.replace(
+      /\[PAYLOAD_MEDIA:([^:]+):([^\]]+)\]/g,
+      (match, id, filename) => {
+        mediaReferences.push({ id, filename })
+        return '' // Remove from markdown for now
+      },
+    )
+
     // Remove all image references from markdown and we'll add them as upload blocks later
-    const inlineImageReferences: Array<{id: string, filename: string, position: number}> = []
+    const inlineImageReferences: Array<{ id: string; filename: string; position: number }> = []
     let imageIndex = 0
-    
+
     // Find and remove image references, storing their info for later
-    processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\]\(([^)]+\.(jpe?g|png|gif|webp))\)/gi, (match, alt, filename) => {
-      const matchingMedia = mediaReferences.find(media => media.filename === filename || filename.includes(media.filename))
-      if (matchingMedia) {
-        inlineImageReferences.push({ id: matchingMedia.id, filename: matchingMedia.filename, position: imageIndex++ })
-        console.log(`[AI] Found inline image: ${match} -> will add as upload block (ID: ${matchingMedia.id})`)
-        return `\n\n[IMAGE_PLACEHOLDER_${matchingMedia.id}]\n\n` // Placeholder for later replacement
-      }
-      return match // Keep unknown images as-is
-    })
-    
+    processedMarkdown = processedMarkdown.replace(
+      /!\[([^\]]*)\]\(([^)]+\.(jpe?g|png|gif|webp))\)/gi,
+      (match, alt, filename) => {
+        const matchingMedia = mediaReferences.find(
+          (media) => media.filename === filename || filename.includes(media.filename),
+        )
+        if (matchingMedia) {
+          inlineImageReferences.push({
+            id: matchingMedia.id,
+            filename: matchingMedia.filename,
+            position: imageIndex++,
+          })
+          console.log(
+            `[AI] Found inline image: ${match} -> will add as upload block (ID: ${matchingMedia.id})`,
+          )
+          return `\n\n[IMAGE_PLACEHOLDER_${matchingMedia.id}]\n\n` // Placeholder for later replacement
+        }
+        return match // Keep unknown images as-is
+      },
+    )
+
     // Also handle link-style image references
-    processedMarkdown = processedMarkdown.replace(/\[([^\]]+\.(jpe?g|png|gif|webp))\]\(([^)]+)\)/gi, (match, filename, url) => {
-      const matchingMedia = mediaReferences.find(media => media.filename === filename || filename.includes(media.filename))
-      if (matchingMedia) {
-        inlineImageReferences.push({ id: matchingMedia.id, filename: matchingMedia.filename, position: imageIndex++ })
-        console.log(`[AI] Found inline link image: ${match} -> will add as upload block (ID: ${matchingMedia.id})`)
-        return `\n\n[IMAGE_PLACEHOLDER_${matchingMedia.id}]\n\n`
-      }
-      return match
-    })
-    
-    console.log(`[AI] Found ${inlineImageReferences.length} inline images to convert to upload blocks`)
-    
+    processedMarkdown = processedMarkdown.replace(
+      /\[([^\]]+\.(jpe?g|png|gif|webp))\]\(([^)]+)\)/gi,
+      (match, filename, url) => {
+        const matchingMedia = mediaReferences.find(
+          (media) => media.filename === filename || filename.includes(media.filename),
+        )
+        if (matchingMedia) {
+          inlineImageReferences.push({
+            id: matchingMedia.id,
+            filename: matchingMedia.filename,
+            position: imageIndex++,
+          })
+          console.log(
+            `[AI] Found inline link image: ${match} -> will add as upload block (ID: ${matchingMedia.id})`,
+          )
+          return `\n\n[IMAGE_PLACEHOLDER_${matchingMedia.id}]\n\n`
+        }
+        return match
+      },
+    )
+
+    console.log(
+      `[AI] Found ${inlineImageReferences.length} inline images to convert to upload blocks`,
+    )
+
     try {
       const editorConfig = await editorConfigFactory.default({ config: payload.config })
       let newContent = await convertMarkdownToLexical({ editorConfig, markdown: processedMarkdown })
-      
+
       console.log('[AI] Successfully converted markdown to Lexical format')
       console.log('[AI] Found', mediaReferences.length, 'media references to add')
-      
+
       // Convert paragraph-based tables to proper Lexical table nodes
       if (newContent.root && newContent.root.children) {
         console.log('[AI] Post-processing content to convert tables to proper table nodes')
         console.log(`[AI] Found ${newContent.root.children.length} children to check`)
-        
+
         for (let i = 0; i < newContent.root.children.length; i++) {
           const child = newContent.root.children[i]
           console.log(`[AI] Checking child ${i}: type=${child.type}`)
-          
+
           // Check if this paragraph contains markdown table syntax
           if (child.type === 'paragraph' && child.children) {
             console.log(`[AI] Found paragraph with ${child.children.length} children`)
-            
+
             // Build text from all text nodes and linebreaks in the paragraph
             let paragraphText = ''
             for (const childNode of child.children) {
@@ -237,19 +292,28 @@ export async function generateContentFromDocuments(articleId: string) {
                 paragraphText += '\n'
               }
             }
-            
+
             console.log(`[AI] Paragraph text length: ${paragraphText.length}`)
-            console.log(`[AI] Contains |: ${paragraphText.includes('|')}, Contains ---: ${paragraphText.includes('---')}`)
-            
+            console.log(
+              `[AI] Contains |: ${paragraphText.includes('|')}, Contains ---: ${paragraphText.includes('---')}`,
+            )
+
             // If it looks like a table (contains | and separator patterns like --- or :-- or :--)
-            if (paragraphText.includes('|') && (paragraphText.includes('---') || paragraphText.includes(':--') || paragraphText.includes(':-:'))) {
+            if (
+              paragraphText.includes('|') &&
+              (paragraphText.includes('---') ||
+                paragraphText.includes(':--') ||
+                paragraphText.includes(':-:'))
+            ) {
               console.log(`[AI] Found table-like paragraph, attempting to convert to table node`)
               console.log(`[AI] Table text preview: ${paragraphText.substring(0, 300)}...`)
-              
+
               const parsedTable = parseMarkdownTableFromText(paragraphText)
               if (parsedTable && parsedTable.headers.length > 0 && parsedTable.rows.length > 0) {
-                console.log(`[AI] Successfully parsed table: ${parsedTable.headers.length} cols, ${parsedTable.rows.length} rows`)
-                
+                console.log(
+                  `[AI] Successfully parsed table: ${parsedTable.headers.length} cols, ${parsedTable.rows.length} rows`,
+                )
+
                 // Create proper Lexical table node structure
                 const tableNode = {
                   type: 'table',
@@ -265,7 +329,7 @@ export async function generateContentFromDocuments(articleId: string) {
                       format: '',
                       indent: 0,
                       direction: 'ltr',
-                      children: parsedTable.headers.map(header => ({
+                      children: parsedTable.headers.map((header) => ({
                         type: 'tablecell',
                         version: 1,
                         format: '',
@@ -292,21 +356,21 @@ export async function generateContentFromDocuments(articleId: string) {
                                 format: 0,
                                 style: '',
                                 mode: 'normal',
-                                detail: 0
-                              }
-                            ]
-                          }
-                        ]
-                      }))
+                                detail: 0,
+                              },
+                            ],
+                          },
+                        ],
+                      })),
                     },
                     // Data rows
-                    ...parsedTable.rows.map(row => ({
+                    ...parsedTable.rows.map((row) => ({
                       type: 'tablerow',
                       version: 1,
                       format: '',
                       indent: 0,
                       direction: 'ltr',
-                      children: row.map(cell => ({
+                      children: row.map((cell) => ({
                         type: 'tablecell',
                         version: 1,
                         format: '',
@@ -329,20 +393,23 @@ export async function generateContentFromDocuments(articleId: string) {
                               {
                                 type: 'text',
                                 version: 1,
-                                text: cell.replace(/<br>/g, '\n').replace(/\$([^$]+)\$/g, '$1').trim(),
+                                text: cell
+                                  .replace(/<br>/g, '\n')
+                                  .replace(/\$([^$]+)\$/g, '$1')
+                                  .trim(),
                                 format: 0,
                                 style: '',
                                 mode: 'normal',
-                                detail: 0
-                              }
-                            ]
-                          }
-                        ]
-                      }))
-                    }))
-                  ]
+                                detail: 0,
+                              },
+                            ],
+                          },
+                        ],
+                      })),
+                    })),
+                  ],
                 }
-                
+
                 // Replace the paragraph with the table node
                 newContent.root.children[i] = tableNode
                 console.log(`[AI] Replaced paragraph with table node`)
@@ -350,15 +417,17 @@ export async function generateContentFromDocuments(articleId: string) {
                 console.log(`[AI] Failed to parse table from paragraph text`)
               }
             } else if (paragraphText.includes('|')) {
-              console.log(`[AI] Paragraph has pipes but no --- separator. Text: ${paragraphText.substring(0, 100)}`)
+              console.log(
+                `[AI] Paragraph has pipes but no --- separator. Text: ${paragraphText.substring(0, 100)}`,
+              )
             }
           }
         }
-        
-        // Replace inline image placeholders with upload blocks  
+
+        // Replace inline image placeholders with upload blocks
         for (const inlineImage of inlineImageReferences) {
           const placeholderText = `[IMAGE_PLACEHOLDER_${inlineImage.id}]`
-          
+
           // Find paragraphs containing the placeholder
           for (let i = 0; i < newContent.root.children.length; i++) {
             const child = newContent.root.children[i]
@@ -371,7 +440,7 @@ export async function generateContentFromDocuments(articleId: string) {
                   break
                 }
               }
-              
+
               if (foundPlaceholder) {
                 // Replace this paragraph with an upload block
                 console.log(`[AI] Replacing placeholder ${placeholderText} with upload block`)
@@ -382,26 +451,26 @@ export async function generateContentFromDocuments(articleId: string) {
                   fields: null,
                   format: '',
                   version: 3,
-                  relationTo: 'media'
+                  relationTo: 'media',
                 }
                 break
               }
             }
           }
         }
-        
+
         // Add remaining images that weren't inline at the end
-        const usedInlineIds = new Set(inlineImageReferences.map(img => img.id))
-        const remainingImages = mediaReferences.filter(media => !usedInlineIds.has(media.id))
-        
+        const usedInlineIds = new Set(inlineImageReferences.map((img) => img.id))
+        const remainingImages = mediaReferences.filter((media) => !usedInlineIds.has(media.id))
+
         if (remainingImages.length > 0) {
           // Add a horizontal rule separator
           newContent.root.children.push({
             type: 'horizontalRule',
             version: 1,
-            children: []
+            children: [],
           })
-          
+
           // Add remaining images as upload blocks at the end
           for (const mediaRef of remainingImages) {
             newContent.root.children.push({
@@ -411,7 +480,7 @@ export async function generateContentFromDocuments(articleId: string) {
               fields: null,
               format: '',
               version: 3,
-              relationTo: 'media'
+              relationTo: 'media',
             })
           }
         }
@@ -420,25 +489,23 @@ export async function generateContentFromDocuments(articleId: string) {
       // Debug: Check current article state before update
       console.log('[AI] Current article title:', article.title)
       console.log('[AI] Current article ID:', article.id)
-      
+
       const updatedArticle = await payload.update({
         collection: 'articles',
         id: articleId,
         data: {
-          title: article.title || `Processed Document ${articleId}`, // Ensure title exists
           content: newContent as any,
         },
         overrideAccess: true, // Skip access control
         draft: false, // Ensure it's not a draft update
       })
-      
+
       console.log('[AI] Successfully updated article')
-      
     } catch (lexicalError) {
       console.error('[AI] Error with Lexical conversion:', lexicalError)
       throw new Error('Failed to convert content to Lexical format')
     }
-    
+
     return {
       success: true,
       content: combinedContent,
