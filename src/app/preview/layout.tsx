@@ -10,7 +10,7 @@ import '../../app/(frontend)/styles.css'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50">
+      <body className="bg-gray-50 p-8 prose prose-slate max-w-none">
         <FavoritesProvider>{children}</FavoritesProvider>
       </body>
     </html>

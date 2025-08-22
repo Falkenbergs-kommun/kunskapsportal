@@ -8,7 +8,7 @@ import type { Article, Department } from '../../../payload-types'
 import { getDepartmentFullPath } from '../../../lib/utils'
 
 export default async function SlugPage({ params }: { params: { slug: string[] } }) {
-  const { slug } = params
+  const { slug } = await params
 
   if (!slug || slug.length === 0) {
     return notFound()
