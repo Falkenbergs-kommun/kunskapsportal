@@ -19,10 +19,12 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@google/genai": "^1.15.0",
     "@google/generative-ai": "^0.24.1",
     "@innovixx/payload-icon-picker-field": "1.0.0-beta.6",
     "@mistralai/mistralai": "^1.7.5",
     "@payloadcms/db-postgres": "3.50.0",
+    "@payloadcms/live-preview-react": "^3.50.0",
     "@payloadcms/next": "3.50.0",
     "@payloadcms/payload-cloud": "3.50.0",
     "@payloadcms/richtext-lexical": "3.50.0",
@@ -36,7 +38,6 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/postcss": "^4.1.12",
-    "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cross-env": "^7.0.3",
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.54.1",
+    "@tailwindcss/typography": "^0.5.16",
     "@testing-library/react": "16.3.0",
     "@types/express": "^5.0.3",
     "@types/node": "^22.5.4",

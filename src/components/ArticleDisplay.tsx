@@ -1,16 +1,7 @@
 'use client'
 import { useState } from 'react'
-import {
-  Calendar,
-  Building,
-  FileText,
-  ChevronDown,
-  ChevronRight,
-  Lightbulb,
-  ExternalLink,
-} from 'lucide-react'
+import { Calendar, Building, FileText, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { FavoriteStar } from '@/components/favorite-star'
 import { Article } from '@/payload-types'
@@ -20,16 +11,12 @@ const documentTypeLabels: Record<string, string> = {
   procedure: 'Procedur',
 }
 
-const departmentLabels: Record<string, string> = {
-  municipal_board: 'Kommunstyrelsen',
-}
-
 const statusColors: Record<string, string> = {
   active: 'bg-emerald-500',
   draft: 'bg-amber-500',
 }
 
-export default function ArticleView({ article }: { article: Article }) {
+export default function ArticleDisplay({ article }: { article: Article | null }) {
   const [showMetadata, setShowMetadata] = useState(false)
 
   const formatDate = (dateString?: string) => {
@@ -42,29 +29,30 @@ export default function ArticleView({ article }: { article: Article }) {
   }
 
   const renderContent = (content: any) => {
-    if (!content || !content.content) return null
+    if (!content || !content.root || !content.root.children) return null
 
-    return content.content.map((node: any, index: number) => {
+    return content.root.children.map((node: any, index: number) => {
       switch (node.type) {
         case 'heading':
-          const HeadingTag = `h${node.attrs.level}` as keyof React.JSX.IntrinsicElements
+          const HeadingTag = node.tag as keyof React.JSX.IntrinsicElements
+          const level = parseInt(node.tag.replace('h', ''))
           return (
             <HeadingTag
               key={index}
               className={cn(
                 'font-bold text-slate-900 mb-4',
-                node.attrs.level === 2 && 'text-2xl mt-8',
-                node.attrs.level === 3 && 'text-xl mt-6',
-                node.attrs.level === 4 && 'text-lg mt-4',
+                level === 2 && 'text-2xl mt-8',
+                level === 3 && 'text-xl mt-6',
+                level === 4 && 'text-lg mt-4',
               )}
             >
-              {node.content?.[0]?.text || ''}
+              {node.children?.[0]?.text || ''}
             </HeadingTag>
           )
         case 'paragraph':
           return (
             <p key={index} className="text-slate-700 leading-relaxed mb-4">
-              {node.content?.[0]?.text || ''}
+              {node.children?.[0]?.text || ''}
             </p>
           )
         case 'upload':
@@ -85,6 +73,14 @@ export default function ArticleView({ article }: { article: Article }) {
           return null
       }
     })
+  }
+
+  if (!article) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-8 text-center">
+        <p className="text-slate-500">Article not found.</p>
+      </div>
+    )
   }
 
   return (
@@ -122,7 +118,8 @@ export default function ArticleView({ article }: { article: Article }) {
             <div className="flex items-center space-x-2">
               <FileText className="text-emerald-600" size={16} />
               <span data-testid="text-document-type">
-                {documentTypeLabels[article.documentType] || article.documentType}
+                {article.documentType &&
+                  (documentTypeLabels[article.documentType] || article.documentType)}
               </span>
             </div>
           )}
@@ -213,19 +210,6 @@ export default function ArticleView({ article }: { article: Article }) {
           </div>
         )}
       </div>
-
-      {/* {article.tldr && ( */}
-      {/*   <div */}
-      {/*     className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl" */}
-      {/*     data-testid="tldr-section" */}
-      {/*   > */}
-      {/*     <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center"> */}
-      {/*       <Lightbulb className="mr-2" size={20} /> */}
-      {/*       Sammanfattning (TLDR) */}
-      {/*     </h2> */}
-      {/*     <p className="text-blue-800 leading-relaxed">{article.tldr}</p> */}
-      {/*   </div> */}
-      {/* )} */}
 
       <div className="prose prose-slate max-w-none mb-12" data-testid="article-content">
         {renderContent(article.content)}

@@ -1,23 +1,14 @@
 import { notFound } from 'next/navigation'
-import ArticleView from '@/components/article-view'
-import DepartmentView from '@/components/department-view'
+import ArticleDisplay from '../../../components/ArticleDisplay' // Use the new unified component
+import DepartmentView from '../../../components/department-view'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import type { Article, Department } from '@/payload-types'
+import type { Article, Department } from '../../../payload-types'
 
-// Helper function to recursively build the full path of a department
-const getDepartmentFullPath = (department: Department | number | null): string => {
-  if (!department || typeof department === 'number') {
-    return ''
-  }
+import { getDepartmentFullPath } from '../../../lib/utils'
 
-  // Recursively get the parent's path and append the current slug
-  const parentPath = getDepartmentFullPath(department.parent || null)
-  return parentPath ? `${parentPath}/${department.slug}` : department.slug || ''
-}
-
-export default async function SlugPage({ params }: { params: Promise<{ slug: string[] }> }) {
-  const { slug } = await params
+export default async function SlugPage({ params }: { params: { slug: string[] } }) {
+  const { slug } = params
 
   if (!slug || slug.length === 0) {
     return notFound()
@@ -40,7 +31,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
         equals: 'published', // Only show published articles on the frontend
       },
     },
-    depth: 5, // High depth to fully populate department parents for path validation
+    depth: 3, // IMPORTANT: Use depth=3 to populate coverPhoto, media in content, and departments
     limit: 1,
   })
 
@@ -55,7 +46,8 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
         // The path matches! Render the ArticleView.
         // NOTE: Your ArticleView currently uses mock data. You will need to
         // modify it to accept the fetched 'article' object as a prop.
-        return <ArticleView article={article} />
+        // Path matches! Render the ArticleDisplay component.
+        return <ArticleDisplay article={article} />
       }
     }
   }
@@ -91,7 +83,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
           equals: 'published',
         },
       },
-      depth: 0,
+      depth: 3,
       limit: 100, // Adjust limit as needed
     })
     return (

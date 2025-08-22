@@ -7,6 +7,7 @@ import { processDocumentWithGemini } from '../../../../services/gemini'
 import { convertMarkdownToLexical } from '@payloadcms/richtext-lexical'
 import { editorConfigFactory } from '@payloadcms/richtext-lexical'
 import type { Media } from '../../../../payload-types'
+import { GoogleGenAI } from '@google/genai'
 
 // Helper function to parse markdown tables
 function parseMarkdownTableFromText(
@@ -111,7 +112,7 @@ export async function generateContentFromDocuments(articleId: string) {
         const conversionResult = await documentConverter.convertToPdf(
           buffer,
           currentMimeType,
-          doc.filename,
+          doc.filename || '',
         )
 
         if (conversionResult.success && conversionResult.pdfBuffer) {
@@ -411,7 +412,7 @@ export async function generateContentFromDocuments(articleId: string) {
                 }
 
                 // Replace the paragraph with the table node
-                newContent.root.children[i] = tableNode
+                newContent.root.children[i] = tableNode as any
                 console.log(`[AI] Replaced paragraph with table node`)
               } else {
                 console.log(`[AI] Failed to parse table from paragraph text`)
@@ -435,7 +436,11 @@ export async function generateContentFromDocuments(articleId: string) {
               // Check if any text node contains our placeholder
               let foundPlaceholder = false
               for (const textChild of child.children) {
-                if (textChild.text && textChild.text.includes(placeholderText)) {
+                if (
+                  'text' in textChild &&
+                  textChild.text &&
+                  textChild.text.includes(placeholderText)
+                ) {
                   foundPlaceholder = true
                   break
                 }
@@ -448,7 +453,7 @@ export async function generateContentFromDocuments(articleId: string) {
                   id: `inline-upload-${inlineImage.id}-${Date.now()}`,
                   type: 'upload',
                   value: parseInt(inlineImage.id),
-                  fields: null,
+                  fields: {},
                   format: '',
                   version: 3,
                   relationTo: 'media',
@@ -466,9 +471,8 @@ export async function generateContentFromDocuments(articleId: string) {
         if (remainingImages.length > 0) {
           // Add a horizontal rule separator
           newContent.root.children.push({
-            type: 'horizontalRule',
+            type: 'horizontalrule',
             version: 1,
-            children: [],
           })
 
           // Add remaining images as upload blocks at the end
@@ -477,7 +481,7 @@ export async function generateContentFromDocuments(articleId: string) {
               id: `end-upload-${mediaRef.id}-${Date.now()}`,
               type: 'upload',
               value: parseInt(mediaRef.id),
-              fields: null,
+              fields: {},
               format: '',
               version: 3,
               relationTo: 'media',
@@ -513,6 +517,88 @@ export async function generateContentFromDocuments(articleId: string) {
     }
   } catch (error) {
     console.error('[AI] An error occurred during content generation:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+    }
+  }
+}
+
+export async function generateCoverPhoto(articleId: string) {
+  try {
+    console.log(`[AI Image] Starting cover photo generation for articleId: ${articleId}`)
+    const payload = await getPayload({ config })
+
+    const article = await payload.findByID({
+      collection: 'articles',
+      id: articleId,
+      depth: 0,
+    })
+
+    if (!article) {
+      throw new Error('Article not found.')
+    }
+
+    const prompt = `Create a visually appealing, abstract, and professional wallpaper background image for a knowledge base article titled "${article.title}". The style should be modern, clean, and minimalist, using a soft color palette. It should evoke a sense of knowledge, clarity, and organization. Do not include any text. The image should be suitable as a background banner.`
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
+
+    const response = await ai.models.generateImages({
+      model: 'imagen-4.0-fast-generate-001',
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+      },
+    })
+
+    if (!response.generatedImages || response.generatedImages.length === 0) {
+      throw new Error('Image generation failed. No images were returned.')
+    }
+
+    const generatedImage = response.generatedImages[0]
+    if (!generatedImage.image?.imageBytes) {
+      throw new Error('Image generation failed. No image bytes were returned.')
+    }
+    const imgBytes = generatedImage.image.imageBytes
+    const buffer = Buffer.from(imgBytes, 'base64')
+
+    const readableName = article.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .substring(0, 50)
+    const filename = `cover-${readableName}-${Date.now()}.png`
+
+    // Upload the image buffer to the 'media' collection
+    const mediaDoc = await payload.create({
+      collection: 'media',
+      data: {
+        alt: `Cover photo for: ${article.title}`,
+      },
+      file: {
+        data: buffer,
+        mimetype: 'image/png',
+        name: filename,
+        size: buffer.length,
+      },
+      overrideAccess: true,
+    })
+
+    // Update the article with the new cover photo ID
+    await payload.update({
+      collection: 'articles',
+      id: articleId,
+      data: {
+        coverPhoto: mediaDoc.id,
+      },
+      overrideAccess: true,
+    })
+
+    console.log(
+      `[AI Image] Successfully generated and attached cover photo ${mediaDoc.id} to article ${articleId}`,
+    )
+    return { success: true, message: 'Cover photo generated and attached successfully.' }
+  } catch (error) {
+    console.error('[AI Image] An error occurred during cover photo generation:', error)
     return {
       success: false,
       message: error instanceof Error ? error.message : 'An unexpected error occurred',
