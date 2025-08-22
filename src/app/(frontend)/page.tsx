@@ -1,5 +1,5 @@
-import ArticleView from '@/components/article-view'
+import WelcomePage from '@/components/welcome-page'
 
 export default function Page() {
-  return <ArticleView />
+  return <WelcomePage />
 }

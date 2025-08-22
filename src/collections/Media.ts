@@ -16,8 +16,8 @@ export const Media: CollectionConfig = {
       type: 'text',
       admin: {
         readOnly: true,
-        description: 'Automatically detected document type'
-      }
+        description: 'Automatically detected document type',
+      },
     },
     {
       name: 'conversionStatus',
@@ -31,35 +31,35 @@ export const Media: CollectionConfig = {
       ],
       admin: {
         readOnly: true,
-        description: 'Status of document conversion to PDF'
-      }
+        description: 'Status of document conversion to PDF',
+      },
     },
     {
       name: 'conversionError',
       type: 'text',
       admin: {
         readOnly: true,
-        condition: (data) => data.conversionStatus === 'failed'
-      }
-    }
+        condition: (data) => data.conversionStatus === 'failed',
+      },
+    },
   ],
   upload: {
     mimeTypes: [
       // PDF documents
       'application/pdf',
-      
-      // Word documents  
+
+      // Word documents
       'application/msword', // .doc
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-      
+
       // PowerPoint presentations
       'application/vnd.ms-powerpoint', // .ppt
       'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
-      
+
       // Excel spreadsheets (for data documents)
       'application/vnd.ms-excel', // .xls
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      
+
       // Text files
       'text/plain', // .txt
     ],
@@ -67,13 +67,21 @@ export const Media: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, operation }) => {
+        // NY LOGIK: Fyll i 'alt'-text från filnamnet vid uppladdning
+        if (operation === 'create' && !data.alt && data.filename) {
+          // Ta bort filändelsen från filnamnet
+          const filenameWithoutExt = data.filename.split('.').slice(0, -1).join('.')
+          // Ersätt bindestreck och understreck med mellanslag för läsbarhet
+          const readableName = filenameWithoutExt.replace(/[-_]/g, ' ')
+          data.alt = readableName
+        }
+
         if (operation === 'create' || operation === 'update') {
-          // Set document type based on MIME type
+          // Befintlig logik för att hantera dokumenttyp och konverteringsstatus
           if (data.mimeType) {
             const { documentConverter } = await import('../services/documentConverter')
             data.documentType = documentConverter.getDocumentTypeName(data.mimeType)
-            
-            // Set initial conversion status (prefer Mistral OCR = convert Office docs to PDF)
+
             const shouldConvert = documentConverter.needsConversion(data.mimeType, true)
             if (shouldConvert) {
               data.conversionStatus = 'pending'
@@ -83,7 +91,7 @@ export const Media: CollectionConfig = {
           }
         }
         return data
-      }
-    ]
-  }
+      },
+    ],
+  },
 }

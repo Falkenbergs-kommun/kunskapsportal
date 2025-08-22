@@ -171,10 +171,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 pages: childPages.map((child: any) => ({
                   name: child.name,
                   url: `/${item.slug}/${child.slug || child.name.toLowerCase().replace(/ /g, '-')}`,
-                  pages: child.pages.map((grandChild: any) => ({
-                    name: grandChild.name,
-                    url: `/${item.slug}/${child.slug}/${grandChild.slug || grandChild.name.toLowerCase().replace(/ /g, '-')}`,
-                  })) || [],
+                  pages:
+                    child.pages.map((grandChild: any) => ({
+                      name: grandChild.name,
+                      url: `/${item.slug}/${child.slug}/${grandChild.slug || grandChild.name.toLowerCase().replace(/ /g, '-')}`,
+                    })) || [],
                 })),
               }
             } else {
@@ -182,7 +183,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               return {
                 name: item.name,
                 slug: item.slug,
-                url: level === 1 ? `/${item.parent.slug}/${item.slug}` : `/${item.parent.parent.slug}/${item.parent.slug}/${item.slug}`,
+                url:
+                  level === 1
+                    ? `/${item.parent.slug}/${item.slug}`
+                    : `/${item.parent.parent.slug}/${item.parent.slug}/${item.slug}`,
                 pages: childPages || [],
               }
             }
@@ -210,7 +214,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="mt-4">
         <NavFavorites />
         <NavWorkspaces workspaces={workspaces} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

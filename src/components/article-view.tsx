@@ -13,68 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { FavoriteStar } from '@/components/favorite-star'
-
-const mockArticle = {
-  id: '12345',
-  title: 'Example Article Title',
-  headerImage: 'https://via.placeholder.com/1024x400.png/ddd/999?text=Header+Image',
-  department: 'municipal_board',
-  documentType: 'policy',
-  updatedAt: '2023-10-27T10:00:00.000Z',
-  documentStatus: 'active',
-  version: '2.1',
-  author: 'John Doe',
-  approver: 'Jane Smith',
-  effectiveDate: '2023-11-01T00:00:00.000Z',
-  reviewDate: '2024-10-27T10:00:00.000Z',
-  tldr: 'This is a short summary of the article content, explaining the main points in a concise way for quick understanding.',
-  content: {
-    content: [
-      {
-        type: 'heading',
-        attrs: { level: 2 },
-        content: [{ type: 'text', text: 'Introduction' }],
-      },
-      {
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: 'This is the first paragraph of the article. It provides an overview of the topic and sets the stage for the content that follows.',
-          },
-        ],
-      },
-      {
-        type: 'heading',
-        attrs: { level: 3 },
-        content: [{ type: 'text', text: 'A Deeper Dive' }],
-      },
-      {
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: 'This section goes into more detail about the subject matter, exploring various facets and providing in-depth analysis.',
-          },
-        ],
-      },
-    ],
-  },
-  sourceDocuments: [
-    {
-      title: 'Related Policy Document.pdf',
-      url: '#',
-      type: 'pdf',
-      size: '1.2 MB',
-    },
-    {
-      title: 'External Reference Link',
-      url: '#',
-      type: 'docx',
-      size: '340 KB',
-    },
-  ],
-}
+import { Article } from '@/payload-types'
 
 const documentTypeLabels: Record<string, string> = {
   policy: 'Policy',
@@ -90,9 +29,8 @@ const statusColors: Record<string, string> = {
   draft: 'bg-amber-500',
 }
 
-export default function ArticleView() {
+export default function ArticleView({ article }: { article: Article }) {
   const [showMetadata, setShowMetadata] = useState(false)
-  const article = mockArticle
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Ej angivet'
@@ -109,7 +47,7 @@ export default function ArticleView() {
     return content.content.map((node: any, index: number) => {
       switch (node.type) {
         case 'heading':
-          const HeadingTag = `h${node.attrs.level}` as keyof JSX.IntrinsicElements
+          const HeadingTag = `h${node.attrs.level}` as keyof React.JSX.IntrinsicElements
           return (
             <HeadingTag
               key={index}
@@ -137,27 +75,23 @@ export default function ArticleView() {
 
   return (
     <article className="max-w-4xl mx-auto px-6 py-8" data-testid="article-view">
-      {article.headerImage && (
-        <div className="mb-8">
-          <img
-            src={article.headerImage}
-            alt={article.title}
-            className="w-full h-64 object-cover rounded-xl shadow-sm"
-            data-testid="img-article-header"
-          />
-        </div>
-      )}
+      {/* {article.headerImage && ( */}
+      {/*   <div className="mb-8"> */}
+      {/*     <img */}
+      {/*       src={article.headerImage} */}
+      {/*       alt={article.title} */}
+      {/*       className="w-full h-64 object-cover rounded-xl shadow-sm" */}
+      {/*       data-testid="img-article-header" */}
+      {/*     /> */}
+      {/*   </div> */}
+      {/* )} */}
 
       <header className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <h1 className="text-4xl font-bold text-slate-900 flex-1" data-testid="text-article-title">
             {article.title}
           </h1>
-          <FavoriteStar 
-            title={article.title}
-            emoji="📄"
-            className="ml-4 mt-1"
-          />
+          <FavoriteStar title={article.title} emoji="📄" className="ml-4 mt-1" />
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
@@ -165,7 +99,7 @@ export default function ArticleView() {
             <div className="flex items-center space-x-2">
               <Building className="text-blue-600" size={16} />
               <span data-testid="text-department">
-                {departmentLabels[article.department] || article.department}
+                {typeof article.department === 'object' && article.department.name}
               </span>
             </div>
           )}
@@ -266,69 +200,74 @@ export default function ArticleView() {
         )}
       </div>
 
-      {article.tldr && (
-        <div
-          className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl"
-          data-testid="tldr-section"
-        >
-          <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-            <Lightbulb className="mr-2" size={20} />
-            Sammanfattning (TLDR)
-          </h2>
-          <p className="text-blue-800 leading-relaxed">{article.tldr}</p>
-        </div>
-      )}
+      {/* {article.tldr && ( */}
+      {/*   <div */}
+      {/*     className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl" */}
+      {/*     data-testid="tldr-section" */}
+      {/*   > */}
+      {/*     <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center"> */}
+      {/*       <Lightbulb className="mr-2" size={20} /> */}
+      {/*       Sammanfattning (TLDR) */}
+      {/*     </h2> */}
+      {/*     <p className="text-blue-800 leading-relaxed">{article.tldr}</p> */}
+      {/*   </div> */}
+      {/* )} */}
 
       <div className="prose prose-slate max-w-none mb-12" data-testid="article-content">
         {renderContent(article.content)}
       </div>
 
-      {article.sourceDocuments && article.sourceDocuments.length > 0 && (
-        <div className="border-t border-slate-200 pt-8" data-testid="source-documents">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Källdokument och referenser</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {article.sourceDocuments.map((doc, index) => {
-              const getFileIcon = (type: string) => {
-                switch (type.toLowerCase()) {
-                  case 'pdf':
-                    return '📄'
-                  case 'docx':
-                  case 'doc':
-                    return '📘'
-                  case 'xlsx':
-                  case 'xls':
-                    return '📊'
-                  default:
-                    return '📄'
+      {article.source_documents &&
+        Array.isArray(article.source_documents) &&
+        article.source_documents.length > 0 && (
+          <div className="border-t border-slate-200 pt-8" data-testid="source-documents">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              Källdokument och referenser
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {article.source_documents.map((doc, index) => {
+                if (typeof doc === 'number') return null
+                const getFileIcon = (type: string) => {
+                  switch (type.toLowerCase()) {
+                    case 'pdf':
+                      return '📄'
+                    case 'docx':
+                    case 'doc':
+                      return '📘'
+                    case 'xlsx':
+                    case 'xls':
+                      return '📊'
+                    default:
+                      return '📄'
+                  }
                 }
-              }
 
-              return (
-                <a
-                  key={index}
-                  href={doc.url}
-                  className="flex items-center p-4 border border-slate-200 hover:border-slate-300 rounded-lg transition-colors group"
-                  data-testid={`link-source-doc-${index}`}
-                >
-                  <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mr-3 text-lg">
-                    {getFileIcon(doc.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 group-hover:text-blue-600 truncate">
-                      {doc.title}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {doc.type.toUpperCase()}
-                      {doc.size && ` • ${doc.size}`}
-                    </p>
-                  </div>
-                  <ExternalLink className="text-slate-400 group-hover:text-blue-600" size={16} />
-                </a>
-              )
-            })}
+                return (
+                  <a
+                    key={index}
+                    href={doc.url || ''}
+                    className="flex items-center p-4 border border-slate-200 hover:border-slate-300 rounded-lg transition-colors group"
+                    data-testid={`link-source-doc-${index}`}
+                  >
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mr-3 text-lg">
+                      {getFileIcon(doc.filename || '')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 group-hover:text-blue-600 truncate">
+                        {doc.filename}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {(doc.mimeType || '').toUpperCase()}
+                        {doc.filesize && ` • ${doc.filesize}`}
+                      </p>
+                    </div>
+                    <ExternalLink className="text-slate-400 group-hover:text-blue-600" size={16} />
+                  </a>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </article>
   )
 }

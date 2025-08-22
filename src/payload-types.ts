@@ -195,20 +195,26 @@ export interface Article {
     [k: string]: unknown;
   } | null;
   title: string;
+  /**
+   * En kort sammanfattning av dokumentets innehåll, genererad av AI.
+   */
+  summary?: string | null;
+  slug?: string | null;
   documentType?:
-    | ('policy' | 'procedure' | 'regulation' | 'guideline' | 'instruction' | 'decision' | 'report' | 'template' | 'faq')
-    | null;
-  department?:
     | (
-        | 'municipal_board'
-        | 'technical_services'
-        | 'social_services'
-        | 'education'
-        | 'environment'
-        | 'building_permits'
-        | 'human_resources'
+        | 'policy'
+        | 'guideline'
+        | 'instruction'
+        | 'plan'
+        | 'protocol'
+        | 'report'
+        | 'decision'
+        | 'agreement'
+        | 'template'
+        | 'faq'
       )
     | null;
+  department?: (number | null) | Department;
   /**
    * Document status in municipal workflow. "Active" documents are embedded in the knowledge base for search. Publishing automatically sets status to "Active".
    */
@@ -219,19 +225,12 @@ export interface Article {
     | {
         law?: string | null;
         chapter?: string | null;
+        url?: string | null;
         id?: string | null;
       }[]
     | null;
   gdprRelevant?: boolean | null;
   accessibilityCompliant?: boolean | null;
-  keywords?:
-    | {
-        keyword?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  relatedDocuments?: (number | Article)[] | null;
-  language?: ('sv' | 'en' | 'sv-simple') | null;
   /**
    * Version number (e.g., 1.6, 2.0)
    */
@@ -251,6 +250,14 @@ export interface Article {
    */
   reviewer?: string | null;
   approver?: string | null;
+  keywords?:
+    | {
+        keyword?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  relatedDocuments?: (number | Article)[] | null;
+  language?: ('sv' | 'en' | 'sv-simple') | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -388,6 +395,8 @@ export interface ArticlesSelect<T extends boolean = true> {
   source_documents?: T;
   content?: T;
   title?: T;
+  summary?: T;
+  slug?: T;
   documentType?: T;
   department?: T;
   documentStatus?: T;
@@ -403,14 +412,6 @@ export interface ArticlesSelect<T extends boolean = true> {
       };
   gdprRelevant?: T;
   accessibilityCompliant?: T;
-  keywords?:
-    | T
-    | {
-        keyword?: T;
-        id?: T;
-      };
-  relatedDocuments?: T;
-  language?: T;
   version?: T;
   effectiveDate?: T;
   reviewDate?: T;
@@ -421,6 +422,14 @@ export interface ArticlesSelect<T extends boolean = true> {
   authorEmail?: T;
   reviewer?: T;
   approver?: T;
+  keywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  relatedDocuments?: T;
+  language?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

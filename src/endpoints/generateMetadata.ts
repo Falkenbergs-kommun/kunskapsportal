@@ -1,179 +1,171 @@
 import type { Endpoint } from 'payload/config'
 import type { PayloadRequest } from 'payload/types'
 import type { Response } from 'express'
+import { Department } from '../payload-types'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { convertLexicalToMarkdown, editorConfigFactory } from '@payloadcms/richtext-lexical'
+import { Schema, SchemaType } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-// Define the expected structure for metadata
-const metadataSchema = {
-  type: 'object',
+// 1. UPDATED: The new schema for Gemini's structured output
+const metadataSchema: Schema = {
+  type: SchemaType.OBJECT,
   properties: {
+    title: {
+      type: SchemaType.STRING,
+      description:
+        'En kort, koncis och informativ titel för dokumentet på svenska. Titeln ska korrekt spegla dokumentets huvudsakliga innehåll.',
+    },
+    summary: {
+      type: SchemaType.STRING,
+      description:
+        'En sammanfattning av dokumentets syfte och viktigaste punkter på 2-4 meningar. Skriven på svenska.',
+    },
+    slug: {
+      type: SchemaType.STRING,
+      description:
+        'En unik, URL-vänlig "slug" baserad på titeln. Använd små bokstäver, bindestreck istället för mellanslag och ta bort specialtecken.',
+    },
     documentType: {
-      type: 'string',
-      enum: [
-        'policy',
-        'procedure',
-        'regulation',
-        'guideline',
-        'instruction',
-        'decision',
-        'report',
-        'template',
-        'faq',
-      ],
-      description: 'The type of municipal document',
+      type: SchemaType.STRING,
+      description:
+        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
     },
     department: {
-      type: 'string',
-      enum: [
-        'municipal_board',
-        'technical_services',
-        'social_services',
-        'education',
-        'environment',
-        'building_permits',
-        'human_resources',
-      ],
-      description: 'The municipal department responsible for this document',
-    },
-    documentStatus: {
-      type: 'string',
-      enum: ['draft', 'review', 'approved', 'active', 'archived', 'superseded'],
-      description: 'Current status of the document',
+      type: SchemaType.STRING,
+      description:
+        'Ange ID för det verksamhetsområde som är mest relevant för dokumentet. Välj från den angivna listan.',
     },
     targetAudience: {
-      type: 'array',
-      items: {
-        type: 'string',
-        enum: ['citizens', 'staff', 'officials', 'businesses', 'municipalities'],
-      },
-      description: 'Who this document is intended for',
+      type: SchemaType.ARRAY,
+      description:
+        "Identifiera målgrupp(er). Välj från: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.",
+      items: { type: SchemaType.STRING },
     },
     securityLevel: {
-      type: 'string',
-      enum: ['public', 'internal', 'confidential', 'restricted'],
-      description: 'Security classification level',
-    },
-    gdprRelevant: {
-      type: 'boolean',
-      description: 'Whether the document contains personal data',
-    },
-    accessibilityCompliant: {
-      type: 'boolean',
-      description: 'Whether the document follows WCAG 2.1 AA standards',
-    },
-    language: {
-      type: 'string',
-      enum: ['sv', 'en', 'sv-simple'],
-      description: 'Primary language of the document',
-    },
-    keywords: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          keyword: { type: 'string' },
-        },
-      },
-      description: 'Relevant keywords for searchability',
+      type: SchemaType.STRING,
+      description:
+        "Bestäm säkerhetsnivån. Välj från: 'public', 'internal', 'confidential', 'restricted'.",
     },
     legalBasis: {
-      type: 'array',
+      type: SchemaType.ARRAY,
+      description:
+        'Om tillämpligt, identifiera den rättsliga grunden. Ange lag/förordning, kapitel/paragraf och en URL.',
       items: {
-        type: 'object',
+        type: SchemaType.OBJECT,
         properties: {
-          law: { type: 'string', description: 'Name of the law or regulation' },
-          chapter: { type: 'string', description: 'Specific chapter or section' },
-          url: { type: 'string', description: 'URL to legal reference' },
+          law: { type: SchemaType.STRING },
+          chapter: { type: SchemaType.STRING },
+          url: { type: SchemaType.STRING },
         },
       },
-      description: 'Legal foundation for the document',
+    },
+    gdprRelevant: {
+      type: SchemaType.BOOLEAN,
+      description: 'Ange true om dokumentet innehåller personuppgifter, annars false.',
+    },
+    accessibilityCompliant: {
+      type: SchemaType.BOOLEAN,
+      description: 'Ange true om dokumentet bedöms vara WCAG 2.1 AA-kompatibelt, annars false.',
     },
     version: {
-      type: 'string',
-      description: 'Document version number (e.g., 1.6, 2.0)',
+      type: SchemaType.STRING,
+      description: 'Identifiera eller föreslå ett versionsnummer, t.ex. "1.0" eller "2.2".',
+    },
+    effectiveDate: {
+      type: SchemaType.STRING,
+      description:
+        'Identifiera datum för fastställelse. Ange som YYYY-MM-DD. Om det inte finns, ange dagens datum.',
     },
     reviewInterval: {
-      type: 'string',
-      enum: ['as_needed', 'annual', 'biannual', 'triannual', 'five_years'],
-      description: 'How often the document should be reviewed',
+      type: SchemaType.STRING,
+      description:
+        "Bestäm revideringsintervall. Välj från: 'as_needed', 'annual', 'biannual', 'triannual', 'five_years'.",
     },
     appliesTo: {
-      type: 'string',
-      description: 'Organizations, departments, or activities this document covers',
+      type: SchemaType.STRING,
+      description:
+        'Beskriv vilka verksamheter, nämnder eller avdelningar dokumentet gäller för. Exempel: "Verksamheter som utför SoL, LSS, HSL".',
     },
     author: {
-      type: 'string',
-      description: 'Document author name',
+      type: SchemaType.STRING,
+      description: 'Identifiera författarens namn. Om okänt, ange "Okänd".',
+    },
+    authorEmail: {
+      type: SchemaType.STRING,
+      description: 'Identifiera författarens e-post. Om okänt, lämna tom.',
     },
     reviewer: {
-      type: 'string',
-      description: 'Person or department responsible for reviewing this document',
+      type: SchemaType.STRING,
+      description:
+        'Identifiera revideringsansvarig (person eller avdelning). Om okänt, ange "Okänd".',
+    },
+    approver: {
+      type: SchemaType.STRING,
+      description: 'Identifiera beslutsfattare/godkännare. Om okänt, ange "Okänd".',
+    },
+    keywords: {
+      type: SchemaType.ARRAY,
+      description: 'En lista med 5-10 relevanta svenska nyckelord som underlättar sökning.',
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          keyword: { type: SchemaType.STRING },
+        },
+      },
+    },
+    language: {
+      type: SchemaType.STRING,
+      description: "Bestäm dokumentets språk. Välj från: 'sv', 'en', 'sv-simple'.",
     },
   },
+  required: [
+    'title',
+    'summary',
+    'slug',
+    'documentType',
+    'department',
+    'securityLevel',
+    'gdprRelevant',
+    'accessibilityCompliant',
+    'version',
+    'effectiveDate',
+    'appliesTo',
+    'language',
+  ],
 }
 
 export const generateMetadataEndpoint: Endpoint = {
-  path: '/generate-metadata/:id',
+  path: '/generate-metadata',
   method: 'post',
   handler: async (req: PayloadRequest, res?: Response) => {
-    console.log('Handler called with res type:', typeof res)
-    console.log('res object keys:', res ? Object.keys(res) : 'res is undefined')
-
     try {
-      // Debug logging
-      console.log('req.params:', req.params)
-      console.log('req.query:', req.query)
-      console.log('req.url:', req.url)
-      console.log('req.route:', req.route)
-
-      // Extract ID from URL path - the URL should be like /api/articles/generate-metadata/7
-      const urlParts = req.url?.split('/') || []
-      const id = urlParts[urlParts.length - 1] // Last part should be the ID
-      console.log('URL parts:', urlParts)
-      console.log('Extracted ID:', id)
-
+      const id = req.body.id
       if (!id) {
-        return res.status(400).json({
-          success: false,
-          message: 'Article ID is required',
-        })
+        return res?.status(400).json({ message: 'Article ID is required' })
       }
 
       const payload = req.payload
+      const article = await payload.findByID({ collection: 'articles', id, depth: 0 })
 
-      // Get the article
-      const article = await payload.findByID({
-        collection: 'articles',
-        id,
-        depth: 0,
+      if (!article.content) {
+        return res?.status(400).json({ message: 'Article must have content to generate metadata.' })
+      }
+
+      // Fetch all departments to provide as context to the AI
+      const departments = await payload.find({
+        collection: 'departments',
+        limit: 100, // Assuming there are not more than 100 departments
       })
+      const departmentList = departments.docs
+        .map((dep: Department) => `- ${dep.name} (ID: ${dep.id})`)
+        .join('\n')
 
-      if (!article.title || !article.content) {
-        return res.status(400).json({
-          success: false,
-          message: 'Article must have title and content',
-        })
-      }
+      // Convert Lexical content to markdown for analysis
+      const editorConfig = await editorConfigFactory.default({ config: payload.config })
+      const markdown = await convertLexicalToMarkdown({ data: article.content, editorConfig })
 
-      // Convert Lexical content to markdown
-      let markdown = ''
-      try {
-        const editorConfig = await editorConfigFactory.default({
-          config: payload.config,
-        })
-        markdown = await convertLexicalToMarkdown({
-          data: article.content,
-          editorConfig,
-        })
-      } catch (error) {
-        console.warn('Failed to convert content to markdown, using title only. Error:', error)
-        markdown = article.title
-      }
-
-      // Create the model with structured output
       const model = genAI.getGenerativeModel({
         model: 'gemini-2.5-flash',
         generationConfig: {
@@ -183,39 +175,42 @@ export const generateMetadataEndpoint: Endpoint = {
       })
 
       const prompt = `
-Analyze this Swedish municipal document and generate appropriate metadata following Swedish municipal standards and practices.
+        Analysera följande kommunala dokument från Falkenbergs kommun. Agera som en erfaren och noggrann kommunal arkivarie och registrator. Ditt uppdrag är att extrahera, härleda och skapa strukturerad metadata på svenska för **ALLA** fält i det specificerade JSON-schemat. Varje fält måste fyllas i korrekt.
 
-Title: ${article.title}
+        **Dokumentinnehåll:**
+        ---
+        ${markdown}
+        ---
 
-Content:
-${markdown}
+        **Tillgängliga verksamhetsområden (Departments):**
+        ---
+        ${departmentList}
+        ---
 
-Instructions:
-- Classify the document type based on its content and purpose (policy, procedure, regulation, guideline, instruction/anvisning, decision, report, template, faq)
-- Determine the most appropriate municipal department based on subject matter
-- Set appropriate document status (likely 'draft' for new documents)  
-- Identify target audience based on content complexity and subject
-- Set security level (default to 'internal' unless clearly public-facing)
-- Determine if document contains personal data (GDPR relevant)
-- Assess if content follows accessibility standards
-- Extract 5-8 relevant keywords in Swedish
-- Identify any Swedish laws, regulations, or municipal bylaws referenced
-- Suggest appropriate author/reviewer roles
-- Suggest a version number (start with 1.0 for new documents)
-- Determine appropriate review interval (as_needed, annual, biannual, triannual, five_years)
-- Identify what organizations, departments, or activities this document applies to (appliesTo)
+        **Instruktioner för varje fält:**
+        1.  **title:** Skapa en ny, tydlig och beskrivande titel.
+        2.  **summary:** Skriv en koncis sammanfattning (2-4 meningar) som förklarar syfte och huvudinnehåll.
+        3.  **slug:** Skapa en URL-vänlig slug från titeln.
+        4.  **documentType:** Välj den mest passande dokumenttypen från listan i schemat.
+        5.  **department:** Välj det mest relevanta verksamhetsområdet från listan ovan och ange dess ID.
+        6.  **targetAudience:** Identifiera alla relevanta målgrupper från listan i schemat.
+        7.  **securityLevel:** Välj den mest lämpliga säkerhetsnivån från listan i schemat.
+        8.  **legalBasis:** Om lagrum nämns, extrahera dem. Annars, lämna som en tom array [].
+        9.  **gdprRelevant:** Analysera om texten hanterar personuppgifter. Svara true eller false.
+        10. **accessibilityCompliant:** Gör en bedömning baserat på textens struktur. Svara true eller false.
+        11. **version:** Hitta eller föreslå ett versionsnummer (t.ex. "1.0").
+        12. **effectiveDate:** Hitta datum för fastställelse (YYYY-MM-DD). Om inget finns, använd dagens datum: ${new Date().toISOString().split('T')[0]}.
+        13. **reviewInterval:** Välj det mest logiska revideringsintervallet från listan i schemat.
+        14. **appliesTo:** Beskriv vilka dokumentet gäller för.
+        15. **author:** Identifiera författare. Om okänt, ange "Okänd".
+        16. **authorEmail:** Identifiera författarens e-post. Om okänt, lämna fältet tomt.
+        17. **reviewer:** Identifiera revideringsansvarig. Om okänt, ange "Okänd".
+        18. **approver:** Identifiera beslutsfattare. Om okänt, ange "Okänd".
+        19. **keywords:** Extrahera 5-10 relevanta svenska sökord.
+        20. **language:** Välj det primära språket från listan i schemat.
 
-Consider Swedish municipal structure:
-- Kommunstyrelsen: Overall governance, strategy
-- Tekniska förvaltningen: Infrastructure, utilities, maintenance
-- Socialförvaltningen: Social services, elderly care, disability services  
-- Utbildningsförvaltningen: Education, schools, childcare
-- Miljöförvaltningen: Environmental protection, waste management
-- Byggförvaltningen: Building permits, planning, construction
-- HR-avdelningen: Human resources, personnel policies
-
-Respond with structured JSON metadata only.
-`
+        Svara **endast** med ett JSON-objekt som följer det specificerade schemat och fyll i **ALLA** obligatoriska fält.
+      `
 
       const result = await model.generateContent(prompt)
       const response = await result.response
@@ -223,63 +218,67 @@ Respond with structured JSON metadata only.
 
       console.log('Generated metadata for article', id, ':', generatedMetadata)
 
-      // Update the article with the generated metadata
-      console.log('Updating article with generated metadata...')
-      await payload.update({
-        collection: 'articles',
-        id,
-        data: generatedMetadata,
-      })
-      console.log('Article updated successfully with metadata')
+      let slug = generatedMetadata.slug
+      let isUnique = false
+      let counter = 1
 
-      // Try using modern Response constructor if res is undefined
-      if (!res) {
-        console.log('Using modern Response constructor...')
-        return new Response(
-          JSON.stringify({
-            success: true,
-            metadata: generatedMetadata,
-          }),
-          {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
+      while (!isUnique) {
+        const existingArticle = await payload.find({
+          collection: 'articles',
+          where: {
+            slug: {
+              equals: slug,
+            },
+            id: {
+              not_equals: id,
             },
           },
-        )
+        })
+
+        if (existingArticle.docs.length === 0) {
+          isUnique = true
+        } else {
+          slug = `${generatedMetadata.slug}-${counter}`
+          counter++
+        }
       }
 
-      console.log('About to send successful response...')
-      return res.json({
-        success: true,
-        metadata: generatedMetadata,
+      // Validate the department from Gemini (can be ID or name)
+      const departmentIdentifier = generatedMetadata.department
+      const validDepartment = departments.docs.find(
+        (dep: Department) =>
+          dep.id === departmentIdentifier ||
+          dep.id === parseInt(String(departmentIdentifier), 10) || // Also check parsed int
+          (dep.name &&
+            typeof departmentIdentifier === 'string' &&
+            dep.name.toLowerCase() === departmentIdentifier.toLowerCase()),
+      )
+
+      const updateData: any = {
+        ...generatedMetadata,
+        slug,
+      }
+
+      if (validDepartment) {
+        updateData.department = validDepartment.id // Ensure we use the correct ID from the found department
+      } else {
+        console.warn(
+          `Gemini returned an invalid department identifier: '${departmentIdentifier}'. Skipping department update.`,
+        )
+        delete updateData.department // Remove invalid department
+      }
+
+      const updatedArticle = await payload.update({
+        collection: 'articles',
+        id,
+        data: updateData,
       })
+
+      return res?.json({ success: true, article: updatedArticle })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred'
       console.error('Error generating metadata:', error)
-
-      // Try using modern Response constructor for errors too
-      if (!res) {
-        console.log('Using modern Response constructor for error...')
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message,
-          }),
-          {
-            status: 500,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-        )
-      }
-
-      console.log('About to send error response...')
-      return res.status(500).json({
-        success: false,
-        message,
-      })
+      return res?.status(500).json({ success: false, message })
     }
   },
 }

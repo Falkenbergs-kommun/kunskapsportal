@@ -159,40 +159,52 @@ export const Articles: CollectionConfig = {
               name: 'title',
               type: 'text',
               required: true,
+              admin: {},
+            },
+            {
+              name: 'summary',
+              type: 'textarea',
+              label: 'Sammanfattning (AI-genererad)',
+              admin: {
+                description: 'En kort sammanfattning av dokumentets innehåll, genererad av AI.',
+              },
+            },
+            {
+              name: 'slug',
+              type: 'text',
+              unique: true,
+              index: true,
+              admin: {},
             },
             {
               type: 'collapsible',
-              label: 'Classification',
+              label: 'Klassificering', // Renamed to Swedish
               fields: [
                 {
                   name: 'documentType',
+                  label: 'Dokumenttyp', // Renamed to Swedish
                   type: 'select',
-                  required: false, // Made optional to avoid validation errors during AI content generation
                   options: [
-                    { label: 'Policy (Policy)', value: 'policy' },
-                    { label: 'Procedure (Procedur)', value: 'procedure' },
-                    { label: 'Regulation (Förordning)', value: 'regulation' },
-                    { label: 'Guideline (Riktlinje)', value: 'guideline' },
-                    { label: 'Instruction (Anvisning)', value: 'instruction' },
-                    { label: 'Decision (Beslut)', value: 'decision' },
-                    { label: 'Report (Rapport)', value: 'report' },
-                    { label: 'Template (Mall)', value: 'template' },
+                    // UPDATED: New, Swedish-focused options
+                    { label: 'Policy', value: 'policy' },
+                    { label: 'Riktlinje', value: 'guideline' },
+                    { label: 'Anvisning', value: 'instruction' },
+                    { label: 'Plan', value: 'plan' },
+                    { label: 'Protokoll', value: 'protocol' },
+                    { label: 'Rapport', value: 'report' },
+                    { label: 'Beslut', value: 'decision' },
+                    { label: 'Avtal', value: 'agreement' },
+                    { label: 'Mall', value: 'template' },
                     { label: 'FAQ', value: 'faq' },
                   ],
+                  admin: {},
                 },
                 {
                   name: 'department',
-                  type: 'select',
-                  required: false, // Made optional to avoid validation errors during AI content generation
-                  options: [
-                    { label: 'Kommunstyrelsen', value: 'municipal_board' },
-                    { label: 'Tekniska förvaltningen', value: 'technical_services' },
-                    { label: 'Socialförvaltningen', value: 'social_services' },
-                    { label: 'Utbildningsförvaltningen', value: 'education' },
-                    { label: 'Miljöförvaltningen', value: 'environment' },
-                    { label: 'Byggförvaltningen', value: 'building_permits' },
-                    { label: 'HR-avdelningen', value: 'human_resources' },
-                  ],
+                  label: 'Verksamhetsområde', // Renamed to Swedish
+                  type: 'relationship',
+                  relationTo: 'departments',
+                  admin: {},
                 },
                 {
                   name: 'documentStatus',
@@ -222,6 +234,7 @@ export const Articles: CollectionConfig = {
                     { label: 'Businesses', value: 'businesses' },
                     { label: 'Other Municipalities', value: 'municipalities' },
                   ],
+                  admin: {},
                 },
                 {
                   name: 'securityLevel',
@@ -233,6 +246,7 @@ export const Articles: CollectionConfig = {
                     { label: 'Confidential', value: 'confidential' },
                     { label: 'Restricted', value: 'restricted' },
                   ],
+                  admin: {},
                 },
               ],
             },
@@ -256,52 +270,23 @@ export const Articles: CollectionConfig = {
                     },
                     {
                       name: 'url',
-                      type: 'url',
+                      type: 'text',
                       label: 'Legal Reference URL',
                     },
                   ],
+                  admin: {},
                 },
                 {
                   name: 'gdprRelevant',
                   type: 'checkbox',
                   label: 'Contains Personal Data',
+                  admin: {},
                 },
                 {
                   name: 'accessibilityCompliant',
                   type: 'checkbox',
                   label: 'WCAG 2.1 AA Compliant',
-                },
-              ],
-            },
-            {
-              type: 'collapsible',
-              label: 'Content Organization',
-              fields: [
-                {
-                  name: 'keywords',
-                  type: 'array',
-                  fields: [
-                    {
-                      name: 'keyword',
-                      type: 'text',
-                    },
-                  ],
-                },
-                {
-                  name: 'relatedDocuments',
-                  type: 'relationship',
-                  relationTo: 'articles',
-                  hasMany: true,
-                },
-                {
-                  name: 'language',
-                  type: 'select',
-                  defaultValue: 'sv',
-                  options: [
-                    { label: 'Svenska', value: 'sv' },
-                    { label: 'English', value: 'en' },
-                    { label: 'Lätt svenska', value: 'sv-simple' },
-                  ],
+                  admin: {},
                 },
               ],
             },
@@ -321,6 +306,7 @@ export const Articles: CollectionConfig = {
                   name: 'effectiveDate',
                   type: 'date',
                   label: 'Date of Establishment (Datum för fastställelse)',
+                  admin: {},
                 },
                 {
                   name: 'reviewDate',
@@ -339,6 +325,7 @@ export const Articles: CollectionConfig = {
                     { label: 'Every 5 years (Var femte år)', value: 'five_years' },
                   ],
                   defaultValue: 'as_needed',
+                  admin: {},
                 },
                 {
                   name: 'appliesTo',
@@ -358,11 +345,13 @@ export const Articles: CollectionConfig = {
                   name: 'author',
                   type: 'text',
                   label: 'Author Name',
+                  admin: {},
                 },
                 {
                   name: 'authorEmail',
                   type: 'email',
                   label: 'Author Email',
+                  admin: {},
                 },
                 {
                   name: 'reviewer',
@@ -376,6 +365,41 @@ export const Articles: CollectionConfig = {
                   name: 'approver',
                   type: 'text',
                   label: 'Approver',
+                  admin: {},
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Content Organization',
+              fields: [
+                {
+                  name: 'keywords',
+                  type: 'array',
+                  fields: [
+                    {
+                      name: 'keyword',
+                      type: 'text',
+                    },
+                  ],
+                  admin: {},
+                },
+                {
+                  name: 'relatedDocuments',
+                  type: 'relationship',
+                  relationTo: 'articles',
+                  hasMany: true,
+                },
+                {
+                  name: 'language',
+                  type: 'select',
+                  defaultValue: 'sv',
+                  options: [
+                    { label: 'Svenska', value: 'sv' },
+                    { label: 'English', value: 'en' },
+                    { label: 'Lätt svenska', value: 'sv-simple' },
+                  ],
+                  admin: {},
                 },
               ],
             },
