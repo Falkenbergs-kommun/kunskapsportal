@@ -25,7 +25,7 @@ const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '32rem'
 const SIDEBAR_WIDTH_MOBILE = '22rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
-const SIDEBAR_KEYBOARD_SHORTCUT = 'm'
+const SIDEBAR_KEYBOARD_SHORTCUT = 'j'
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'

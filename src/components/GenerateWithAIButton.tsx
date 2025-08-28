@@ -1,7 +1,8 @@
+// File: /Users/frej/Code/payload/knowledge-base/src/components/GenerateWithAIButton.tsx
 'use client'
 
 import React, { useState } from 'react'
-import { Button, useDocumentInfo } from '@payloadcms/ui'
+import { Button, useDocumentInfo, useFormFields } from '@payloadcms/ui'
 import { generateContentFromDocuments } from '../app/(payload)/admin/[[...segments]]/actions'
 
 const GenerateWithAIButton: React.FC = () => {
@@ -9,40 +10,45 @@ const GenerateWithAIButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string>('')
 
+  // Use this hook to get the current value of the source_documents field
+  const sourceDocuments = useFormFields(([fields]) => fields.source_documents?.value)
+
   const handleClick = async () => {
-    console.log('[AI Button] Clicked. Article ID:', id)
+    setMessage('') // Clear previous messages
+
+    // 1. Add a client-side check first for instant feedback
+    const hasSourceDocuments = Array.isArray(sourceDocuments) && sourceDocuments.length > 0
+    if (!hasSourceDocuments) {
+      setMessage('❌ Please upload at least one source document before generating content.')
+      return
+    }
+
     if (!id) {
-      console.log('[AI Button] No ID found, showing message.')
-      setMessage('Please save the article first before generating content')
+      setMessage('Please save the article first before generating content.')
       return
     }
 
     setIsLoading(true)
     setMessage('🚀 Starting AI content generation...')
-    console.log('[AI Button] Set loading to true.')
 
     try {
-      console.log('[AI Button] Calling server action `generateContentFromDocuments`.')
-      const result = await generateContentFromDocuments(id)
-      console.log('[AI Button] Server action result:', result)
+      const result = await generateContentFromDocuments(String(id))
 
       if (result.success) {
         setMessage('✅ Content generated successfully! Refreshing page...')
-        console.log('[AI Button] Success. Refreshing page.')
-        // Optionally reload the page after a delay
+        // Reload the page after a delay to show the new content
         setTimeout(() => {
           window.location.reload()
         }, 2000)
       } else {
+        // Use the specific error message from the server
         setMessage(`❌ Error: ${result.message}`)
-        console.error('[AI Button] Server action returned an error:', result.message)
       }
     } catch (error) {
       setMessage('❌ An unexpected client-side error occurred. See console for details.')
       console.error('[AI Button] An unexpected error occurred:', error)
     } finally {
       setIsLoading(false)
-      console.log('[AI Button] Set loading to false.')
     }
   }
 

@@ -43,9 +43,9 @@ export function DynamicBreadcrumb() {
       if (segments.length === 0) return
 
       // --- Article Breadcrumb Logic ---
-      // Assume the last segment is a potential article slug
       const potentialArticleSlug = segments[segments.length - 1]
       const potentialDepartmentPath = segments.slice(0, -1).join('/')
+      let articleFound = false
 
       try {
         const articleResponse = await fetch(
@@ -53,18 +53,15 @@ export function DynamicBreadcrumb() {
         )
         const articleResult = await articleResponse.json()
 
-        if (articleResult.docs.length > 0) {
+        if (articleResult && articleResult.docs && articleResult.docs.length > 0) {
           const article = articleResult.docs[0]
-
-          // Verify the article's department path matches the URL
           if (article.department && typeof article.department === 'object') {
             const articleDepartmentPath = getDepartmentFullPath(article.department)
 
             if (articleDepartmentPath === potentialDepartmentPath) {
-              // It's a valid article page. Build breadcrumbs from its department hierarchy.
+              articleFound = true
               const newBreadcrumbs: Breadcrumb[] = []
               let currentDept = article.department
-
               while (currentDept) {
                 newBreadcrumbs.unshift({
                   name: currentDept.name,
@@ -72,10 +69,8 @@ export function DynamicBreadcrumb() {
                 })
                 currentDept = currentDept.parent
               }
-
               setBreadcrumbs(newBreadcrumbs)
               setCurrentPage(article.title)
-              return // Exit after successfully handling the article path
             }
           }
         }
@@ -83,32 +78,33 @@ export function DynamicBreadcrumb() {
         console.error('Error fetching article for breadcrumbs:', error)
       }
 
-      // --- Fallback to Department Breadcrumb Logic (Existing Logic) ---
-      // This runs if the URL is not a valid article path
-      try {
-        const response = await fetch('/api/departments?limit=1000&depth=5')
-        const result = await response.json()
-        const departments = result.docs
+      // --- Department Breadcrumb Logic (Fallback) ---
+      if (!articleFound) {
+        try {
+          const response = await fetch('/api/departments?limit=1000&depth=5')
+          const result = await response.json()
+          const departments = result.docs
 
-        const currentDepartment = departments.find(
-          (d: any) => getDepartmentFullPath(d) === segments.join('/'),
-        )
+          const currentDepartment = departments.find(
+            (d: any) => getDepartmentFullPath(d) === segments.join('/'),
+          )
 
-        if (currentDepartment) {
-          const newBreadcrumbs: Breadcrumb[] = []
-          let parent = currentDepartment.parent
-          while (parent) {
-            newBreadcrumbs.unshift({
-              name: parent.name,
-              url: `/${getDepartmentFullPath(parent)}`,
-            })
-            parent = parent.parent
+          if (currentDepartment) {
+            const newBreadcrumbs: Breadcrumb[] = []
+            let parent = currentDepartment.parent
+            while (parent) {
+              newBreadcrumbs.unshift({
+                name: parent.name,
+                url: `/${getDepartmentFullPath(parent)}`,
+              })
+              parent = parent.parent
+            }
+            setBreadcrumbs(newBreadcrumbs)
+            setCurrentPage(currentDepartment.name)
           }
-          setBreadcrumbs(newBreadcrumbs)
-          setCurrentPage(currentDepartment.name)
+        } catch (error) {
+          console.error('Error generating department breadcrumbs:', error)
         }
-      } catch (error) {
-        console.error('Error generating department breadcrumbs:', error)
       }
     }
 

@@ -13,6 +13,7 @@ import {
   Settings2,
   Sparkles,
   Trash2,
+  UserCheck,
 } from 'lucide-react'
 
 import { NavFavorites } from '@/components/nav-favorites'
@@ -56,28 +57,28 @@ const data = {
   ],
   navSecondary: [
     {
-      title: 'Calendar',
-      url: '#',
-      icon: Calendar,
+      title: 'Administratör',
+      url: '/admin',
+      icon: UserCheck,
     },
     {
-      title: 'Settings',
+      title: 'Inställningar',
       url: '#',
       icon: Settings2,
     },
+    // {
+    //   title: 'Templates',
+    //   url: '#',
+    //   icon: Blocks,
+    // },
+    // {
+    //   title: 'Trash',
+    //   url: '#',
+    //   icon: Trash2,
+    // },
     {
-      title: 'Templates',
-      url: '#',
-      icon: Blocks,
-    },
-    {
-      title: 'Trash',
-      url: '#',
-      icon: Trash2,
-    },
-    {
-      title: 'Help',
-      url: '#',
+      title: 'Hjälp',
+      url: '#faq',
       icon: MessageCircleQuestion,
     },
   ],
@@ -214,7 +215,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="mt-4">
         <NavFavorites />
         <NavWorkspaces workspaces={workspaces} />
-        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

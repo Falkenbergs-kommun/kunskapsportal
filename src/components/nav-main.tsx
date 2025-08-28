@@ -18,12 +18,22 @@ export function NavMain({
 }) {
   const triggerRightSidebar = () => {
     const event = new KeyboardEvent('keydown', {
-      key: 'm',
+      key: 'j',
       metaKey: true, // Use metaKey for Command on Mac
       bubbles: true,
     })
     document.dispatchEvent(event)
   }
+  const triggerCommandMenu = () => {
+    // We simulate the ⌘K event that the layout is listening for
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      metaKey: true,
+      bubbles: true,
+    })
+    document.dispatchEvent(event)
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -43,16 +53,16 @@ export function NavMain({
         <Tooltip>
           <TooltipTrigger asChild>
             <SidebarMenuAction>
-              <kbd className="text-xs">⌘M</kbd>
+              <kbd className="text-xs">⌘J</kbd>
             </SidebarMenuAction>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Ask AI (⌘M)</p>
+            <p>Ask AI (⌘J)</p>
           </TooltipContent>
         </Tooltip>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton className="cursor-pointer">
+        <SidebarMenuButton onClick={triggerCommandMenu} className="cursor-pointer">
           <Search />
           <span>Sök</span>
         </SidebarMenuButton>

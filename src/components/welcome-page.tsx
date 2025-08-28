@@ -71,6 +71,12 @@ const faqs = [
     answer:
       'Det är utformat för alla anställda inom kommunen för att enkelt komma åt och hantera intern kunskap, från policys och riktlinjer till rapporter och rutiner.',
   },
+  {
+    id: 5,
+    question: 'Var laddar jag upp dokument?',
+    answer:
+      'För att ladda upp dokument behöver du vara innehållsadministratör för din avdelning eller enhet.',
+  },
 ]
 
 export default function WelcomePage() {

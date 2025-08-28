@@ -50,16 +50,24 @@ export async function generateContentFromDocuments(articleId: string) {
     const payload = await getPayload({ config })
 
     // Fetch the article with populated source documents
+    // Use draft: true to get the latest draft version if it exists
     const article = await payload.findByID({
       collection: 'articles',
       id: articleId,
       depth: 2, // Populate the media relations
+      draft: true, // Get the draft version if it exists
     })
     console.log('[AI] Fetched article:', article ? 'OK' : 'Not Found')
+    console.log('[AI] Article source_documents field:', article?.source_documents)
+    console.log('[AI] Article keys:', article ? Object.keys(article) : 'No article')
 
     if (!article.source_documents || article.source_documents.length === 0) {
       console.log('[AI] No source documents found on the article.')
-      throw new Error('No source documents found')
+      return {
+        success: false,
+        error:
+          'No source documents found. Please upload at least one source document before generating AI content.',
+      }
     }
     console.log(`[AI] Found ${article.source_documents.length} source document(s).`)
 
@@ -501,7 +509,7 @@ export async function generateContentFromDocuments(articleId: string) {
           content: newContent as any,
         },
         overrideAccess: true, // Skip access control
-        draft: false, // Ensure it's not a draft update
+        draft: true, // Update the draft version to avoid validation issues
       })
 
       console.log('[AI] Successfully updated article')
@@ -552,16 +560,21 @@ export async function generateCoverPhoto(articleId: string) {
       return text
     }
 
-    // Extract the first 200 characters of the article content to provide more context
-    const contentSnippet =
-      article.content && article.content.root && Array.isArray(article.content.root.children)
-        ? lexicalToText(article.content.root.children).substring(0, 200).trim()
-        : ''
+    // Extract the first 2000 characters of the article content to provide more context
+    const contentSnippet = article.summary
 
-    const prompt = `Create a visually appealing, abstract, and professional wallpaper background image for a knowledge base article.
-    - Title: "${article.title}"
-    - Content hint: "${contentSnippet}..."
-    The style should be modern, clean, and minimalist, using a soft color palette. It should evoke a sense of knowledge, clarity, and organization. Do not include any text or words. The image should be suitable as a background banner.`
+    const prompt = `Create a visually appealing, abstract, and professional wallpaper background for a knowledge base article.
+
+      - Core-Concept: Glowing particles, interconnected light trails, geometric patterns, futuristic technology.
+      - Visual-Style: Modern, clean, minimalist, professional, abstract.
+      - Color-Palette: Soft and gentle color scheme with blues and purples.
+      - Desired-Feeling: Evokes a sense of knowledge, clarity, and organization.
+      - Negative-Prompt: Exclude all text, words, letters, and numbers.
+
+      The final image should be a high-quality, text-free background banner.
+
+    - Article Title: "${article.title}"
+    - Artiucle summary: "${contentSnippet}..."`
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 

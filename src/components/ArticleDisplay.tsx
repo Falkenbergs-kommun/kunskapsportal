@@ -32,6 +32,21 @@ const statusLabels: Record<string, string> = {
   draft: 'Utkast',
 }
 
+const securityLevelLabels: Record<string, string> = {
+  public: 'Offentlig',
+  internal: 'Intern',
+  confidential: 'Konfidentiell',
+  restricted: 'Begränsad',
+}
+
+const targetAudienceLabels: Record<string, string> = {
+  citizens: 'Medborgare',
+  staff: 'Kommunanställda',
+  officials: 'Förtroendevalda',
+  businesses: 'Företag',
+  municipalities: 'Andra kommuner',
+}
+
 export default function ArticleDisplay({ article }: { article: Article | null }) {
   const [showMetadata, setShowMetadata] = useState(false)
   const [showTldr, setShowTldr] = useState(false)
@@ -177,13 +192,19 @@ export default function ArticleDisplay({ article }: { article: Article | null })
                 article.targetAudience.length > 0 && (
                   <div>
                     <label className="block text-slate-500 font-medium mb-1">Målgrupp</label>
-                    <span className="text-slate-900">{article.targetAudience.join(', ')}</span>
+                    <span className="text-slate-900">
+                      {article.targetAudience
+                        .map((audience) => targetAudienceLabels[audience] || audience)
+                        .join(', ')}
+                    </span>
                   </div>
                 )}
               {article.securityLevel && (
                 <div>
                   <label className="block text-slate-500 font-medium mb-1">Säkerhetsnivå</label>
-                  <span className="text-slate-900 capitalize">{article.securityLevel}</span>
+                  <span className="text-slate-900 capitalize">
+                    {securityLevelLabels[article.securityLevel] || article.securityLevel}
+                  </span>
                 </div>
               )}
             </div>

@@ -30,7 +30,7 @@ const metadataSchema: Schema = {
     documentType: {
       type: SchemaType.STRING,
       description:
-        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'riktlinje', 'anvisning', 'plan', 'protokoll', 'rapport', 'beslut', 'avtal', 'mall', 'faq'",
+        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
     },
     department: {
       type: SchemaType.STRING,
@@ -40,13 +40,13 @@ const metadataSchema: Schema = {
     targetAudience: {
       type: SchemaType.ARRAY,
       description:
-        "Identifiera målgrupp(er). Välj från: 'medborgare', 'kommunanstallda', 'fortroendevalda', 'foretag', 'andra-kommuner'.",
+        "Identifiera målgrupp(er). Välj från: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.",
       items: { type: SchemaType.STRING },
     },
     securityLevel: {
       type: SchemaType.STRING,
       description:
-        "Bestäm säkerhetsnivån. Välj från: 'offentlig', 'intern', 'konfidentiell', 'begransad'.",
+        "Bestäm säkerhetsnivån. Välj från: 'public', 'internal', 'confidential', 'restricted'.",
     },
     legalBasis: {
       type: SchemaType.ARRAY,
@@ -142,12 +142,23 @@ export const generateMetadataEndpoint: Endpoint = {
   handler: async (req: PayloadRequest, res?: Response) => {
     try {
       const id = req.body.id
+      
       if (!id) {
         return res?.status(400).json({ message: 'Article ID is required' })
       }
 
       const payload = req.payload
-      const article = await payload.findByID({ collection: 'articles', id, depth: 0 })
+      // Fetch with draft: true to get draft content
+      const article = await payload.findByID({ 
+        collection: 'articles', 
+        id, 
+        draft: true,
+        depth: 1 // Need depth to populate richText fields
+      })
+
+      if (!article) {
+        return res?.status(404).json({ message: 'Article not found' })
+      }
 
       if (!article.content) {
         return res?.status(400).json({ message: 'Article must have content to generate metadata.' })
@@ -163,8 +174,56 @@ export const generateMetadataEndpoint: Endpoint = {
         .join('\n')
 
       // Convert Lexical content to markdown for analysis
-      const editorConfig = await editorConfigFactory.default({ config: payload.config })
-      const markdown = await convertLexicalToMarkdown({ data: article.content, editorConfig })
+      let markdown = ''
+      try {
+        const editorConfig = await editorConfigFactory.default({ config: payload.config })
+        markdown = await convertLexicalToMarkdown({ data: article.content, editorConfig })
+      } catch (error) {
+        console.warn('Failed to convert Lexical content to markdown:', error)
+        
+        // Fallback: Try to extract text content directly from the Lexical state
+        try {
+          if (article.content && typeof article.content === 'object' && 'root' in article.content) {
+            const extractText = (node: any): string => {
+              let text = ''
+              
+              if (node.text) {
+                text += node.text
+              }
+              
+              if (node.children && Array.isArray(node.children)) {
+                for (const child of node.children) {
+                  text += extractText(child) + ' '
+                }
+              }
+              
+              return text
+            }
+            
+            markdown = extractText(article.content.root)
+          }
+        } catch (fallbackError) {
+          console.error('Fallback text extraction also failed:', fallbackError)
+        }
+      }
+      
+      // If we still don't have content, try to get it as a string
+      if (!markdown || markdown.trim().length === 0) {
+        if (typeof article.content === 'string') {
+          markdown = article.content
+        } else {
+          markdown = JSON.stringify(article.content, null, 2)
+        }
+      }
+      
+      console.log('Extracted content for analysis (first 500 chars):', markdown.substring(0, 500))
+      
+      // Ensure we have meaningful content
+      if (!markdown || markdown.trim().length < 10) {
+        return res?.status(400).json({ 
+          message: 'Article content could not be extracted or is too short. Please ensure the article has meaningful content.' 
+        })
+      }
 
       const model = genAI.getGenerativeModel({
         model: 'gemini-2.5-flash',
@@ -191,10 +250,10 @@ export const generateMetadataEndpoint: Endpoint = {
         1.  **title:** Skapa en ny, tydlig och beskrivande titel.
         2.  **summary:** Skriv en koncis sammanfattning (2-4 meningar) som förklarar syfte och huvudinnehåll.
         3.  **slug:** Skapa en URL-vänlig slug från titeln.
-        4.  **documentType:** Välj den mest passande dokumenttypen från listan i schemat.
+        4.  **documentType:** Välj den mest passande dokumenttypen från listan: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'.
         5.  **department:** Välj det mest relevanta verksamhetsområdet från listan ovan och ange dess ID.
-        6.  **targetAudience:** Identifiera alla relevanta målgrupper från listan i schemat.
-        7.  **securityLevel:** Välj den mest lämpliga säkerhetsnivån från listan i schemat.
+        6.  **targetAudience:** Identifiera alla relevanta målgrupper från listan: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.
+        7.  **securityLevel:** Välj den mest lämpliga säkerhetsnivån från listan: 'public', 'internal', 'confidential', 'restricted'.
         8.  **legalBasis:** Om lagrum nämns, extrahera dem. Annars, lämna som en tom array [].
         9.  **gdprRelevant:** Analysera om texten hanterar personuppgifter. Svara true eller false.
         10. **accessibilityCompliant:** Gör en bedömning baserat på textens struktur. Svara true eller false.

@@ -29,25 +29,8 @@ const GenerateMetadataButton = () => {
     setSuccess('')
 
     try {
-      // Fetch current article data to validate it has title and content
-      console.log('Fetching article data to validate...')
-      const articleResponse = await fetch(`/api/articles/${articleId}?depth=0`)
-      if (!articleResponse.ok) {
-        throw new Error('Failed to fetch article data')
-      }
-      const articleData = await articleResponse.json()
-
-      console.log('Article data:', articleData)
-
-      if (!articleData.title) {
-        setError('Article must have a title before generating metadata')
-        return
-      }
-
-      if (!articleData.content) {
-        setError('Article must have content before generating metadata')
-        return
-      }
+      // Skip client-side validation - let the server handle it
+      // The server has access to the actual article data
 
       // Call the metadata generation API
       const response = await fetch(`/api/generate-metadata`, {
