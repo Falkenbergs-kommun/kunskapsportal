@@ -1,17 +1,17 @@
 ---
 title: Kunskapsportal - Dokumentation
 layout: default
+description: AI-driven kunskapsdatabas för svensk kommunal förvaltning
 ---
 
-# Kunskapsportal
-
-**AI-driven kunskapsdatabas för svensk kommunal förvaltning**
-
-Kunskapsportal är ett open source-system för kunskapshantering, specialbyggt för svenska kommuner och offentlig sektor. Systemet använder AI för att automatiskt bearbeta dokument, generera metadata och möjliggöra intelligent sökning och AI-chatt.
-
-> 🏛️ Byggt för kommunala behov | 💬 Chatta med dina dokument | 🤖 Automatisk AI-bearbetning
-
----
+<div style="background: linear-gradient(to right, #f5f7fa, #c3cfe2); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+  <p style="font-size: 1.125rem; margin: 0; color: #1a1a1a;">
+    Open source-system för kunskapshantering, specialbyggt för svenska kommuner och offentlig sektor. Systemet använder AI för att automatiskt bearbeta dokument, generera metadata och möjliggöra intelligent sökning och AI-chatt.
+  </p>
+  <p style="margin-top: 1rem; margin-bottom: 0; color: #4a4a4a;">
+    🏛️ Byggt för kommunala behov | 💬 Chatta med dina dokument | 🤖 Automatisk AI-bearbetning
+  </p>
+</div>
 
 ## 🚀 Snabbstart
 

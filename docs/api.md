@@ -1,3 +1,9 @@
+---
+title: API-dokumentation - Kunskapsportal
+layout: default
+description: REST och GraphQL API-dokumentation för Kunskapsportal
+---
+
 # API-dokumentation - Kunskapsportal
 
 Kunskapsportal erbjuder både REST API och GraphQL för att integrera med externa system.

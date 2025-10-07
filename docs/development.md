@@ -1,3 +1,9 @@
+---
+title: Utvecklingsguide - Kunskapsportal
+layout: default
+description: Guide för utvecklare som vill bidra till eller anpassa Kunskapsportal
+---
+
 # Utvecklingsguide - Kunskapsportal
 
 Guide för utvecklare som vill bidra till eller anpassa Kunskapsportal.

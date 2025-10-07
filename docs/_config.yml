@@ -1,15 +1,11 @@
 # Jekyll configuration for GitHub Pages
 title: Kunskapsportal
 description: AI-driven kunskapsdatabas för svensk kommunal förvaltning
-baseurl: ""
-url: "https://falkenbergs-kommun.github.io/kunskapsportal"
+baseurl: "/kunskapsportal"
+url: "https://falkenbergs-kommun.github.io"
 
-# Theme
-theme: jekyll-theme-cayman
-# Alternative themes you can try:
-# theme: jekyll-theme-slate
-# theme: jekyll-theme-modernist
-# theme: jekyll-theme-architect
+# No theme - using custom layout
+# theme: jekyll-theme-cayman
 
 # Markdown
 markdown: kramdown

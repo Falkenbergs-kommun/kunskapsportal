@@ -1,3 +1,9 @@
+---
+title: Installationsguide - Kunskapsportal
+layout: default
+description: Installera och konfigurera Kunskapsportal för både produktion och utveckling
+---
+
 # Installationsguide - Kunskapsportal
 
 Denna guide hjälper dig att installera och konfigurera Kunskapsportal för både produktion och utveckling.

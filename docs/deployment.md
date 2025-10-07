@@ -1,3 +1,9 @@
+---
+title: Deployment-guide - Kunskapsportal
+layout: default
+description: Guide för att driftsätta Kunskapsportal i produktion
+---
+
 # Deployment-guide - Kunskapsportal
 
 Guide för att driftsätta Kunskapsportal i produktion.

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ page.description | default: 'Kunskapsportal - AI-driven kunskapsdatabas för svensk kommunal förvaltning' }}">
+  <title>{{ page.title | default: site.title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
+
+  <header>
+    <div class="container">
+      <h1><a href="{{ '/' | relative_url }}" style="color: white; text-decoration: none;">Kunskapsportal</a></h1>
+      <p><strong>AI-driven kunskapsdatabas för svensk kommunal förvaltning</strong></p>
+      <nav style="margin-top: 1rem;">
+        <a href="{{ '/' | relative_url }}" style="color: white; margin-right: 1rem;">Hem</a>
+        <a href="{{ '/installation.html' | relative_url }}" style="color: white; margin-right: 1rem;">Installation</a>
+        <a href="{{ '/user-guide.html' | relative_url }}" style="color: white; margin-right: 1rem;">Användarguide</a>
+        <a href="{{ '/api.html' | relative_url }}" style="color: white; margin-right: 1rem;">API</a>
+        <a href="{{ '/development.html' | relative_url }}" style="color: white; margin-right: 1rem;">Utveckling</a>
+        <a href="{{ '/deployment.html' | relative_url }}" style="color: white;">Deployment</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    {{ content }}
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2025 Falkenbergs kommun | MIT License | <a href="https://github.com/Falkenbergs-kommun/kunskapsportal">GitHub</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
