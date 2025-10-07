@@ -14,6 +14,7 @@ import {
   Sparkles,
   Trash2,
   UserCheck,
+  BookOpen,
 } from 'lucide-react'
 
 import { NavFavorites } from '@/components/nav-favorites'
@@ -57,15 +58,20 @@ const data = {
   ],
   navSecondary: [
     {
+      title: 'Användarguide',
+      url: '/docs',
+      icon: BookOpen,
+    },
+    {
       title: 'Administratör',
       url: '/admin',
       icon: UserCheck,
     },
-    {
-      title: 'Inställningar',
-      url: '#',
-      icon: Settings2,
-    },
+    // {
+    //   title: 'Inställningar',
+    //   url: '#',
+    //   icon: Settings2,
+    // },
     // {
     //   title: 'Templates',
     //   url: '#',
@@ -77,8 +83,8 @@ const data = {
     //   icon: Trash2,
     // },
     {
-      title: 'Hjälp',
-      url: '#faq',
+      title: 'FAQ',
+      url: '/#faq',
       icon: MessageCircleQuestion,
     },
   ],
@@ -138,7 +144,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [workspaces, setWorkspaces] = React.useState(data.workspaces)
+  const [workspaces, setWorkspaces] = React.useState<any[]>(data.workspaces)
 
   React.useEffect(() => {
     const fetchDepartments = async () => {

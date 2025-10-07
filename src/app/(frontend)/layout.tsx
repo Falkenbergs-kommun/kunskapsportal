@@ -19,8 +19,35 @@ import { FavoritesProvider } from '@/contexts/favorites-context'
 // Note: Because we need client-side state, we can no longer fetch cookies on the server
 // for this component. The sidebar state is handled client-side in the SidebarProvider now.
 
+// Helper function to read cookies
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+  return null
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [openCommandMenu, setOpenCommandMenu] = useState(false)
+  
+  // Initialize sidebar states from cookies
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true) // default to true
+  const [chatSidebarOpen, setChatSidebarOpen] = useState(true) // default to true
+  const [focusMode, setFocusMode] = useState(false)
+  
+  // Read cookie values on client mount
+  useEffect(() => {
+    const leftSaved = getCookie('sidebar_state')
+    if (leftSaved !== null) {
+      setLeftSidebarOpen(leftSaved === 'true')
+    }
+    
+    const chatSaved = getCookie('sidebar_chat_state')
+    if (chatSaved !== null) {
+      setChatSidebarOpen(chatSaved === 'true')
+    }
+  }, [])
 
   // Keyboard shortcut listener for Command Menu (⌘K)
   useEffect(() => {
@@ -34,6 +61,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return () => document.removeEventListener('keydown', down)
   }, [])
 
+  // Listen for focus mode toggle event
+  useEffect(() => {
+    const handleFocusMode = () => {
+      setFocusMode((prev) => {
+        const newFocusMode = !prev
+        // When entering focus mode, close both sidebars
+        // When exiting, restore to open state
+        setLeftSidebarOpen(!newFocusMode)
+        setChatSidebarOpen(!newFocusMode)
+        return newFocusMode
+      })
+    }
+    window.addEventListener('toggle-focus-mode', handleFocusMode)
+    return () => window.removeEventListener('toggle-focus-mode', handleFocusMode)
+  }, [])
+
   return (
     <html lang="en">
       <body>
@@ -42,9 +85,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <TooltipProvider>
               {/* Pass setOpen function to the CommandMenu */}
               <CommandMenu open={openCommandMenu} setOpen={setOpenCommandMenu} />
-              <SidebarProvider>
+              <SidebarProvider 
+                open={leftSidebarOpen} 
+                onOpenChange={setLeftSidebarOpen}
+              >
                 <AppSidebar id="left" />
-                <SidebarProviderChat>
+                <SidebarProviderChat 
+                  open={chatSidebarOpen} 
+                  onOpenChange={setChatSidebarOpen}
+                >
                   <SidebarInset>
                     <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
                       <Tooltip>

@@ -148,6 +148,10 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
                 totalChunks: chunks.length,
                 chunkPosition: `${globalChunkIndex + 1} of ${chunks.length}`,
 
+                // URL construction fields
+                slug: doc.slug || null,
+                departmentSlug: typeof doc.department === 'object' ? doc.department?.slug : null,
+
                 // Document metadata
                 documentType: doc.documentType || null,
                 department: doc.department || null,

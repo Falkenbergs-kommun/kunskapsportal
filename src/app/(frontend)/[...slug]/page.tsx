@@ -7,7 +7,11 @@ import type { Article, Department } from '../../../payload-types'
 
 import { getDepartmentFullPath } from '../../../lib/utils'
 
-export default async function SlugPage({ params }: { params: { slug: string[] } }) {
+export default async function SlugPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string[] }> 
+}) {
   const { slug } = await params
 
   if (!slug || slug.length === 0) {

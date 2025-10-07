@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await generateMetadataEndpoint.handler(req, res as any)
+    const result = await generateMetadataEndpoint.handler(req)
     return result
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An error occurred'

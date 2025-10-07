@@ -227,7 +227,7 @@ export class MistralOcrService {
         },
       })
 
-      return result.id
+      return String(result.id)
     } catch (error) {
       console.error('[Mistral OCR] Failed to upload image to Payload:', error)
       throw new Error(`Failed to upload image to Payload: ${error}`)

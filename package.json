@@ -15,10 +15,11 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "sync:qdrant": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/syncQdrantActiveDocuments.ts",
     "test": "pnpm run test:int && pnpm run test:e2e",
-    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test --config=dev/playwright.config.ts",
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./dev/vitest.config.mts"
   },
   "dependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@google/genai": "^1.15.0",
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.7",

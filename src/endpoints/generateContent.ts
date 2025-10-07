@@ -1,9 +1,7 @@
-import type { Endpoint } from 'payload/config'
-import type { PayloadRequest } from 'payload/types'
+import type { Endpoint, PayloadRequest } from 'payload'
 import { processDocumentWithGemini } from '@/services/gemini'
 import { processDocumentWithMistral } from '@/services/mistralSimple'
 import type { Media } from '@/payload-types'
-import type { Response } from 'express'
 
 // Simple markdown to Lexical conversion - for production, consider using a proper converter
 function convertMarkdownToLexical(markdown: string) {
@@ -80,8 +78,8 @@ function convertMarkdownToLexical(markdown: string) {
   return {
     root: {
       children,
-      direction: 'ltr',
-      format: '',
+      direction: 'ltr' as const,
+      format: '' as const,
       indent: 0,
       version: 1,
     },
@@ -91,9 +89,12 @@ function convertMarkdownToLexical(markdown: string) {
 export const generateContentEndpoint: Endpoint = {
   path: '/generate-content/:id',
   method: 'post',
-  handler: async (req: PayloadRequest, res: Response) => {
+  handler: async (req: PayloadRequest) => {
     try {
-      const { id } = req.params
+      const id = req.routeParams?.id as string
+      if (!id) {
+        return Response.json({ message: 'Article ID is required' }, { status: 400 })
+      }
       const payload = req.payload
 
       // Similar logic as the server function
@@ -150,10 +151,6 @@ export const generateContentEndpoint: Endpoint = {
           documentContent = await processDocumentWithGemini(
             buffer,
             doc.mimeType || 'application/pdf',
-            `Extract and structure the content from this document titled "${
-              doc.filename || 'Untitled'
-            }". 
-             Format as markdown with clear headings and organization.`,
           )
         }
 
@@ -173,16 +170,16 @@ export const generateContentEndpoint: Endpoint = {
         },
       })
 
-      return res.json({
+      return Response.json({
         success: true,
         message: 'Content generated successfully',
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred'
-      return res.status(500).json({
+      return Response.json({
         success: false,
         message,
-      })
+      }, { status: 500 })
     }
   },
 }

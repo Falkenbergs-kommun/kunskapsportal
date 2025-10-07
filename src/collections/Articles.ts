@@ -82,7 +82,13 @@ export const Articles: CollectionConfig = {
           // Condition 1: If the article is now published and active, embed it in Qdrant.
           // This handles both initial publishing and updates to already published articles.
           if (isPublished && doc.documentStatus === 'active') {
-            await embed(doc, req.payload.config)
+            // Fetch the article with department relationship populated
+            const articleWithDept = await req.payload.findByID({
+              collection: 'articles',
+              id: doc.id,
+              depth: 2,
+            })
+            await embed(articleWithDept, req.payload.config)
             req.payload.logger.info(`Embedded published & active article ${doc.id} in Qdrant`)
           }
           // Condition 2: If the article was published but is now not, remove it from Qdrant.
@@ -175,7 +181,7 @@ export const Articles: CollectionConfig = {
               name: 'title',
               type: 'text',
               required: false,
-              validate: (value, { data }) => {
+              validate: (value: unknown, { data }: { data: any }) => {
                 // Only require title when publishing
                 if (data?._status === 'published' && !value) {
                   return 'Title is required when publishing'
@@ -200,7 +206,7 @@ export const Articles: CollectionConfig = {
               unique: true,
               index: true,
               required: false,
-              validate: (value, { data }) => {
+              validate: (value: unknown, { data }: { data: any }) => {
                 // Only require slug when publishing
                 if (data?._status === 'published' && !value) {
                   return 'Slug is required when publishing'

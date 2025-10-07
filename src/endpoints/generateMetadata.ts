@@ -1,6 +1,4 @@
-import type { Endpoint } from 'payload/config'
-import type { PayloadRequest } from 'payload/types'
-import type { Response } from 'express'
+import type { Endpoint, PayloadRequest } from 'payload'
 import { Department } from '../payload-types'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { convertLexicalToMarkdown, editorConfigFactory } from '@payloadcms/richtext-lexical'
@@ -139,12 +137,13 @@ const metadataSchema: Schema = {
 export const generateMetadataEndpoint: Endpoint = {
   path: '/generate-metadata',
   method: 'post',
-  handler: async (req: PayloadRequest, res?: Response) => {
+  handler: async (req: PayloadRequest) => {
     try {
-      const id = req.body.id
-      
+      const body = req.body as any
+      const id = body?.id
+
       if (!id) {
-        return res?.status(400).json({ message: 'Article ID is required' })
+        return Response.json({ message: 'Article ID is required' }, { status: 400 })
       }
 
       const payload = req.payload
@@ -157,11 +156,11 @@ export const generateMetadataEndpoint: Endpoint = {
       })
 
       if (!article) {
-        return res?.status(404).json({ message: 'Article not found' })
+        return Response.json({ message: 'Article not found' }, { status: 404 })
       }
 
       if (!article.content) {
-        return res?.status(400).json({ message: 'Article must have content to generate metadata.' })
+        return Response.json({ message: 'Article must have content to generate metadata.' }, { status: 400 })
       }
 
       // Fetch all departments to provide as context to the AI
@@ -220,9 +219,9 @@ export const generateMetadataEndpoint: Endpoint = {
       
       // Ensure we have meaningful content
       if (!markdown || markdown.trim().length < 10) {
-        return res?.status(400).json({ 
-          message: 'Article content could not be extracted or is too short. Please ensure the article has meaningful content.' 
-        })
+        return Response.json({
+          message: 'Article content could not be extracted or is too short. Please ensure the article has meaningful content.'
+        }, { status: 400 })
       }
 
       const model = genAI.getGenerativeModel({
@@ -333,11 +332,11 @@ export const generateMetadataEndpoint: Endpoint = {
         data: updateData,
       })
 
-      return res?.json({ success: true, article: updatedArticle })
+      return Response.json({ success: true, article: updatedArticle })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred'
       console.error('Error generating metadata:', error)
-      return res?.status(500).json({ success: false, message })
+      return Response.json({ success: false, message }, { status: 500 })
     }
   },
 }

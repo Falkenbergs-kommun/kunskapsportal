@@ -9,7 +9,7 @@ export const LivePreviewListener: React.FC = () => {
   return (
     <PayloadLivePreview
       refresh={router.refresh}
-      serverURL={process.env.NEXT_PUBLIC_PAYLOAD_URL || ''}
+      serverURL={process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3000'}
     />
   )
 }

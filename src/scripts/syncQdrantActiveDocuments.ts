@@ -28,7 +28,7 @@ async function syncQdrantActiveDocuments() {
     const { docs: articles } = await payload.find({
       collection: 'articles',
       limit: 1000, // Adjust as needed
-      depth: 0,
+      depth: 2, // Include department relationship
     })
 
     console.log(`📋 Found ${articles.length} articles in database`)
@@ -45,7 +45,7 @@ async function syncQdrantActiveDocuments() {
           activeCount++
         } else {
           console.log(`🗑️  Removing non-active article: ${article.title} (ID: ${article.id}) [Status: ${article.documentStatus || 'undefined'}]`)
-          await deleteFromQdrant(article.id)
+          await deleteFromQdrant(String(article.id))
           removedCount++
         }
       } catch (error) {

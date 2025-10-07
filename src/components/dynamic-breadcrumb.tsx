@@ -49,29 +49,32 @@ export function DynamicBreadcrumb() {
 
       try {
         const articleResponse = await fetch(
-          `/api/articles?where[slug][equals]=${potentialArticleSlug}&depth=5&limit=1`,
+          `/api/article-by-slug?slug=${potentialArticleSlug}`,
         )
         const articleResult = await articleResponse.json()
 
-        if (articleResult && articleResult.docs && articleResult.docs.length > 0) {
-          const article = articleResult.docs[0]
-          if (article.department && typeof article.department === 'object') {
-            const articleDepartmentPath = getDepartmentFullPath(article.department)
+        if (articleResult && articleResult.article) {
+          const article = articleResult.article
 
-            if (articleDepartmentPath === potentialDepartmentPath) {
-              articleFound = true
-              const newBreadcrumbs: Breadcrumb[] = []
-              let currentDept = article.department
-              while (currentDept) {
-                newBreadcrumbs.unshift({
-                  name: currentDept.name,
-                  url: `/${getDepartmentFullPath(currentDept)}`,
-                })
-                currentDept = currentDept.parent
-              }
-              setBreadcrumbs(newBreadcrumbs)
-              setCurrentPage(article.title)
+          if (article.department && typeof article.department === 'object') {
+            // Always build breadcrumbs from the article's department, regardless of URL path
+            articleFound = true
+            const newBreadcrumbs: Breadcrumb[] = []
+            let currentDept = article.department
+            while (currentDept) {
+              newBreadcrumbs.unshift({
+                name: currentDept.name,
+                url: `/${getDepartmentFullPath(currentDept)}`,
+              })
+              currentDept = currentDept.parent
             }
+            setBreadcrumbs(newBreadcrumbs)
+            setCurrentPage(article.title)
+          } else {
+            // Article exists but has no department - still show the article title
+            articleFound = true
+            setBreadcrumbs([])
+            setCurrentPage(article.title)
           }
         }
       } catch (error) {

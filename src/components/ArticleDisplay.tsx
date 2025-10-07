@@ -8,6 +8,8 @@ import {
   ChevronRight,
   ExternalLink,
   Lightbulb,
+  MessageSquareIcon,
+  BookOpen,
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
@@ -17,9 +19,15 @@ import RichText from './RichText' // Import the new component
 
 const documentTypeLabels: Record<string, string> = {
   policy: 'Policy',
-  procedure: 'Procedur',
+  guideline: 'Riktlinje',
+  instruction: 'Anvisning',
+  plan: 'Plan',
+  protocol: 'Protokoll',
   report: 'Rapport',
-  // ... add other labels as needed
+  decision: 'Beslut',
+  agreement: 'Avtal',
+  template: 'Mall',
+  faq: 'FAQ',
 }
 
 const statusColors: Record<string, string> = {
@@ -60,6 +68,27 @@ export default function ArticleDisplay({ article }: { article: Article | null })
     })
   }
 
+  const handleChatWithArticle = () => {
+    if (!article) return
+
+    // Dispatch custom event with article data
+    const event = new CustomEvent('chat-with-article', {
+      detail: {
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        summary: article.summary,
+      }
+    })
+    window.dispatchEvent(event)
+  }
+
+  const handleToggleFocusMode = () => {
+    const event = new Event('toggle-focus-mode')
+    window.dispatchEvent(event)
+  }
+
   if (!article) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8 text-center">
@@ -74,7 +103,7 @@ export default function ArticleDisplay({ article }: { article: Article | null })
         <div className="mb-8">
           <img
             src={article.coverPhoto.url}
-            alt={article.title}
+            alt={article.title || ''}
             className="w-full h-64 object-cover rounded-xl shadow-sm"
             data-testid="img-article-header"
           />
@@ -86,7 +115,29 @@ export default function ArticleDisplay({ article }: { article: Article | null })
           <h1 className="text-4xl font-bold text-slate-900 flex-1" data-testid="text-article-title">
             {article.title}
           </h1>
-          <FavoriteStar title={article.title} emoji="📄" className="ml-4 mt-1" />
+          <div className="flex items-center gap-2 ml-4">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={handleToggleFocusMode}
+              className="flex items-center gap-2 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
+              title="Fokusläge - dölj sidopaneler"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Fokus</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              onClick={handleChatWithArticle}
+              className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+              title="Chatta om denna artikel"
+            >
+              <MessageSquareIcon className="h-4 w-4" />
+              <span>Chatta om artikel</span>
+            </Button>
+            <FavoriteStar title={article.title || ''} emoji="📄" className="mt-1" />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
@@ -153,10 +204,6 @@ export default function ArticleDisplay({ article }: { article: Article | null })
             data-testid="metadata-content"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <label className="block text-slate-500 font-medium mb-1">Dokument-ID</label>
-                <span className="text-slate-900">{article.id}</span>
-              </div>
               {article.version && (
                 <div>
                   <label className="block text-slate-500 font-medium mb-1">Version</label>
@@ -266,7 +313,11 @@ export default function ArticleDisplay({ article }: { article: Article | null })
         </div>
       )}
       <div data-testid="article-content" className="mb-12">
-        {article.content ? <RichText data={article.content} /> : <p>No content available.</p>}
+        {article.content && article.content.root?.children?.length > 0 ? (
+          <RichText data={article.content} />
+        ) : (
+          <p>No content available.</p>
+        )}
       </div>
     </article>
   )

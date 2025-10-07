@@ -274,7 +274,7 @@ export async function generateContentFromDocuments(articleId: string) {
 
     try {
       const editorConfig = await editorConfigFactory.default({ config: payload.config })
-      let newContent = await convertMarkdownToLexical({ editorConfig, markdown: processedMarkdown })
+      const newContent = await convertMarkdownToLexical({ editorConfig, markdown: processedMarkdown })
 
       console.log('[AI] Successfully converted markdown to Lexical format')
       console.log('[AI] Found', mediaReferences.length, 'media references to add')
@@ -597,7 +597,7 @@ export async function generateCoverPhoto(articleId: string) {
     const imgBytes = generatedImage.image.imageBytes
     const buffer = Buffer.from(imgBytes, 'base64')
 
-    const readableName = article.title
+    const readableName = (article.title || 'untitled')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
       .substring(0, 50)

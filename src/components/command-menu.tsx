@@ -64,6 +64,13 @@ export function CommandMenu({
     [setOpen],
   )
 
+  const handleArticleClick = React.useCallback(
+    (url: string) => {
+      runCommand(() => router.push(url))
+    },
+    [runCommand, router],
+  )
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput
@@ -96,15 +103,21 @@ export function CommandMenu({
               return (
                 <CommandItem
                   key={article.id}
-                  value={article.title}
-                  onSelect={() => runCommand(() => router.push(url))}
+                  value={article.title || ''}
+                  onSelect={() => handleArticleClick(url)}
+                  className="cursor-pointer"
                 >
-                  <Newspaper className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">{article.title}</span>
+                  <Newspaper className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="font-medium truncate">{article.title}</span>
                     {article.department && typeof article.department === 'object' && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground truncate">
                         {getDepartmentFullPath(article.department)}
+                      </span>
+                    )}
+                    {article.summary && (
+                      <span className="text-xs text-muted-foreground/75 line-clamp-2 mt-1">
+                        {article.summary}
                       </span>
                     )}
                   </div>

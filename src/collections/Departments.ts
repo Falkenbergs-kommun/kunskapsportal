@@ -27,7 +27,7 @@ export const Departments: CollectionConfig = {
         description: 'Leave this empty if this is a top-level department.',
       },
       // Prevent a department from being its own parent
-      filterOptions: ({ id }) => {
+      filterOptions: (({ id }: any) => {
         if (id) {
           return {
             id: {
@@ -35,7 +35,8 @@ export const Departments: CollectionConfig = {
             },
           }
         }
-      },
+        return undefined
+      }) as any,
     },
     // A slug is essential for clean URLs
     {
@@ -51,10 +52,10 @@ export const Departments: CollectionConfig = {
           ({ value, data }) => {
             if (value) return value
             // Simple slug generation from name
-            return data.name
-              .toLowerCase()
-              .replace(/ /g, '-')
-              .replace(/[^\w-]+/g, '')
+            return data?.name
+              ?.toLowerCase()
+              ?.replace(/ /g, '-')
+              ?.replace(/[^\w-]+/g, '') || ''
           },
         ],
       },

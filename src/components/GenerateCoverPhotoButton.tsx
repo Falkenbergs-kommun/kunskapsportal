@@ -65,7 +65,7 @@ const GenerateCoverPhotoButton = () => {
       )}
 
       <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
-        This will generate an abstract background image based on the article's title and the first
+        This will generate an abstract background image based on the article&apos;s title and the first
         few sections of its content, then set it as the cover photo.
       </div>
     </div>

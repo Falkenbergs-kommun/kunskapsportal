@@ -11,6 +11,19 @@ import { getDepartmentFullPath } from '@/lib/utils'
 
 import { Article } from '@/payload-types'
 
+const documentTypeLabels: Record<string, string> = {
+  policy: 'Policy',
+  guideline: 'Riktlinje',
+  instruction: 'Anvisning',
+  plan: 'Plan',
+  protocol: 'Protokoll',
+  report: 'Rapport',
+  decision: 'Beslut',
+  agreement: 'Avtal',
+  template: 'Mall',
+  faq: 'FAQ',
+}
+
 interface DepartmentViewProps {
   departmentName: string
   departmentSlug?: string
@@ -25,7 +38,7 @@ export default function DepartmentView({
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredArticles = articles.filter((article) =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    article.title?.toLowerCase()?.includes(searchTerm.toLowerCase()),
   )
 
   const formatDate = (dateString: string) => {
@@ -81,7 +94,7 @@ export default function DepartmentView({
         {filteredArticles.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-            <p className="text-slate-500">Inga dokument hittades för "{searchTerm}"</p>
+            <p className="text-slate-500">Inga dokument hittades för &ldquo;{searchTerm}&rdquo;</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -105,7 +118,7 @@ export default function DepartmentView({
                       </p>
                     </div>
                     <Badge variant="secondary" className="ml-4 shrink-0">
-                      {article.documentType}
+                      {article.documentType ? (documentTypeLabels[article.documentType] || article.documentType) : 'Okänd typ'}
                     </Badge>
                   </div>
                 </CardHeader>
