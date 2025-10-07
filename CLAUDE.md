@@ -1,6 +1,8 @@
-# CLAUDE.md
+# CLAUDE.md - Kunskapsportal
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+**Project:** Kunskapsportal - AI-driven kunskapsdatabas för svensk kommunal förvaltning
 
 ## Development Commands
 
@@ -30,15 +32,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a **Next.js 15 application with Payload CMS** serving as a knowledge base system for Swedish municipal documents. The architecture combines:
+**Kunskapsportal** is an AI-powered knowledge management system for Swedish municipalities built on **Payload CMS** and **Next.js**.
 
-### Core Technologies
-- **Next.js 15** (App Router) - Frontend and API framework
-- **Payload CMS 3.50** - Headless CMS for content management
-- **PostgreSQL** - Primary database via `@payloadcms/db-postgres`
-- **Qdrant** - Vector database for semantic search via embeddings
-- **OpenAI** - Text embeddings for search functionality
-- **Google Gemini AI** - Document processing and content generation
+### Core Technologies & Their Roles
+
+**[Payload CMS 3.50](https://payloadcms.com/)** - Application foundation
+- Entire application is built as a Payload CMS project
+- Provides admin UI, collections, REST/GraphQL API
+- Handles all content management
+- TypeScript-based with auto-generated types
+- Documentation: https://payloadcms.com/docs
+
+**[Next.js 15](https://nextjs.org/)** - Frontend & server
+- Payload is built on top of Next.js App Router
+- Handles frontend rendering and API routes
+- Server Components for performance
+- Documentation: https://nextjs.org/docs
+
+**[PostgreSQL 15](https://www.postgresql.org/)** - Primary database
+- Stores all articles, metadata, users
+- Connected via `@payloadcms/db-postgres` adapter
+- Documentation: https://www.postgresql.org/docs/15/
+
+**[Qdrant](https://qdrant.tech/)** - Vector database (RAG core)
+- Stores embeddings for semantic search
+- Enables similarity search (finding relevant docs)
+- Critical for AI chat's ability to retrieve context
+- Local Docker or Qdrant Cloud
+- Documentation: https://qdrant.tech/documentation/
+
+**[OpenAI API](https://platform.openai.com/)** - Text embeddings
+- `text-embedding-3-large` model converts text to vectors
+- Creates embeddings stored in Qdrant
+- Enables semantic search (meaning-based, not just keywords)
+- Documentation: https://platform.openai.com/docs/guides/embeddings
+
+**[Google Gemini 2.5 Flash](https://ai.google.dev/)** - AI engine
+- OCR document extraction from PDFs
+- AI chat with RAG (retrieval augmented generation)
+- Metadata generation (title, summary, keywords)
+- Documentation: https://ai.google.dev/docs
+
+**[Mistral AI](https://mistral.ai/)** - Alternative OCR
+- Pixtral Large for document processing
+- Backup/alternative to Gemini
+- Documentation: https://docs.mistral.ai/
+
+**[LibreOffice](https://www.libreoffice.org/)** - Office conversion
+- Converts Word/Excel/PowerPoint to PDF (headless mode)
+- Pre-processing before OCR
+- Runs in Docker container
+- Documentation: https://documentation.libreoffice.org/
+
+### RAG (Retrieval Augmented Generation) Workflow
+
+**Document Upload → Vectorization → Search → Chat**
+
+1. **Upload & OCR** (`src/endpoints/generateContent.ts`)
+   - User uploads PDF/Office file to Payload Media collection
+   - Gemini/Mistral extracts text with OCR
+   - Content stored in Articles collection (PostgreSQL)
+
+2. **Publish & Embed** (`src/qdrant/index.ts`)
+   - When article is published, hook triggers
+   - OpenAI embeddings converts text to 1536-dimensional vectors
+   - Vectors stored in Qdrant with article ID
+
+3. **Search** (`src/services/qdrantSearch.ts`)
+   - User query → OpenAI embeddings → vector
+   - Qdrant similarity search finds relevant docs
+   - Returns article IDs ranked by similarity
+
+4. **Chat** (`src/services/geminiChat.ts`)
+   - Relevant docs fetched from PostgreSQL
+   - Gemini receives docs as context
+   - Generates answer with sources
+
+**Key files:**
+- `src/qdrant/index.ts` - Qdrant operations (upsert, search, delete)
+- `src/services/qdrantSearch.ts` - Search logic
+- `src/services/geminiChat.ts` - RAG chat implementation
+- `src/app/api/chat/route.ts` - Chat API endpoint
+- `src/collections/Articles.ts` - Article collection with hooks
 
 ### Application Structure
 

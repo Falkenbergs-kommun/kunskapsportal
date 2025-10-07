@@ -1,390 +1,412 @@
-# 🚀 Knowledge Base - Swedish Municipal Documents
+# Kunskapsportal
 
-AI-powered knowledge base system with semantic search, LibreOffice document processing, and AI chat for Swedish municipal document management.
+**AI-driven kunskapsdatabas för svensk kommunal förvaltning**
 
-## ⚡ Quick Start (Production)
+Kunskapsportal är ett open source-system för kunskapshantering, specialbyggt för svenska kommuner och offentlig sektor. Systemet använder AI för att automatiskt bearbeta dokument, generera metadata och möjliggöra intelligent sökning och AI-chatt.
 
-Deploy with Docker in 3 steps:
-
-```bash
-# 1. Clone and configure
-git clone <your-repo>
-cd knowledge-base
-cp .env.example .env
-
-# 2. Edit .env and add your API keys
-nano .env  # Add GEMINI_API_KEY, OPENAI_API_KEY, set DB_PASSWORD
-
-# 3. Start everything
-docker-compose up -d
-```
-
-**Done!** Visit http://localhost:3000
-
-Default admin: Create on first visit at http://localhost:3000/admin
+> 🏛️ Byggt för kommunala behov | 💬 Chatta med dina dokument | 🤖 Automatisk AI-bearbetning
 
 ---
 
-## 🎯 Two Modes
+## ✨ Huvudfunktioner
 
-### **Production (Docker)** ✅
+### 🏛️ Specialbyggt för Kommunal Förvaltning
 
-Complete setup with all services in containers:
+- **Regelefterlevnad inbyggt**
+  - GDPR-flaggor och hantering av personuppgifter
+  - WCAG 2.1 AA tillgänglighetsspårning
+  - Säkerhetsklassificering (Offentlig, Intern, Konfidentiell, Begränsad)
+
+- **Juridisk struktur**
+  - Länkning till rättslig grund (Lag, Förordning, Kapitel, Paragraf)
+  - Spårning av målgrupper (Medborgare, Anställda, Förtroendevalda, Företag)
+
+- **Livscykelhantering**
+  - Automatiska granskningspåminnelser
+  - Revideringsintervaller (Årlig, Vartannat år, etc.)
+  - Godkännandekedjor (Författare, Granskare, Godkännare)
+  - Versionhantering (upp till 50 versioner per dokument)
+
+- **Svenska-först**
+  - Helt svenskt gränssnitt
+  - AI-genererad metadata på svenska
+  - Dokumenttyper anpassade för svensk förvaltning
+
+### 💬 Konversationssökning med AI
+
+- **RAG-powered sökning** (Retrieval Augmented Generation)
+  - AI-assistent som förstår hela dokumentarkivet
+  - Svarar på frågor med kontext från dina dokument
+  - Källhänvisningar med direktlänkar
+
+- **Semantisk vektorsökning**
+  - Hitta dokument baserat på innebörd, inte bara nyckelord
+  - Qdrant-driven vektordatabas med OpenAI embeddings
+  - Sök över 1000+ dokument på millisekunder
+
+- **Intelligent filtrering**
+  - Filtrera på verksamhetsområden/avdelningar
+  - Hierarkisk organisationsstruktur
+  - Sparade chathistorik och inställningar
+
+### 🤖 Automatisk Dokumentbearbetning
+
+- **AI OCR-extraktion**
+  - Bearbetar PDF, Word, Excel, PowerPoint automatiskt
+  - Google Gemini 2.5 Flash eller Mistral AI OCR
+  - LibreOffice-integration för Office-dokumentkonvertering
+
+- **Smart metadatagenerering**
+  - Auto-genererar: Titel, Sammanfattning, Nyckelord
+  - Föreslår: Dokumenttyp, Målgrupp, Säkerhetsnivå
+  - Identifierar: Verksamhetsområde, Rättslig grund
+  - Extraherar: Versionsnummer, Datum, Författare
+
+- **Innehållsstrukturering**
+  - Konverterar till sökbart rich-text format (Lexical)
+  - Bevarar rubriker, tabeller, listor
+  - Extraherar och bäddar in bilder
+
+## 🚀 Snabbstart
+
+### Produktionsdriftsättning med Docker
+
+**Förutsättningar:**
+- Docker & Docker Compose installerat
+- 2GB RAM minimum (4GB rekommenderat)
+- API-nycklar för AI-tjänster (Gemini, Mistral, OpenAI)
+
+**Steg 1: Klona och konfigurera**
 
 ```bash
-docker-compose up -d              # Start all services
-docker-compose logs -f app        # View logs
-docker-compose down               # Stop everything
-docker-compose down -v            # Stop and remove data
+git clone https://github.com/Falkenbergs-kommun/kunskapsportal.git
+cd kunskapsportal
+cp .env.example .env
 ```
 
-**What you get:**
-- App (Next.js + Payload CMS + LibreOffice)
-- PostgreSQL database
-- Qdrant vector database
-- Automatic health checks
-- Data persistence
-- Production-ready
-
-### **Development (Local - Recommended)** 🛠️
-
-For active development with instant hot-reload:
-
-#### Prerequisites
-
-1. **PostgreSQL** - Running locally or remote
-2. **Qdrant** - Running locally
-3. **LibreOffice** - For document conversion
-
-**Install LibreOffice:**
+**Steg 2: Redigera `.env` med dina API-nycklar**
 
 ```bash
-# macOS
-brew install --cask libreoffice
+# Obligatoriska
+DATABASE_URI=postgres://knowledge_user:docker_password@postgres:5432/knowledge_base
+PAYLOAD_SECRET=din-hemliga-nyckel-minst-32-tecken
+GEMINI_API_KEY=din-gemini-api-nyckel
+OPENAI_API_KEY=din-openai-api-nyckel
 
-# Ubuntu/Debian
-sudo apt update && sudo apt install libreoffice
-
-# Verify installation
-libreoffice --version
+# Valfria
+MISTRAL_API_KEY=din-mistral-api-nyckel
+QDRANT_API_KEY=din-qdrant-api-nyckel  # Om du använder Qdrant Cloud
 ```
 
-**Run Qdrant locally:**
+**Steg 3: Starta tjänsterna**
 
 ```bash
-# Option 1: Docker (simplest)
-docker run -p 6333:6333 -v $(pwd)/qdrant_storage:/qdrant/storage qdrant/qdrant
-
-# Option 2: Native installation
-# See https://qdrant.tech/documentation/quick-start/
+docker-compose up -d
 ```
 
-#### Start Development
+**Steg 4: Öppna i webbläsaren**
+
+- **Frontend:** http://localhost:3000
+- **Admin-gränssnitt:** http://localhost:3000/admin
+
+**Första inloggningen:**
+Skapa första användaren via `/admin/create-first-user`
+
+### Lokal utveckling
+
+**Förutsättningar:**
+- Node.js 20+ och pnpm
+- PostgreSQL 15+
+- Qdrant (Docker: `docker run -p 6333:6333 qdrant/qdrant`)
+- LibreOffice (för dokumentkonvertering)
+
+**Installation:**
 
 ```bash
-# 1. Configure environment
-cp .env.example .env.local
-nano .env.local  # Use localhost URLs for PostgreSQL and Qdrant
-
-# 2. Install dependencies
+# Installera dependencies
 pnpm install
 
-# 3. Start dev server
+# Konfigurera .env.local
+cp .env.example .env.local
+# Redigera DATABASE_URI till din lokala PostgreSQL
+
+# Starta utvecklingsserver
 pnpm dev
 ```
 
-**Development URLs:**
-- App: http://localhost:3000
-- Admin: http://localhost:3000/admin
-- Qdrant: http://localhost:6333/dashboard
+## 🏗️ Teknisk Arkitektur
 
----
+Kunskapsportal bygger på moderna, beprövade teknologier för att leverera en robust och skalbar lösning.
 
-## 📦 What's Included
+### Kärnsystem
 
-| Service | Description | Port |
-|---------|-------------|------|
-| **App** | Next.js 15 + Payload CMS + LibreOffice | 3000 |
-| **PostgreSQL** | Primary database | 5432 |
-| **Qdrant** | Vector search | 6333, 6334 |
+**[Payload CMS 3.50](https://payloadcms.com/)** - Hela applikationens grund
+- Headless CMS för innehållshantering
+- Admin-gränssnitt för dokumenthantering
+- Collections för artiklar, media, användare
+- Webhook-system och REST/GraphQL API
+- TypeScript-baserat med full type-safety
+- [📖 Payload Dokumentation](https://payloadcms.com/docs)
 
----
+**[Next.js 15](https://nextjs.org/)** - Frontend-ramverk och server
+- App Router för modern routing
+- Server Components för bättre prestanda
+- API Routes för custom endpoints
+- Built-in optimering och caching
+- [📖 Next.js Dokumentation](https://nextjs.org/docs)
 
-## 🔧 Configuration
+**[PostgreSQL 15](https://www.postgresql.org/)** - Primär databas
+- Lagrar alla artiklar, metadata och användare
+- ACID-kompatibel för dataintegritet
+- Skalbar och pålitlig
+- [📖 PostgreSQL Dokumentation](https://www.postgresql.org/docs/15/)
 
-### Required Environment Variables
+**[Qdrant](https://qdrant.tech/)** - Vektordatabas för RAG (Retrieval Augmented Generation)
+- Lagrar embeddings av dokumentinnehåll
+- Möjliggör semantisk sökning (sökning baserad på mening, inte bara keywords)
+- Snabb similarity search (millisekunder)
+- Kritisk för AI-chattens förmåga att hitta relevant information
+- [📖 Qdrant Dokumentation](https://qdrant.tech/documentation/)
 
-**For Production (Docker) - `.env`:**
+### AI-stack
 
-```env
-# Database (uses container name as hostname)
-DATABASE_URI=postgres://knowledge_user:your_password@postgres:5432/knowledge_base
-DB_PASSWORD=your_secure_password
+**[Google Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/)** - Primär AI-motor
+- **OCR & Dokumentextrahering:** Läser PDF:er och konverterar till text
+- **AI-chatt:** Svarar på användarfrågor med RAG
+- **Metadatagenerering:** Analyserar innehåll och föreslår metadata
+- Snabb och kostnadseffektiv (Flash-modellen)
+- [📖 Gemini API Dokumentation](https://ai.google.dev/docs)
 
-# App
-PAYLOAD_SECRET=your_long_random_secret_min_32_chars
-PAYLOAD_URL=http://localhost:3000
-NEXT_PUBLIC_PAYLOAD_URL=http://localhost:3000
+**[OpenAI Embeddings](https://platform.openai.com/)** - Text-to-vector
+- **text-embedding-3-large:** Konverterar text till vektorer (1536 dimensioner)
+- Används för att skapa embeddings som lagras i Qdrant
+- Möjliggör semantisk sökning
+- [📖 OpenAI Embeddings Guide](https://platform.openai.com/docs/guides/embeddings)
 
-# AI Services (Required for features)
-GEMINI_API_KEY=your_gemini_api_key        # Document processing & chat
-OPENAI_API_KEY=your_openai_api_key        # Embeddings for search
-MISTRAL_API_KEY=your_mistral_api_key      # OCR (optional)
+**[Mistral AI](https://mistral.ai/)** - Alternativ OCR
+- Pixtral Large för dokumentbearbetning
+- Backup/alternativ till Gemini
+- [📖 Mistral Dokumentation](https://docs.mistral.ai/)
 
-# Vector Database (uses container name as hostname)
-QDRANT_ENABLED=true
-QDRANT_URL=http://qdrant:6333
-QDRANT_API_KEY=                           # Optional
+### Frontend-teknologier
 
-# Optional
-PDF_EXTRACTOR=mistral                     # or "gemini"
-```
+**[React 19](https://react.dev/)** - UI-bibliotek
+- Server Components för bättre prestanda
+- [📖 React Dokumentation](https://react.dev/learn)
 
-**For Development - `.env.local`:**
+**[Tailwind CSS 4](https://tailwindcss.com/)** - Utility-first CSS
+- Snabb styling med predefinerade klasser
+- [📖 Tailwind Dokumentation](https://tailwindcss.com/docs)
 
-```env
-# Database (localhost or remote)
-DATABASE_URI=postgres://user:password@localhost:5432/knowledge_base
+**[shadcn/ui](https://ui.shadcn.com/)** - Komponentbibliotek
+- Radix UI-baserade komponenter
+- Fullt anpassningsbara
+- [📖 shadcn/ui Dokumentation](https://ui.shadcn.com/docs)
 
-# App
-PAYLOAD_SECRET=your_long_random_secret_min_32_chars
-PAYLOAD_URL=http://localhost:3000
-NEXT_PUBLIC_PAYLOAD_URL=http://localhost:3000
+**[Lexical](https://lexical.dev/)** - Rich text-editor
+- Meta's moderna editor-ramverk
+- Används för artikelinnehåll
+- [📖 Lexical Dokumentation](https://lexical.dev/docs/intro)
 
-# AI Services (Required for features)
-GEMINI_API_KEY=your_gemini_api_key
-OPENAI_API_KEY=your_openai_api_key
-MISTRAL_API_KEY=your_mistral_api_key
+### DevOps & Infrastruktur
 
-# Vector Database (localhost)
-QDRANT_ENABLED=true
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=
+**[Docker](https://www.docker.com/)** - Containerisering
+- Multi-stage builds för optimerade images
+- Docker Compose för lokal utveckling och produktion
+- [📖 Docker Dokumentation](https://docs.docker.com/)
 
-# Optional
-PDF_EXTRACTOR=mistral
-NODE_ENV=development
-```
+**[LibreOffice](https://www.libreoffice.org/)** - Office-konvertering
+- Konverterar Word/Excel/PowerPoint till PDF
+- Headless mode i Docker-container
+- [📖 LibreOffice Dokumentation](https://documentation.libreoffice.org/)
 
-### Get API Keys
+**[TypeScript 5.7](https://www.typescriptlang.org/)** - Typsäkerhet
+- Strikt typing genom hela applikationen
+- Auto-genererade typer från Payload-schema
+- [📖 TypeScript Dokumentation](https://www.typescriptlang.org/docs/)
 
-- **Gemini**: https://ai.google.dev/
-- **OpenAI**: https://platform.openai.com/api-keys
-- **Mistral**: https://console.mistral.ai/
+## 🔄 Så fungerar det - RAG-arkitekturen
 
----
+**RAG (Retrieval Augmented Generation)** är hjärtat i Kunskapsportal. Här är hela flödet:
 
-## 🌐 URLs
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| **App** | http://localhost:3000 | Frontend |
-| **Admin** | http://localhost:3000/admin | CMS Admin |
-| **Health** | http://localhost:3000/api/health | Health check |
-| **Qdrant** | http://localhost:6333/dashboard | Vector DB UI |
-
----
-
-## 🚀 Features
-
-### Core Features
-- ✅ **Payload CMS** - Content management with live preview
-- ✅ **Vector Search** - Semantic search with Qdrant + OpenAI embeddings
-- ✅ **AI Chat** - Gemini 2.5 Flash with function calling
-- ✅ **LibreOffice** - Auto-convert .docx, .pptx, .xlsx → PDF
-- ✅ **AI Processing** - OCR with Mistral/Gemini
-- ✅ **Department Hierarchy** - Organizational content structure
-
-### Document Support
-- PDF documents (direct processing)
-- Word (.doc, .docx) → auto-converts to PDF
-- PowerPoint (.ppt, .pptx) → auto-converts to PDF
-- Excel (.xls, .xlsx) → auto-converts to PDF
-- Text files (.txt)
-
-### Swedish Municipal Features
-- Bilingual UI (Swedish/English)
-- GDPR compliance flags
-- Legal basis tracking
-- Document lifecycle management
-- Approval workflows
-- Accessibility (WCAG 2.1 AA)
-
----
-
-## 📝 Common Commands
-
-### Docker
-```bash
-# View all logs
-docker-compose logs -f
-
-# Restart a service
-docker-compose restart app
-
-# Rebuild after code changes
-docker-compose up --build
-
-# Check service health
-docker-compose ps
-
-# Access container shell
-docker exec -it knowledge-base-app-1 sh
-
-# Database backup
-docker exec knowledge-base-postgres-1 pg_dump -U knowledge_user knowledge_base > backup.sql
-```
-
-### Development
-```bash
-pnpm dev                    # Start dev server
-pnpm build                  # Production build
-pnpm start                  # Start production server
-pnpm lint                   # Run linting
-pnpm generate:types         # Generate Payload types
-pnpm sync:qdrant            # Sync documents to Qdrant
-```
-
----
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-**"Cannot connect to database"**
-```bash
-# Wait for PostgreSQL to be ready (30s first start)
-docker-compose logs postgres
-
-# Check health
-docker-compose ps
-```
-
-**"Qdrant connection failed"**
-```bash
-# Verify Qdrant is running
-curl http://localhost:6333/health
-
-# Restart Qdrant
-docker-compose restart qdrant
-```
-
-**"LibreOffice conversion failed"**
-- LibreOffice is pre-installed in Docker
-- For local dev: Install LibreOffice (see OFFICE_DOCUMENTS_SETUP.md)
-
-**"API key errors"**
-- Verify all required API keys in `.env`
-- Restart after changing env vars: `docker-compose restart app`
-
-**Build fails**
-```bash
-# Clean build
-docker-compose down
-docker-compose build --no-cache
-docker-compose up
-```
-
----
-
-## 📊 System Requirements
-
-### Production (Docker)
-- Docker 20.10+
-- Docker Compose 2.0+
-- 4GB RAM minimum (8GB recommended)
-- 10GB disk space
-
-### Development
-- Node.js 20+
-- pnpm 9+
-- PostgreSQL 15+
-- Qdrant (Docker or native)
-- LibreOffice (for document conversion)
-
----
-
-## 🏗️ Architecture
+### 1. Dokumentuppladdning → AI-bearbetning
 
 ```
-┌─────────────────────────────────────────────┐
-│  Docker Compose                             │
-├──────────────┬──────────────┬───────────────┤
-│   App        │  PostgreSQL  │   Qdrant      │
-│   Container  │  Container   │   Container   │
-│              │              │               │
-│ • Next.js    │ • Port 5432  │ • Port 6333   │
-│ • Payload    │ • Volume:    │ • Volume:     │
-│ • LibreOffice│   postgres   │   qdrant      │
-│ • Port 3000  │              │               │
-│ • Volumes:   │              │               │
-│   uploads    │              │               │
-│   temp       │              │               │
-└──────────────┴──────────────┴───────────────┘
+PDF/Office-fil → Payload CMS → Gemini/Mistral OCR → Extraherad text → Payload Collection
 ```
 
----
+När du laddar upp ett dokument:
+1. **Payload CMS** tar emot filen och sparar i Media-collection
+2. **Gemini/Mistral** läser dokumentet med OCR och extraherar text
+3. Texten struktureras med rubriker, listor, tabeller
+4. Sparas i Articles-collection i **PostgreSQL**
 
-## 📚 Documentation
+### 2. Publicering → Vektorisering
 
-- **CLAUDE.md** - Developer guide and architecture
-- **OFFICE_DOCUMENTS_SETUP.md** - LibreOffice integration details
-- **CHAT_FEATURE.md** - AI chat system documentation
-
----
-
-## 🚢 Deployment
-
-### Docker Hub (Recommended)
-
-```bash
-# Build and tag
-docker build -t your-username/knowledge-base:latest .
-
-# Push
-docker push your-username/knowledge-base:latest
-
-# Deploy anywhere
-docker-compose pull
-docker-compose up -d
+```
+Artikel publiceras → OpenAI Embeddings → Vektorer → Qdrant lagring
 ```
 
-### Environment-Specific
+När en artikel publiceras:
+1. **OpenAI API** konverterar texten till 1536-dimensionella vektorer (embeddings)
+2. Vektorerna sparas i **Qdrant** tillsammans med artikel-ID
+3. Artikeln blir nu sökbar via semantisk sökning
 
-For production servers, use environment-specific `.env` files:
+### 3. Sökning → RAG-chatt
 
-```bash
-# Production
-docker-compose --env-file .env.production up -d
-
-# Staging
-docker-compose --env-file .env.staging up -d
+```
+Användarfråga → OpenAI Embeddings → Qdrant similarity search → Relevanta dokument → Gemini + kontext → Svar
 ```
 
----
+När en användare ställer en fråga:
+1. Frågan konverteras till en vektor med **OpenAI Embeddings**
+2. **Qdrant** hittar liknande vektorer (similarity search)
+3. Relevanta dokument hämtas från **PostgreSQL** via **Payload**
+4. **Gemini** får dokumenten som kontext och genererar svar
+5. Svar visas med källhänvisningar
 
-## 🤝 Contributing
+### Varför RAG istället för bara AI-chatt?
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
+| Vanlig AI-chatt | RAG (Kunskapsportal) |
+|----------------|----------------------|
+| ❌ Kan "hitta på" information | ✅ Baseras på faktiska dokument |
+| ❌ Vetskap begränsad till träningsdata | ✅ Aktuell info från dina dokument |
+| ❌ Inga källor | ✅ Källhänvisningar till originaldokument |
+| ❌ Generisk | ✅ Specifik för din organisation |
 
----
-
-## 📄 License
-
-MIT
-
----
-
-## 🆘 Support
-
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Payload Docs**: https://payloadcms.com/docs
-- **Discord**: https://discord.com/invite/payload
+**Resultat:** AI som svarar baserat på ERA faktiska policydokument, riktlinjer och beslut!
 
 ---
 
-**Built with ❤️ for Swedish municipalities**
+## 📚 Användningsfall
+
+### För Kommuner
+
+**Central Kunskapsdatabas**
+- Samla policydokument, riktlinjer, beslut på ett ställe
+- Automatisk kategorisering och metadata
+- Enkel åtkomst för alla medarbetare
+
+**Intelligent Medborgarservice**
+- AI-chattbot som svarar på frågor om kommunala tjänster
+- Hänvisar till rätt dokument automatiskt
+- Tillgänglig 24/7
+
+**Regelefterlevnad och Kvalitet**
+- Inbyggd GDPR-spårning
+- Tillgänglighetskontroll (WCAG 2.1 AA)
+- Automatiska granskningspåminnelser
+- Versionskontroll och ändringshistorik
+
+**Effektiv Dokumenthantering**
+- Ladda upp PDF/Office → AI bearbetar automatiskt
+- Genererar metadata på svenska
+- Sparar timmar av manuellt arbete
+
+### För Utvecklare
+
+**Moderna Standarder**
+- TypeScript-first
+- RESTful API + GraphQL
+- Webhook-support
+- Utbyggbar arkitektur
+
+**Anpassningsbar**
+- Custom collections och fields
+- Hooks för affärslogik
+- Plugin-system
+- Headless CMS = använd valfri frontend
+
+## 📖 Dokumentation
+
+- **[Installation Guide](docs/installation.md)** - Detaljerad installationsguide
+- **[User Guide](docs/user-guide.md)** - Användarhandledning
+- **[API Documentation](docs/api.md)** - API-referens
+- **[Development Guide](docs/development.md)** - För utvecklare
+- **[Deployment Guide](docs/deployment.md)** - Produktionsdriftsättning
+
+## 🤝 Bidra
+
+Vi välkomnar bidrag från open source-communityn! Vare sig det är buggfixar, nya funktioner eller dokumentation.
+
+**Så här bidrar du:**
+
+1. Forka projektet
+2. Skapa en feature branch (`git checkout -b feature/amazing-feature`)
+3. Commita dina ändringar (`git commit -m 'Add amazing feature'`)
+4. Pusha till branchen (`git push origin feature/amazing-feature`)
+5. Öppna en Pull Request
+
+**Kodstandarder:**
+- TypeScript strict mode
+- ESLint + Prettier
+- Konventionella commit-meddelanden
+- Tester för ny funktionalitet
+
+## 🐛 Buggar och Feature Requests
+
+Hittat en bugg? Har du en idé för en ny funktion?
+
+- **Buggar:** [Öppna en issue](https://github.com/Falkenbergs-kommun/kunskapsportal/issues/new?template=bug_report.md)
+- **Features:** [Öppna en feature request](https://github.com/Falkenbergs-kommun/kunskapsportal/issues/new?template=feature_request.md)
+
+## 📊 Status
+
+- ✅ **Produktion:** Redo för användning
+- 🔄 **Aktivt underhållen:** Regelbundna uppdateringar
+- 🛡️ **Stabil:** Payload 3.x, Next.js 15
+- 📈 **Skalbar:** Testad med 1000+ dokument
+
+## 🔒 Säkerhet
+
+Vi tar säkerhet på allvar. Om du hittar en säkerhetsrisk:
+
+- **Rapportera privat:** security@falkenberg.se
+- **Använd inte:** Public issues för säkerhetsproblem
+- **Vi svarar:** Inom 48 timmar
+
+## 📄 Licens
+
+MIT License
+
+Copyright (c) 2025 Falkenbergs kommun
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## 🙏 Tack Till
+
+**Utveckling:**
+- Falkenbergs kommun IT-avdelning
+- Open source-communityn
+
+**Teknologi:**
+- [Payload CMS](https://payloadcms.com/) - Headless CMS
+- [Next.js](https://nextjs.org/) - React-ramverk
+- [Qdrant](https://qdrant.tech/) - Vektordatabas
+- [Google Gemini](https://deepmind.google/technologies/gemini/) - AI-modeller
+- [shadcn/ui](https://ui.shadcn.com/) - UI-komponenter
+
+**AI-assistans:**
+- Utvecklat med stöd av Claude Code (Anthropic)
+
+---
+
+**Skapat med ❤️ av Falkenbergs kommun för svensk offentlig sektor**
+
+*Ett projekt för att göra kommunala kunskapsbaser intelligenta, tillgängliga och användarvänliga.*
