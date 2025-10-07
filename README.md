@@ -8,6 +8,14 @@ Kunskapsportal är ett open source-system för kunskapshantering, specialbyggt f
 
 ---
 
+## 📖 Dokumentation
+
+**👉 [Läs den fullständiga dokumentationen](https://falkenbergs-kommun.github.io/kunskapsportal/)**
+
+Komplett guide för installation, användning, API, utveckling och deployment.
+
+---
+
 ## ✨ Huvudfunktioner
 
 ### 🏛️ Specialbyggt för Kommunal Förvaltning
@@ -317,13 +325,18 @@ När en användare ställer en fråga:
 - Plugin-system
 - Headless CMS = använd valfri frontend
 
-## 📖 Dokumentation
+## 📖 Mer Information
 
-- **[Installation Guide](docs/installation.md)** - Detaljerad installationsguide
-- **[User Guide](docs/user-guide.md)** - Användarhandledning
-- **[API Documentation](docs/api.md)** - API-referens
-- **[Development Guide](docs/development.md)** - För utvecklare
-- **[Deployment Guide](docs/deployment.md)** - Produktionsdriftsättning
+För detaljerad dokumentation, besök vår dokumentationssida:
+
+**👉 https://falkenbergs-kommun.github.io/kunskapsportal/**
+
+Innehåller:
+- Installation och konfiguration
+- Användarguide med screenshots
+- API-dokumentation (REST & GraphQL)
+- Utvecklingsguide
+- Deployment och produktion
 
 ## 🤝 Bidra
 
