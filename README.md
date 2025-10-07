@@ -392,7 +392,7 @@ SOFTWARE.
 ## 🙏 Tack Till
 
 **Utveckling:**
-- Falkenbergs kommun IT-avdelning
+- Falkenbergs kommun Utvecklingsavdelningen
 - Open source-communityn
 
 **Teknologi:**

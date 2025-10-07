@@ -718,4 +718,4 @@ services:
 - Kritiska säkerhetsproblem: security@falkenberg.se
 
 **Professionell support:**
-Kontakta Falkenbergs kommun IT-avdelning för enterprise support.
+Kontakta Falkenbergs kommun Utvecklingsavdelningen för support.
