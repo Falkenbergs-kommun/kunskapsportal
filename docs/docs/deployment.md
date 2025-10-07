@@ -1,10 +1,10 @@
 ---
-title: Deployment-guide - Kunskapsportal
-layout: default
+sidebar_position: 6
+title: Deployment
 description: Guide för att driftsätta Kunskapsportal i produktion
 ---
 
-# Deployment-guide - Kunskapsportal
+# Deployment
 
 Guide för att driftsätta Kunskapsportal i produktion.
 

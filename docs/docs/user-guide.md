@@ -1,10 +1,10 @@
 ---
-title: Användarguide - Kunskapsportal
-layout: default
+sidebar_position: 3
+title: Användarguide
 description: Användarhandledning för Kunskapsportal - hantera dokument, sök och använd AI-funktioner
 ---
 
-# Användarguide - Kunskapsportal
+# Användarguide
 
 Välkommen till Kunskapsportal! Denna guide hjälper dig att komma igång med att hantera dokument, söka information och använda AI-funktionerna.
 

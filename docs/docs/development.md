@@ -1,10 +1,10 @@
 ---
-title: Utvecklingsguide - Kunskapsportal
-layout: default
+sidebar_position: 5
+title: Utveckling
 description: Guide för utvecklare som vill bidra till eller anpassa Kunskapsportal
 ---
 
-# Utvecklingsguide - Kunskapsportal
+# Utveckling
 
 Guide för utvecklare som vill bidra till eller anpassa Kunskapsportal.
 
