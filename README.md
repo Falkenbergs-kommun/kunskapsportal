@@ -374,7 +374,7 @@ Hittat en bugg? Har du en idé för en ny funktion?
 
 Vi tar säkerhet på allvar. Om du hittar en säkerhetsrisk:
 
-- **Rapportera privat:** security@falkenberg.se
+- **Rapportera privat:** utvecklingsavdelningen@falkenberg.se
 - **Använd inte:** Public issues för säkerhetsproblem
 - **Vi svarar:** Inom 48 timmar
 

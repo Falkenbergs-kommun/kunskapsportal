@@ -488,4 +488,4 @@ Kolla statusen i artikelns metadata.
 https://github.com/Falkenbergs-kommun/kunskapsportal/issues
 
 **Säkerhetsproblem?** Maila:
-security@falkenberg.se
+utvecklingsavdelningen@falkenberg.se

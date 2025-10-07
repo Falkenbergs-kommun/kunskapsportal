@@ -715,7 +715,7 @@ services:
 
 **Produktionsproblem?**
 - Öppna issue: https://github.com/Falkenbergs-kommun/kunskapsportal/issues
-- Kritiska säkerhetsproblem: security@falkenberg.se
+- Kritiska säkerhetsproblem: utvecklingsavdelningen@falkenberg.se
 
 **Professionell support:**
 Kontakta Falkenbergs kommun Utvecklingsavdelningen för support.

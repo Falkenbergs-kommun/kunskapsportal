@@ -839,4 +839,4 @@ const articles = await client.find({
 - 🐛 [Öppna issue](https://github.com/Falkenbergs-kommun/kunskapsportal/issues)
 
 **Säkerhetsproblem?**
-- 🔒 Maila: security@falkenberg.se
+- 🔒 Maila: utvecklingsavdelningen@falkenberg.se

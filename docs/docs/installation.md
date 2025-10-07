@@ -587,4 +587,4 @@ Nu när du har installerat Kunskapsportal:
 **Problem?** Öppna en issue på GitHub:
 https://github.com/Falkenbergs-kommun/kunskapsportal/issues
 
-**Säkerhetsproblem?** Maila: security@falkenberg.se
+**Säkerhetsproblem?** Maila: utvecklingsavdelningen@falkenberg.se
