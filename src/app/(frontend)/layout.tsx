@@ -79,6 +79,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;800&family=Lato:wght@300;400&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <div>
           <FavoritesProvider>

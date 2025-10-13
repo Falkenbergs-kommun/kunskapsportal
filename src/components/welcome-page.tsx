@@ -106,9 +106,9 @@ export default function WelcomePage() {
         <div id="features" className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16 lg:px-6">
           <div className="mx-auto max-w-4xl ">
             <h2 className="text-base font-semibold leading-7 text-gray-500">Allt du behöver</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
+            <h3 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
               En intelligent plattform för kunskapshantering
-            </p>
+            </h3>
             <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
               Vår plattform är byggd för att göra kunskap tillgänglig och användbar, inte bara
               lagrad.
@@ -140,9 +140,9 @@ export default function WelcomePage() {
         <div id="how-it-works" className="mx-auto my-20 max-w-4xl px-4 sm:my-24 lg:px-6">
           <div className="mx-auto max-w-2xl lg:text-center">
             <h2 className="text-base font-semibold leading-7 text-gray-500">Steg-för-steg</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
+            <h3 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
               Från dokument till sökbar kunskap
-            </p>
+            </h3>
             <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
               Processen är enkel och nästan helt automatiserad.
             </p>

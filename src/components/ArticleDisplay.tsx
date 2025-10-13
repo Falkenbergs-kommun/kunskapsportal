@@ -111,11 +111,11 @@ export default function ArticleDisplay({ article }: { article: Article | null })
       )}
 
       <header className="mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <h1 className="text-4xl font-bold text-slate-900 flex-1" data-testid="text-article-title">
+        <div className="mb-4">
+          <h1 className="text-4xl font-bold text-slate-900 mb-3" data-testid="text-article-title">
             {article.title}
           </h1>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="default"
@@ -136,7 +136,7 @@ export default function ArticleDisplay({ article }: { article: Article | null })
               <MessageSquareIcon className="h-4 w-4" />
               <span>Chatta om artikel</span>
             </Button>
-            <FavoriteStar title={article.title || ''} emoji="📄" className="mt-1" />
+            <FavoriteStar title={article.title || ''} emoji="📄" />
           </div>
         </div>
 

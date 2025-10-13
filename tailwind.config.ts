@@ -8,7 +8,13 @@ const config: Config = {
     './src/app/preview/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        heading: ['Montserrat', 'sans-serif'],
+        body: ['Lato', 'sans-serif'],
+        sans: ['Lato', 'sans-serif'], // Default sans to Lato
+      },
+    },
   },
   plugins: [
     require('@tailwindcss/typography'),
