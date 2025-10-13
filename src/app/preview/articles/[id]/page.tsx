@@ -24,7 +24,7 @@ export default async function ArticlePreview({
     collection: 'articles',
     id,
     depth: 3, // Keep depth to populate relationships like coverPhoto
-    draft: isDraftMode, // Fetch draft version if draft mode is enabled
+    draft: true, // Always fetch draft version on preview page
   })
 
   if (!article) {

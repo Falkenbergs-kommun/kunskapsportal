@@ -67,23 +67,26 @@ FROM base-with-libreoffice AS runner
 
 WORKDIR /app
 
-# Create non-root user for security
+# Create non-root user for security with a proper home directory
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 --home /home/nextjs nextjs && \
+    mkdir -p /home/nextjs && \
+    chown -R nextjs:nodejs /home/nextjs
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Create temp directory for LibreOffice conversions
-RUN mkdir -p /app/temp/conversions && \
-    chown -R nextjs:nodejs /app/temp
+# Create temp directory for LibreOffice conversions and media directory for uploads
+RUN mkdir -p /app/temp/conversions /app/media && \
+    chown -R nextjs:nodejs /app/temp /app/media
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV HOME=/home/nextjs
 
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1

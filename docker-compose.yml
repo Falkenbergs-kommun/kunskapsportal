@@ -10,7 +10,7 @@ services:
     env_file:
       - .env
     volumes:
-      - uploads:/app/uploads
+      - media:/app/media
       - temp:/app/temp
     depends_on:
       postgres:
@@ -62,5 +62,5 @@ services:
 volumes:
   postgres_data:
   qdrant_data:
-  uploads:
+  media:
   temp:

@@ -215,7 +215,8 @@ export const generateMetadataEndpoint: Endpoint = {
         }
       }
       
-      console.log('Extracted content for analysis (first 500 chars):', markdown.substring(0, 500))
+      console.log('Extracted content for analysis:', markdown.substring(0, 1000)) // Show first 1000 chars in logs
+      console.log(`Total content length: ${markdown.length} characters`)
       
       // Ensure we have meaningful content
       if (!markdown || markdown.trim().length < 10) {
