@@ -40,7 +40,8 @@ COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 RUN corepack enable pnpm && \
-    pnpm install --frozen-lockfile --prod=false
+    pnpm install --frozen-lockfile --prod=false && \
+    pnpm approve-builds
 
 # ===================================
 # Stage 3: Build application
