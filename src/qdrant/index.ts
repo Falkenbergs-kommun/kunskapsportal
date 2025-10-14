@@ -85,7 +85,7 @@ async function buildDepartmentPath(departmentId: number, payload: any): Promise<
 
   while (currentDeptId) {
     try {
-      const dept = await payload.findByID({
+      const dept: any = await payload.findByID({
         collection: 'departments',
         id: currentDeptId,
       })
@@ -95,7 +95,7 @@ async function buildDepartmentPath(departmentId: number, payload: any): Promise<
       }
 
       // Move to parent
-      currentDeptId = typeof dept.parent === 'object' ? dept.parent?.id : dept.parent
+      currentDeptId = typeof dept?.parent === 'object' ? dept.parent?.id : dept?.parent
     } catch (error) {
       console.error(`Error fetching department ${currentDeptId}:`, error)
       break
