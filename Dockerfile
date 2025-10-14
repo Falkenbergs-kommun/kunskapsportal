@@ -79,6 +79,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Copy migrations for runtime execution
+COPY --from=builder --chown=nextjs:nodejs /app/src/migrations ./src/migrations
+
 # Create temp directory for LibreOffice conversions and media directory for uploads
 RUN mkdir -p /app/temp/conversions /app/media && \
     chown -R nextjs:nodejs /app/temp /app/media

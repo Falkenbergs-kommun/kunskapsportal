@@ -109,8 +109,10 @@ QDRANT_API_KEY=din-qdrant-api-nyckel  # Om du använder Qdrant Cloud
 **Steg 3: Starta tjänsterna**
 
 ```bash
-docker-compose up -d
+docker-compose up --build
 ```
+
+**Viktigt:** Vid första uppstart körs automatiskt databasmigrationer när servern startar (runtime migrations). Detta kan ta några sekunder extra vid första starten. Payload skapar alla nödvändiga tabeller i PostgreSQL automatiskt.
 
 **Steg 4: Öppna i webbläsaren**
 
@@ -140,6 +142,19 @@ cp .env.example .env.local
 
 # Starta utvecklingsserver
 pnpm dev
+```
+
+**Databasmigrationer i utveckling:**
+
+I development mode använder Payload `push: true` vilket automatiskt synkar databasen med din Payload-konfiguration. Du behöver normalt inte köra migrations manuellt.
+
+Om du vill skapa migrations för production:
+```bash
+# Skapa en ny migration
+pnpm payload migrate:create min-migration
+
+# Visa migrationsstatus
+pnpm payload migrate:status
 ```
 
 ## 🏗️ Teknisk Arkitektur

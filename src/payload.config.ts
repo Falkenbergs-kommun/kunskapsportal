@@ -24,6 +24,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Articles } from './collections/Articles'
 import { Departments } from './collections/Departments'
+import { migrations } from './migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -76,6 +77,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
     push: process.env.NODE_ENV !== 'production' || process.env.DB_PUSH === 'true',
+    prodMigrations: migrations,
   }),
   sharp,
   plugins: [
