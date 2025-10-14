@@ -9,6 +9,7 @@ const qdrantUrl = new URL(process.env.QDRANT_URL || 'http://localhost:6333')
 const qdrant = new QdrantClient({
   host: qdrantUrl.hostname,
   port: parseInt(qdrantUrl.port, 10) || 443,
+  https: qdrantUrl.protocol === 'https:',
   apiKey: process.env.QDRANT_API_KEY,
   checkCompatibility: false,
 })
