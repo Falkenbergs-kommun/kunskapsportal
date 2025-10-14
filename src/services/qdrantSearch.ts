@@ -26,7 +26,7 @@ export interface SearchResult {
   score: number
   articleId: string
   slug: string | null
-  departmentSlug: string | null
+  departmentPath: string | null
   url: string
 }
 
@@ -77,14 +77,14 @@ export async function searchKnowledgeBase({
     // Transform results with slug and URL construction
     const results = searchResult.map((result) => {
       const slug = result.payload?.slug as string | null
-      const departmentSlug = result.payload?.departmentSlug as string | null
-      
-      // Construct URL if we have both slugs
+      const departmentPath = result.payload?.departmentPath as string | null
+
+      // Construct URL with full department hierarchy
       let url = ''
-      if (slug && departmentSlug) {
-        url = `/${departmentSlug}/${slug}`
+      if (slug && departmentPath) {
+        url = `/${departmentPath}/${slug}`
       }
-      
+
       return {
         id: result.id as string,
         title: result.payload?.title as string || 'Untitled',
@@ -94,7 +94,7 @@ export async function searchKnowledgeBase({
         score: result.score || 0,
         articleId: result.payload?.articleId as string || '',
         slug,
-        departmentSlug,
+        departmentPath,
         url,
       }
     })

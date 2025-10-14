@@ -88,7 +88,7 @@ export const Articles: CollectionConfig = {
               id: doc.id,
               depth: 2,
             })
-            await embed(articleWithDept, req.payload.config)
+            await embed(articleWithDept, req.payload.config, req.payload)
             req.payload.logger.info(`Embedded published & active article ${doc.id} in Qdrant`)
           }
           // Condition 2: If the article was published but is now not, remove it from Qdrant.

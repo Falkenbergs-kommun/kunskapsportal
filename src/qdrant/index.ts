@@ -74,7 +74,38 @@ async function ensureCollection() {
   }
 }
 
-export const embed = async (doc: Article, config: SanitizedConfig): Promise<void> => {
+/**
+ * Build full department path by following parent chain
+ * Returns array of slugs from root to current department
+ * Example: ['it', 'utveckling', 'digitalisering']
+ */
+async function buildDepartmentPath(departmentId: number, payload: any): Promise<string[]> {
+  const path: string[] = []
+  let currentDeptId: number | null = departmentId
+
+  while (currentDeptId) {
+    try {
+      const dept = await payload.findByID({
+        collection: 'departments',
+        id: currentDeptId,
+      })
+
+      if (dept && dept.slug) {
+        path.unshift(dept.slug) // Add to beginning of array
+      }
+
+      // Move to parent
+      currentDeptId = typeof dept.parent === 'object' ? dept.parent?.id : dept.parent
+    } catch (error) {
+      console.error(`Error fetching department ${currentDeptId}:`, error)
+      break
+    }
+  }
+
+  return path
+}
+
+export const embed = async (doc: Article, config: SanitizedConfig, payload: any): Promise<void> => {
   await ensureCollection()
 
   const editorConfig = await editorConfigFactory.default({
@@ -89,6 +120,13 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
     data: doc.content,
     editorConfig,
   })
+
+  // Build full department path for URL construction
+  let departmentPath: string[] = []
+  const departmentId = typeof doc.department === 'object' ? doc.department?.id : doc.department
+  if (departmentId) {
+    departmentPath = await buildDepartmentPath(departmentId, payload)
+  }
 
   // For debugging, save the markdown to a file
   const debugDir = path.resolve(process.cwd(), 'debug')
@@ -151,7 +189,7 @@ export const embed = async (doc: Article, config: SanitizedConfig): Promise<void
 
                 // URL construction fields
                 slug: doc.slug || null,
-                departmentSlug: typeof doc.department === 'object' ? doc.department?.slug : null,
+                departmentPath: departmentPath.length > 0 ? departmentPath.join('/') : null,
 
                 // Document metadata
                 documentType: doc.documentType || null,

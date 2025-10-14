@@ -41,7 +41,7 @@ async function syncQdrantActiveDocuments() {
       try {
         if (article.documentStatus === 'active') {
           console.log(`✅ Embedding active article: ${article.title} (ID: ${article.id})`)
-          await embed(article, payload.config)
+          await embed(article, payload.config, payload)
           activeCount++
         } else {
           console.log(`🗑️  Removing non-active article: ${article.title} (ID: ${article.id}) [Status: ${article.documentStatus || 'undefined'}]`)
