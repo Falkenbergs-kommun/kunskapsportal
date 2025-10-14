@@ -104,6 +104,10 @@ OPENAI_API_KEY=din-openai-api-nyckel
 # Valfria
 MISTRAL_API_KEY=din-mistral-api-nyckel
 QDRANT_API_KEY=din-qdrant-api-nyckel  # Om du använder Qdrant Cloud
+
+# Email provider (valfritt - för lösenordsåterställning)
+# EMAIL_FROM=noreply@dindoman.se
+# RESEND_API_KEY=re_din_api_nyckel
 ```
 
 **Steg 3: Starta tjänsterna**
@@ -121,6 +125,44 @@ docker-compose up --build
 
 **Första inloggningen:**
 Skapa första användaren via `/admin/create-first-user`
+
+### Email-konfiguration (Valfritt)
+
+För att aktivera lösenordsåterställning och emailverifiering behöver du konfigurera en email provider. **Utan email-konfiguration skrivs emails till konsolen** (bra för utveckling).
+
+**Rekommenderade email providers:**
+
+**1. Resend (Enklast & Rekommenderat)**
+
+[Resend](https://resend.com) är en modern email API med generös gratisplan (100 emails/dag gratis).
+
+```bash
+# Lägg till i .env
+EMAIL_FROM=noreply@dindoman.se
+EMAIL_FROM_NAME=Kunskapsportal
+RESEND_API_KEY=re_din_api_nyckel
+```
+
+**2. SMTP (Vilken leverantör som helst)**
+
+Fungerar med Gmail, Outlook, SendGrid, Mailgun, eller din organisations SMTP-server.
+
+```bash
+# Lägg till i .env
+EMAIL_FROM=noreply@dindoman.se
+EMAIL_FROM_NAME=Kunskapsportal
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=ditt_användarnamn
+SMTP_PASS=ditt_lösenord
+```
+
+**Email-funktioner:**
+- ✅ Lösenordsåterställning för användare
+- ✅ Email-verifiering för nya användare (om aktiverat i `src/collections/Users.ts`)
+- ✅ Anpassningsbara email-mallar
+
+Mer info: [Payload Email Dokumentation](https://payloadcms.com/docs/email/overview)
 
 ### Lokal utveckling
 
