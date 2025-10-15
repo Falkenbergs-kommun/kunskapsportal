@@ -226,7 +226,7 @@ export const generateMetadataEndpoint: Endpoint = {
       }
 
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest',
         generationConfig: {
           responseMimeType: 'application/json',
           responseSchema: metadataSchema,

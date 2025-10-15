@@ -24,7 +24,7 @@ const qdrant = new QdrantClient({
   checkCompatibility: false,
 })
 
-const EMBEDDING_MODEL = 'text-embedding-3-large'
+const EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-large'
 const COLLECTION_NAME = 'articles'
 const UUID_NAMESPACE = '3a0a51e2-8777-4f52-bc74-c2cbde0c8b04' // Randomly generated namespace
 

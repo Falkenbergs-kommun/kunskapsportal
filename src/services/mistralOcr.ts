@@ -59,7 +59,7 @@ export class MistralOcrService {
       const documentUrl = await this.convertPdfToBase64DataUrl(pdfSource)
 
       const ocrPayload = {
-        model: 'mistral-ocr-latest',
+        model: process.env.MISTRAL_OCR_MODEL || 'mistral-ocr-latest',
         document: {
           type: 'document_url',
           document_url: documentUrl,

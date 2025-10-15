@@ -161,10 +161,17 @@ The application requires several environment variables:
 - `PAYLOAD_URL` - Base URL for the application (default: http://localhost:3000)
 - `QDRANT_URL` & `QDRANT_API_KEY` - Vector database connection
 - `QDRANT_ENABLED` - Enable/disable vector database features (true/false)
-- `OPENAI_API_KEY` - For embeddings generation (text-embedding-3-large model)
+- `OPENAI_API_KEY` - For embeddings generation
 - `GEMINI_API_KEY` - For document processing and content generation
 - `MISTRAL_API_KEY` - Alternative AI service for document OCR
 - `PDF_EXTRACTOR` - Choose PDF extraction service: "gemini" or "mistral" (default: "mistral")
+
+**AI Model Configuration (optional):**
+- `GEMINI_FLASH_MODEL` - Gemini model for OCR, metadata, and chat (default: "gemini-flash-latest")
+- `GEMINI_IMAGEN_MODEL` - Imagen model for cover photos (default: "imagen-4.0-fast-generate-001")
+- `MISTRAL_OCR_MODEL` - Mistral OCR model (default: "mistral-ocr-latest")
+- `OPENAI_EMBEDDING_MODEL` - OpenAI embedding model (default: "text-embedding-3-large")
+  - **WARNING:** Changing this requires re-embedding all documents with `pnpm sync:qdrant`
 
 ### Testing Architecture
 - **Integration tests** - API and database operations (Vitest)

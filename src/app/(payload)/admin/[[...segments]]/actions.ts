@@ -579,7 +579,7 @@ export async function generateCoverPhoto(articleId: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 
     const response = await ai.models.generateImages({
-      model: 'imagen-4.0-fast-generate-001',
+      model: process.env.GEMINI_IMAGEN_MODEL || 'imagen-4.0-fast-generate-001',
       prompt: prompt,
       config: {
         numberOfImages: 1,

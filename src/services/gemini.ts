@@ -7,7 +7,9 @@ export async function processDocumentWithGemini(
   mimeType: string,
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest'
+    })
 
     const prompt = `You are a professional document analysis specialist. Your task is to extract and structure content from documents while preserving the original language and formatting.
 

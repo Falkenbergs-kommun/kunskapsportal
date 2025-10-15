@@ -14,7 +14,7 @@ const qdrant = new QdrantClient({
   checkCompatibility: false,
 })
 
-const EMBEDDING_MODEL = 'text-embedding-3-large'
+const EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-large'
 const COLLECTION_NAME = 'articles'
 
 export interface SearchResult {

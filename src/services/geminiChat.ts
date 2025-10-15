@@ -123,7 +123,7 @@ export async function chatWithKnowledge({
 
     // First, try to generate with tool calling (always provide the search tool)
     const initialResponse = await ai.models.generateContent({
-      model: 'gemini-flash-latest',
+      model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest',
       contents: fullMessage,
       config: {
         systemInstruction,
@@ -152,7 +152,7 @@ export async function chatWithKnowledge({
 
         // Generate final response with the search results
         const finalResponse = await ai.models.generateContent({
-          model: 'gemini-flash-latest',
+          model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest',
           contents: `${fullMessage}\n\nI searched the knowledge base with query "${functionCall.args.query}" and found:\n\n${searchResult}\n\nBased on this information, here is my answer:`,
           config: {
             systemInstruction,
