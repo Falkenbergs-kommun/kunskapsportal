@@ -281,8 +281,7 @@ export const Articles: CollectionConfig = {
                   ],
                   admin: {
                     description:
-                      'Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv".',
-                    condition: (data) => data._status !== 'published', // Hide when published to avoid confusion
+                      'Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv". För att ändra status måste artikeln först avpubliceras.',
                   },
                 },
                 {
