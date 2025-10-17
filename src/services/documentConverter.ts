@@ -19,6 +19,7 @@ const CONVERTIBLE_MIME_TYPES = new Set([
   'application/vnd.ms-powerpoint', // .ppt
   'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
   'application/msword', // .doc (can also be processed directly by Gemini, but conversion gives better results)
+  'application/x-cfb', // .doc (alternative MIME type detection for Compound File Binary format)
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
   'application/vnd.ms-excel', // .xls
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
@@ -195,6 +196,7 @@ export class DocumentConverter {
       'application/vnd.ms-powerpoint': '.ppt',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
       'application/msword': '.doc',
+      'application/x-cfb': '.doc',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
       'application/vnd.ms-excel': '.xls',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
@@ -213,6 +215,7 @@ export class DocumentConverter {
       'application/vnd.ms-powerpoint': 'PowerPoint Presentation (.ppt)',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint Presentation (.pptx)',
       'application/msword': 'Word Document (.doc)',
+      'application/x-cfb': 'Word Document (.doc)',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document (.docx)',
       'application/vnd.ms-excel': 'Excel Spreadsheet (.xls)',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheet (.xlsx)',

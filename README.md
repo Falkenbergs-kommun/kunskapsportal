@@ -60,7 +60,8 @@ Komplett guide för installation, användning, API, utveckling och deployment.
 ### 🤖 Automatisk Dokumentbearbetning
 
 - **AI OCR-extraktion**
-  - Bearbetar PDF, Word, Excel, PowerPoint automatiskt
+  - Bearbetar PDF och Office-dokument automatiskt
+  - Stödjer både moderna (.docx, .pptx, .xlsx) och äldre format (.doc, .ppt, .xls)
   - Google Gemini 2.5 Flash eller Mistral AI OCR
   - LibreOffice-integration för Office-dokumentkonvertering
 

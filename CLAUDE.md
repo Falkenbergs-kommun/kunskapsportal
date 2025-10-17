@@ -80,6 +80,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **[LibreOffice](https://www.libreoffice.org/)** - Office conversion
 - Converts Word/Excel/PowerPoint to PDF (headless mode)
+- Supports both modern (.docx, .pptx, .xlsx) and legacy formats (.doc, .ppt, .xls)
 - Pre-processing before OCR
 - Runs in Docker container
 - Documentation: https://documentation.libreoffice.org/

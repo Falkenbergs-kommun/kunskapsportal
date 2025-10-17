@@ -57,6 +57,7 @@ export const Media: CollectionConfig = {
 
       // Word documents
       'application/msword', // .doc
+      'application/x-cfb', // .doc (alternative MIME type detection)
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
 
       // PowerPoint presentations
