@@ -116,6 +116,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/app/api/chat/route.ts` - Chat API endpoint
 - `src/collections/Articles.ts` - Article collection with hooks
 
+### External Qdrant Sources
+
+The application supports searching external Qdrant collections alongside the internal knowledge base. This enables querying multiple content repositories from a single chatbot interface.
+
+**Configuration**: Purely environment-based via `EXTERNAL_QDRANT_SOURCES` JSON variable.
+
+**Key Features:**
+- Each external source has independent Qdrant connection (URL + API key)
+- Flexible field mapping to handle different payload structures
+- Optional UI customization (icons, colors, labels)
+- Generic implementation - no hardcoded source names in code
+- Graceful degradation when not configured
+
+**Critical Requirement:**
+External collections MUST use `text-embedding-3-large` (3072 dimensions) to match the internal collection. Query embeddings are generated once and reused across all collections for performance.
+
+**How It Works:**
+1. Define sources in `EXTERNAL_QDRANT_SOURCES` environment variable
+2. Sources appear automatically in chatbot UI under "Externa källor"
+3. Users select which sources to search (selection persisted in localStorage)
+4. Chatbot searches enabled sources in parallel and merges results
+5. Results show source attribution with badges
+6. External URLs open in new tabs
+
+**Example Use Cases:**
+- Municipal intranet content (separate Qdrant collection)
+- Public website content (different collection)
+- Legacy documentation systems (migrated to Qdrant)
+- Partner organization knowledge bases (shared Qdrant instance)
+
+**Adding External Sources:**
+1. Ensure external collection uses `text-embedding-3-large` embeddings
+2. Add source configuration to `EXTERNAL_QDRANT_SOURCES` (minified JSON)
+3. Restart application
+4. Source appears automatically in UI
+
+No code changes required!
+
+**Configuration Example:**
+See `.env.example` for full documentation and examples.
+
+**Implementation Files:**
+- `src/config/externalSources.ts` - Configuration parser and Qdrant client factory
+- `src/services/qdrantSearch.ts` - Multi-source search with single embedding
+- `src/components/ExternalSourceSelector.tsx` - UI selector component
+- `src/components/SourceBadge.tsx` - Source attribution badges
+
 ### Application Structure
 
 #### Route Groups

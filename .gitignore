@@ -59,3 +59,6 @@ node_modules/
 
 # Editor
 .vscode/
+
+# Communication plans (internal)
+kommunikationsplan.md

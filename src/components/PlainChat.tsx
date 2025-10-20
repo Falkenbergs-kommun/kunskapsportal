@@ -7,6 +7,7 @@ import { ArrowUpIcon, MessageSquarePlusIcon, SettingsIcon, XIcon, FileTextIcon }
 import { useSidebar } from './ui/sidebar-chat'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { DepartmentSelector } from './DepartmentSelector'
+import { ExternalSourceSelector } from './ExternalSourceSelector'
 import { MarkdownMessage } from './MarkdownMessage'
 import { usePersistedState } from '@/hooks/usePersistedState'
 
@@ -30,7 +31,7 @@ export function PlainChat() {
     sender: 'agent',
     text: 'Hej! Jag är din AI-assistent med tillgång till kommunens kunskapsdatabas. Hur kan jag hjälpa dig idag?',
   }
-  
+
   const [messages, setMessages, messagesLoading] = usePersistedState<Message[]>(
     'chat_messages',
     [initialMessage]
@@ -41,11 +42,17 @@ export function PlainChat() {
     'chat_selected_departments',
     []
   )
+  const [selectedExternalSources, setSelectedExternalSources] = usePersistedState<string[]>(
+    'chat_selected_external_sources',
+    []
+  )
   const [articleContext, setArticleContext] = usePersistedState<ArticleContext | null>(
     'chat_article_context',
     null
   )
   const [showSettings, setShowSettings] = useState(false)
+  const [availableDepartments, setAvailableDepartments] = useState<any[]>([])
+  const [availableExternalSources, setAvailableExternalSources] = useState<any[]>([])
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const { open, setOpen } = useSidebar()
@@ -66,6 +73,53 @@ export function PlainChat() {
       }, 100)
     }
   }, [isLoading, messages.length])
+
+  // Fetch available departments and external sources
+  useEffect(() => {
+    const fetchAvailableSources = async () => {
+      try {
+        const response = await fetch('/api/chat')
+        if (response.ok) {
+          const data = await response.json()
+          setAvailableDepartments(data.departments || [])
+          setAvailableExternalSources(data.externalSources || [])
+
+          // Validate and clean up selected departments
+          const validDeptIds = getAllDepartmentIds(data.departments || [])
+          const validSelectedDepts = selectedDepartments.filter((id) => validDeptIds.includes(id))
+          if (validSelectedDepts.length !== selectedDepartments.length) {
+            setSelectedDepartments(validSelectedDepts)
+          }
+
+          // Validate and clean up selected external sources
+          const validSourceIds = (data.externalSources || []).map((s: any) => s.id)
+          const validSelectedSources = selectedExternalSources.filter((id) =>
+            validSourceIds.includes(id),
+          )
+          if (validSelectedSources.length !== selectedExternalSources.length) {
+            setSelectedExternalSources(validSelectedSources)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch available sources:', error)
+      }
+    }
+
+    fetchAvailableSources()
+  }, [])
+
+  // Helper to get all department IDs from tree
+  const getAllDepartmentIds = (departments: any[]): string[] => {
+    const ids: string[] = []
+    const traverse = (dept: any) => {
+      ids.push(dept.id.toString())
+      if (dept.children) {
+        dept.children.forEach(traverse)
+      }
+    }
+    departments.forEach(traverse)
+    return ids
+  }
 
   // Listen for article context events
   useEffect(() => {
@@ -134,6 +188,7 @@ export function PlainChat() {
         body: JSON.stringify({
           message: trimmedInput,
           departmentIds: selectedDepartments,
+          externalSourceIds: selectedExternalSources,
           history,
           articleContext: articleContext ? {
             id: articleContext.id,
@@ -234,10 +289,31 @@ export function PlainChat() {
 
       {/* Settings/Department Filter Section */}
       {showSettings && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 space-y-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600">Kunskapskällor</span>
+            {(selectedDepartments.length > 0 || selectedExternalSources.length > 0) && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedDepartments([])
+                  setSelectedExternalSources([])
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Rensa alla
+              </Button>
+            )}
+          </div>
           <DepartmentSelector
             selectedDepartments={selectedDepartments}
             onSelectionChange={setSelectedDepartments}
+          />
+          <ExternalSourceSelector
+            selectedSources={selectedExternalSources}
+            onSelectionChange={setSelectedExternalSources}
           />
         </div>
       )}
@@ -270,9 +346,9 @@ export function PlainChat() {
             className="text-gray-500 hover:text-gray-700"
           >
             <SettingsIcon className="h-4 w-4 mr-1" />
-            {selectedDepartments.length > 0 
-              ? `${selectedDepartments.length} avdelningar valda`
-              : 'Filtrera avdelningar'
+            {selectedDepartments.length > 0 || selectedExternalSources.length > 0
+              ? `${selectedDepartments.length + selectedExternalSources.length} källor valda`
+              : 'Filtrera kunskap'
             }
           </Button>
           {messages.length > 1 && (
@@ -294,9 +370,12 @@ export function PlainChat() {
         >
           <Textarea
             ref={inputRef}
-            placeholder={articleContext 
-              ? `Ställ en fråga om "${articleContext.title}"...`
-              : "Ställ en fråga om kommunens dokument..."
+            placeholder={
+              articleContext
+                ? `Ställ en fråga om "${articleContext.title}"...`
+                : selectedExternalSources.length > 0
+                  ? "Sök i kunskapsbasen och externa källor..."
+                  : "Ställ en fråga om kommunens dokument..."
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}

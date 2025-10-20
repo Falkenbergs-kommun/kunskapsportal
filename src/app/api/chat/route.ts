@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { chatWithKnowledge, type ChatMessage } from '@/services/geminiChat'
 import { getDepartmentHierarchy } from '@/services/qdrantSearch'
+import { getExternalSources } from '@/config/externalSources'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { message, departmentIds = [], history = [], articleContext } = body
+    const { message, departmentIds = [], externalSourceIds = [], history = [], articleContext } = body
 
     if (!message || typeof message !== 'string' || message.trim() === '') {
       return NextResponse.json(
@@ -38,16 +39,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate external source IDs against configuration
+    const availableSources = getExternalSources()
+    const validExternalSourceIds = externalSourceIds.filter((id: string) =>
+      availableSources.some((source) => source.id === id),
+    )
+
+    if (validExternalSourceIds.length !== externalSourceIds.length) {
+      console.warn('Some external source IDs not found in configuration')
+    }
+
     // If department IDs are provided, expand them to include all child departments
     let expandedDepartmentIds: string[] = []
     if (departmentIds.length > 0) {
       const payload = await getPayload({ config })
-      
+
       for (const deptId of departmentIds) {
         const hierarchyIds = await getDepartmentHierarchy(deptId, payload)
         expandedDepartmentIds.push(...hierarchyIds)
       }
-      
+
       // Remove duplicates
       expandedDepartmentIds = [...new Set(expandedDepartmentIds)]
     }
@@ -74,6 +85,7 @@ export async function POST(request: NextRequest) {
     const response = await chatWithKnowledge({
       message,
       departmentIds: expandedDepartmentIds,
+      externalSourceIds: validExternalSourceIds,
       history: validatedHistory,
       articleContext: articleContext || null,
     })
@@ -81,6 +93,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       response,
       departmentIds: expandedDepartmentIds, // Return expanded IDs for transparency
+      externalSourceIds: validExternalSourceIds, // Return validated IDs
     })
   } catch (error) {
     console.error('Chat API error:', error)
@@ -109,11 +122,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to fetch available departments
+// GET endpoint to fetch available departments and external sources
 export async function GET(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
-    
+
     // Fetch all departments
     const departments = await payload.find({
       collection: 'departments',
@@ -124,16 +137,22 @@ export async function GET(request: NextRequest) {
     // Structure departments in a hierarchical format
     const departmentTree = buildDepartmentTree(departments.docs)
 
+    // Fetch external sources from configuration (generic - no hardcoded IDs)
+    const externalSources = getExternalSources().map((source) => ({
+      id: source.id,
+      label: source.label,
+      icon: source.icon,
+      color: source.color,
+    }))
+
     return NextResponse.json({
       departments: departmentTree,
+      externalSources, // Dynamically from config
       total: departments.totalDocs,
     })
   } catch (error) {
     console.error('Error fetching departments:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch departments' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch departments' }, { status: 500 })
   }
 }
 

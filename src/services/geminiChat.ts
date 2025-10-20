@@ -38,15 +38,21 @@ export interface ArticleContext {
 export interface ChatOptions {
   message: string
   departmentIds?: string[]
+  externalSourceIds?: string[]
   history?: ChatMessage[]
   articleContext?: ArticleContext | null
 }
 
 // Tool executor function
-async function executeSearchKnowledge(args: any, departmentIds: string[]): Promise<string> {
+async function executeSearchKnowledge(
+  args: any,
+  departmentIds: string[],
+  externalSourceIds: string[],
+): Promise<string> {
   const searchResults = await searchKnowledgeBase({
     query: args.query,
     departmentIds,
+    externalSourceIds,
     limit: 5,
   })
 
@@ -56,41 +62,50 @@ async function executeSearchKnowledge(args: any, departmentIds: string[]): Promi
 export async function chatWithKnowledge({
   message,
   departmentIds = [],
+  externalSourceIds = [],
   history = [],
   articleContext = null,
 }: ChatOptions): Promise<string> {
   try {
+    // Build source context message for system prompt
+    const sourceContext =
+      externalSourceIds.length > 0
+        ? '\n\nYou have access to both internal documents and external sources. Always cite the source of information in your answers.'
+        : ''
+
     // Adjust system instruction based on whether we have article context
     const systemInstruction = articleContext
       ? `You are a helpful AI assistant discussing a specific article from the Swedish municipal knowledge base.
-      
+
       You are currently discussing the article titled: "${articleContext.title}"
       ${articleContext.summary ? `Article summary: ${articleContext.summary}` : ''}
-      
+
       Focus your responses primarily on this specific article's content. When the user asks questions, first answer based on the information in this article.
-      
+
       IMPORTANT: You have access to the searchKnowledge function to find related information from the broader knowledge base. Use it when:
       1. The user asks about something not fully covered in the current article
       2. The user wants to find similar or related articles
       3. You need additional context or information to provide a complete answer
-      
+
       When you find relevant articles through search:
       1. Provide direct links using markdown format: [Article Title](Article URL)
       2. Explain how the found articles relate to the current discussion
       3. Guide the user to specific articles that complement the current one
-      
+      ${sourceContext}
+
       Answer in the same language as the user's question (Swedish or English).
       Be helpful and provide clear, structured responses using markdown.`
-      : `You are a helpful AI assistant with access to a knowledge base of Swedish municipal documents. 
+      : `You are a helpful AI assistant with access to a knowledge base of Swedish municipal documents.
       When answering questions, use the searchKnowledge function to find relevant information from the knowledge base.
       Always search for relevant information before providing an answer.
-      
+
       IMPORTANT: When you find relevant articles:
       1. Provide direct links to the articles using markdown format: [Article Title](Article URL)
       2. Guide the user to the specific article that best answers their question
       3. Explain what they will find in each linked article
       4. Use the complete Article URL from the search results to create working links
-      
+      ${sourceContext}
+
       Answer in the same language as the user's question (Swedish or English).
       Be helpful and guide users to find the exact information they need.
       Format your responses with clear structure using markdown.`
@@ -147,8 +162,12 @@ export async function chatWithKnowledge({
       const functionCall = functionCalls[0]
 
       if (functionCall.name === 'searchKnowledge' && functionCall.args) {
-        // Execute the search
-        const searchResult = await executeSearchKnowledge(functionCall.args, departmentIds)
+        // Execute the search with both department and external source filters
+        const searchResult = await executeSearchKnowledge(
+          functionCall.args,
+          departmentIds,
+          externalSourceIds,
+        )
 
         // Generate final response with the search results
         const finalResponse = await ai.models.generateContent({
@@ -180,11 +199,15 @@ function formatSearchResults(results: SearchResult[]): string {
 
   return results
     .map((result, index) => {
-      return `**Result ${index + 1}:**
+      const sourceLabel = result.isExternal
+        ? `[External Source: ${result.source}]`
+        : '[Internal Knowledge Base]'
+
+      return `**Result ${index + 1}:** ${sourceLabel}
 Title: ${result.title}
 Article URL: ${result.url || 'URL not available'}
-Article Slug: ${result.slug || 'Slug not available'}
-Department: ${result.department || 'N/A'}
+${!result.isExternal ? `Article Slug: ${result.slug || 'Slug not available'}` : ''}
+${!result.isExternal ? `Department: ${result.department || 'N/A'}` : ''}
 Document Type: ${result.documentType || 'N/A'}
 Relevance Score: ${result.score.toFixed(2)}
 

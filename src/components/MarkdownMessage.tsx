@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import { ExternalLink } from 'lucide-react'
 
 interface MarkdownMessageProps {
   content: string
@@ -110,26 +111,50 @@ export function MarkdownMessage({ content, className = '' }: MarkdownMessageProp
       // Add the link
       const linkText = linkMatch[1]
       const linkUrl = linkMatch[2]
-      const isInternal = linkUrl.startsWith('/') || (typeof window !== 'undefined' && linkUrl.includes(window.location.host))
-      
-      elements.push(
-        <a
-          key={`link-${linkMatch.index}`}
-          href={linkUrl}
-          className="text-blue-600 hover:underline cursor-pointer"
-          onClick={(e) => {
-            // Check if it's an internal link
-            if (linkUrl.startsWith('/')) {
+      const isExternal = linkUrl.startsWith('http://') || linkUrl.startsWith('https://')
+      const isInternal = linkUrl.startsWith('/')
+
+      if (isExternal) {
+        // External link - open in new tab with security attributes and icon
+        elements.push(
+          <a
+            key={`link-${linkMatch.index}`}
+            href={linkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline cursor-pointer inline-flex items-center gap-1"
+          >
+            {linkText}
+            <ExternalLink className="h-3 w-3 inline" />
+          </a>
+        )
+      } else if (isInternal) {
+        // Internal link - use Next.js router
+        elements.push(
+          <a
+            key={`link-${linkMatch.index}`}
+            href={linkUrl}
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={(e) => {
               e.preventDefault()
-              // Use Next.js router for internal navigation
               router.push(linkUrl)
-            }
-            // Let external links work normally
-          }}
-        >
-          {linkText}
-        </a>
-      )
+            }}
+          >
+            {linkText}
+          </a>
+        )
+      } else {
+        // Relative or other link
+        elements.push(
+          <a
+            key={`link-${linkMatch.index}`}
+            href={linkUrl}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
+            {linkText}
+          </a>
+        )
+      }
       
       lastIndex = linkMatch.index + linkMatch[0].length
     }
