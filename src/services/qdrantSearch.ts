@@ -77,10 +77,6 @@ async function searchExternalCollection(
     const titleField = getNestedValue(result.payload, source.mapping.title)
     const contentField = getNestedValue(result.payload, source.mapping.content)
 
-    // Debug log to see what we're getting
-    console.log(`[External Source: ${source.id}] URL field (${source.mapping.url}):`, urlField)
-    console.log(`[External Source: ${source.id}] Payload keys:`, Object.keys(result.payload || {}))
-
     // Construct full URL
     let fullUrl = urlField || ''
     if (fullUrl && !fullUrl.startsWith('http') && source.urlBase) {
@@ -121,53 +117,70 @@ export async function searchKnowledgeBase({
       externalSourceIds.length === 0 || externalSourceIds.includes('internal')
 
     if (searchInternal) {
-      // Build filter for departments if provided
-      const filter: any = {}
-      if (departmentIds.length > 0) {
-        const numericDeptIds = departmentIds.map((id) => parseInt(id))
+      try {
+        // Check if internal collection exists
+        const collections = await qdrant.getCollections()
+        const collectionExists = collections.collections.some(
+          (col) => col.name === COLLECTION_NAME,
+        )
 
-        filter.should = numericDeptIds.map((deptId) => ({
-          key: 'department.id',
-          match: { value: deptId },
-        }))
+        if (collectionExists) {
+          // Build filter for departments if provided
+          const filter: any = {}
+          if (departmentIds.length > 0) {
+            const numericDeptIds = departmentIds.map((id) => parseInt(id))
+
+            filter.should = numericDeptIds.map((deptId) => ({
+              key: 'department.id',
+              match: { value: deptId },
+            }))
+          }
+
+          // Search in internal Qdrant collection
+          const searchResult = await qdrant.search(COLLECTION_NAME, {
+            vector: queryEmbedding,
+            limit,
+            with_payload: true,
+            filter: Object.keys(filter).length > 0 ? filter : undefined,
+          })
+
+          // Transform internal results
+          const internalResults = searchResult.map((result) => {
+            const slug = result.payload?.slug as string | null
+            const departmentPath = result.payload?.departmentPath as string | null
+
+            // Construct URL with full department hierarchy
+            let url = ''
+            if (slug && departmentPath) {
+              url = `/${departmentPath}/${slug}`
+            }
+
+            return {
+              id: result.id as string,
+              title: (result.payload?.title as string) || 'Untitled',
+              text: (result.payload?.text as string) || '',
+              department: (result.payload?.department as string) || null,
+              documentType: (result.payload?.documentType as string) || null,
+              score: result.score || 0,
+              articleId: (result.payload?.articleId as string) || '',
+              slug,
+              departmentPath,
+              url,
+              source: 'internal' as const,
+              isExternal: false,
+            }
+          })
+
+          results.push(...internalResults)
+        } else {
+          console.log(
+            `Internal collection '${COLLECTION_NAME}' does not exist yet - skipping internal search`,
+          )
+        }
+      } catch (error) {
+        console.error('Error searching internal collection:', error)
+        // Continue with external sources even if internal search fails
       }
-
-      // Search in internal Qdrant collection
-      const searchResult = await qdrant.search(COLLECTION_NAME, {
-        vector: queryEmbedding,
-        limit,
-        with_payload: true,
-        filter: Object.keys(filter).length > 0 ? filter : undefined,
-      })
-
-      // Transform internal results
-      const internalResults = searchResult.map((result) => {
-        const slug = result.payload?.slug as string | null
-        const departmentPath = result.payload?.departmentPath as string | null
-
-        // Construct URL with full department hierarchy
-        let url = ''
-        if (slug && departmentPath) {
-          url = `/${departmentPath}/${slug}`
-        }
-
-        return {
-          id: result.id as string,
-          title: (result.payload?.title as string) || 'Untitled',
-          text: (result.payload?.text as string) || '',
-          department: (result.payload?.department as string) || null,
-          documentType: (result.payload?.documentType as string) || null,
-          score: result.score || 0,
-          articleId: (result.payload?.articleId as string) || '',
-          slug,
-          departmentPath,
-          url,
-          source: 'internal' as const,
-          isExternal: false,
-        }
-      })
-
-      results.push(...internalResults)
     }
 
     // Search external sources in parallel
