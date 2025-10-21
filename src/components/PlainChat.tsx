@@ -202,11 +202,35 @@ export function PlainChat() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to get response')
+
+        // Format error with debug info if available
+        let formattedError = errorData.error || 'Ett fel uppstod'
+
+        if (errorData.debugInfo) {
+          formattedError += '\n\n**Debug-information för utvecklare:**\n'
+
+          if (errorData.debugInfo.errorType) {
+            formattedError += `- Feltyp: \`${errorData.debugInfo.errorType}\`\n`
+          }
+          if (errorData.debugInfo.errorMessage) {
+            formattedError += `- Meddelande: ${errorData.debugInfo.errorMessage}\n`
+          }
+          if (errorData.debugInfo.errorStack) {
+            formattedError += `- Stack:\n\`\`\`\n${errorData.debugInfo.errorStack}\n\`\`\`\n`
+          }
+          if (errorData.debugInfo.timestamp) {
+            formattedError += `- Tidpunkt: ${errorData.debugInfo.timestamp}\n`
+          }
+          if (errorData.debugInfo.requestInfo) {
+            formattedError += `- Request:\n\`\`\`json\n${JSON.stringify(errorData.debugInfo.requestInfo, null, 2)}\n\`\`\`\n`
+          }
+        }
+
+        throw new Error(formattedError)
       }
 
       const data = await response.json()
-      
+
       const agentMessage: Message = {
         id: Date.now() + 1,
         sender: 'agent',
@@ -215,12 +239,15 @@ export function PlainChat() {
       setMessages((prev) => [...prev, agentMessage])
     } catch (error) {
       console.error('Chat error:', error)
+
+      const errorText = error instanceof Error
+        ? error.message
+        : 'Tyvärr uppstod ett fel när jag försökte svara på din fråga. Vänligen försök igen.'
+
       const errorMessage: Message = {
         id: Date.now() + 1,
         sender: 'agent',
-        text: error instanceof Error 
-          ? `Tyvärr uppstod ett fel: ${error.message}` 
-          : 'Tyvärr uppstod ett fel när jag försökte svara på din fråga. Vänligen försök igen.',
+        text: errorText,
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {

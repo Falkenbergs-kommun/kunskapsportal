@@ -6,8 +6,10 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 export async function POST(request: NextRequest) {
+  let body: any = null
+
   try {
-    const body = await request.json()
+    body = await request.json()
     const { message, departmentIds = [], externalSourceIds = [], history = [], articleContext } = body
 
     if (!message || typeof message !== 'string' || message.trim() === '') {
@@ -96,27 +98,97 @@ export async function POST(request: NextRequest) {
       externalSourceIds: validExternalSourceIds, // Return validated IDs
     })
   } catch (error) {
-    console.error('Chat API error:', error)
-    
+    console.error('[Chat API Error]', error)
+
     // Check for specific error types
     if (error instanceof Error) {
-      if (error.message.includes('rate limit')) {
+      // Rate limit errors
+      if (error.message.includes('rate limit') || error.message.includes('429')) {
         return NextResponse.json(
-          { error: 'Rate limit exceeded. Please try again later.' },
+          {
+            error: 'API rate limit nådd. Vänligen försök igen om en stund.',
+            debugInfo: {
+              errorType: 'rate_limit',
+              timestamp: new Date().toISOString(),
+            }
+          },
           { status: 429 }
         )
       }
-      
-      if (error.message.includes('API key')) {
+
+      // API key errors
+      if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('403')) {
         return NextResponse.json(
-          { error: 'API configuration error' },
+          {
+            error: 'API-konfigurationsfel. Kontakta utvecklaren.',
+            debugInfo: {
+              errorType: 'api_config',
+              timestamp: new Date().toISOString(),
+            }
+          },
           { status: 500 }
         )
       }
+
+      // Qdrant connection errors
+      if (error.message.includes('Qdrant') || error.message.includes('vector')) {
+        return NextResponse.json(
+          {
+            error: 'Fel vid anslutning till kunskapsdatabasen. Vänligen försök igen.',
+            debugInfo: {
+              errorType: 'qdrant_connection',
+              errorMessage: error.message,
+              timestamp: new Date().toISOString(),
+            }
+          },
+          { status: 500 }
+        )
+      }
+
+      // OpenAI embedding errors
+      if (error.message.includes('embedding') || error.message.includes('OpenAI')) {
+        return NextResponse.json(
+          {
+            error: 'Fel vid generering av sökning. Vänligen försök igen.',
+            debugInfo: {
+              errorType: 'embedding_error',
+              errorMessage: error.message,
+              timestamp: new Date().toISOString(),
+            }
+          },
+          { status: 500 }
+        )
+      }
+
+      // Return detailed error for developers in test phase
+      return NextResponse.json(
+        {
+          error: `Ett fel uppstod: ${error.message}`,
+          debugInfo: {
+            errorType: 'unknown',
+            errorMessage: error.message,
+            errorStack: error.stack?.split('\n').slice(0, 3).join('\n'), // First 3 lines of stack
+            timestamp: new Date().toISOString(),
+            requestInfo: body ? {
+              messageLength: body.message?.length || 0,
+              historyLength: body.history?.length || 0,
+              departmentFilters: body.departmentIds?.length || 0,
+              externalSourceFilters: body.externalSourceIds?.length || 0,
+            } : null
+          }
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(
-      { error: 'An error occurred while processing your message' },
+      {
+        error: 'Ett okänt fel uppstod när meddelandet bearbetades.',
+        debugInfo: {
+          errorType: 'unknown_non_error',
+          timestamp: new Date().toISOString(),
+        }
+      },
       { status: 500 }
     )
   }
