@@ -78,8 +78,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, [])
 
   return (
-    <html lang="en">
+    <html lang="sv">
       <head>
+        <title>Kunskapsportal - Falkenbergs kommun</title>
+        <meta name="description" content="AI-driven kunskapsdatabas för Falkenbergs kommun" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;800&family=Lato:wght@300;400&display=swap"
           rel="stylesheet"

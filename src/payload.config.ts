@@ -32,6 +32,9 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     user: Users.slug,
+    meta: {
+      titleSuffix: '- Falkenbergs kommun',
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
