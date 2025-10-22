@@ -175,8 +175,6 @@ export interface Media {
  */
 export interface Article {
   id: number;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
   /**
    * Upload documents to be used as a source for the content.
    */
@@ -270,6 +268,8 @@ export interface Article {
     | null;
   relatedDocuments?: (number | Article)[] | null;
   language?: ('sv' | 'en' | 'sv-simple') | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -282,14 +282,14 @@ export interface Article {
  */
 export interface Department {
   id: number;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
   name: string;
   /**
    * Leave this empty if this is a top-level department.
    */
   parent?: (number | null) | Department;
   slug?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -406,8 +406,6 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
-  createdBy?: T;
-  updatedBy?: T;
   source_documents?: T;
   content?: T;
   title?: T;
@@ -447,6 +445,8 @@ export interface ArticlesSelect<T extends boolean = true> {
       };
   relatedDocuments?: T;
   language?: T;
+  createdBy?: T;
+  updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -456,11 +456,11 @@ export interface ArticlesSelect<T extends boolean = true> {
  * via the `definition` "departments_select".
  */
 export interface DepartmentsSelect<T extends boolean = true> {
-  createdBy?: T;
-  updatedBy?: T;
   name?: T;
   parent?: T;
   slug?: T;
+  createdBy?: T;
+  updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

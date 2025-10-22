@@ -129,44 +129,6 @@ export const Articles: CollectionConfig = {
   },
   fields: [
     {
-      name: 'createdBy',
-      type: 'relationship',
-      relationTo: 'users',
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-      },
-      hooks: {
-        beforeChange: [
-          ({ req, operation, value }) => {
-            if (operation === 'create' && req.user) {
-              return req.user.id
-            }
-            return value
-          },
-        ],
-      },
-    },
-    {
-      name: 'updatedBy',
-      type: 'relationship',
-      relationTo: 'users',
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-      },
-      hooks: {
-        beforeChange: [
-          ({ req, value }) => {
-            if (req.user) {
-              return req.user.id
-            }
-            return value
-          },
-        ],
-      },
-    },
-    {
       type: 'tabs',
       tabs: [
         {
@@ -504,6 +466,53 @@ export const Articles: CollectionConfig = {
                     { label: 'Lättläst svenska', value: 'sv-simple' },
                   ],
                   admin: {},
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Systemfält',
+              admin: {
+                initCollapsed: true,
+              },
+              fields: [
+                {
+                  name: 'createdBy',
+                  label: 'Skapad av',
+                  type: 'relationship',
+                  relationTo: 'users',
+                  admin: {
+                    readOnly: true,
+                  },
+                  hooks: {
+                    beforeChange: [
+                      ({ req, operation, value }) => {
+                        if (operation === 'create' && req.user) {
+                          return req.user.id
+                        }
+                        return value
+                      },
+                    ],
+                  },
+                },
+                {
+                  name: 'updatedBy',
+                  label: 'Senast uppdaterad av',
+                  type: 'relationship',
+                  relationTo: 'users',
+                  admin: {
+                    readOnly: true,
+                  },
+                  hooks: {
+                    beforeChange: [
+                      ({ req, value }) => {
+                        if (req.user) {
+                          return req.user.id
+                        }
+                        return value
+                      },
+                    ],
+                  },
                 },
               ],
             },
