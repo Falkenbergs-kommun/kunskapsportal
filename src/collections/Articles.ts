@@ -279,6 +279,12 @@ export const Articles: CollectionConfig = {
                     { label: 'Arkiverad', value: 'archived' },
                     { label: 'Ersatt', value: 'superseded' },
                   ],
+                  access: {
+                    update: ({ doc }) => {
+                      // Prevent updates when article is published
+                      return doc?._status !== 'published'
+                    },
+                  },
                   admin: {
                     description:
                       'Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv". För att ändra status måste artikeln först avpubliceras.',
