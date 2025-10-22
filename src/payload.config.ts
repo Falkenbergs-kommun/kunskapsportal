@@ -14,6 +14,7 @@ import {
   OrderedListFeature,
   HorizontalRuleFeature,
   EXPERIMENTAL_TableFeature,
+  FixedToolbarFeature,
 } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -41,17 +42,12 @@ export default buildConfig({
   },
   collections: [Users, Media, Articles, Departments],
   editor: lexicalEditor({
-    features: [
-      // Essential features for basic text editing
-      HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] }),
-      ParagraphFeature(),
-      BoldFeature(),
-      ItalicFeature(),
-      UnderlineFeature(),
-      LinkFeature(),
-      UnorderedListFeature(),
-      OrderedListFeature(),
-      HorizontalRuleFeature(),
+    features: ({ defaultFeatures }) => [
+      // Fixed toolbar at the top (like Microsoft Word)
+      FixedToolbarFeature(),
+      // Include all default features
+      ...defaultFeatures,
+      // Add custom features
       // Table feature (experimental)
       EXPERIMENTAL_TableFeature(),
       // Upload feature for media
