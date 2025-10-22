@@ -183,7 +183,7 @@ Klicka **"Create"** längst ner.
 
 ### 🤖 AI-innehållsextrahering
 
-**Teknologi:** [Google Gemini 2.5 Flash](https://ai.google.dev/) eller [Mistral Pixtral Large](https://mistral.ai/)
+**Teknologi:** [Google Gemini Flash](https://ai.google.dev/) eller [Mistral Pixtral Large](https://mistral.ai/)
 
 **Vad den gör:**
 - Läser PDF:er och Office-dokument med OCR (Optical Character Recognition)
@@ -199,7 +199,7 @@ Klicka **"Create"** längst ner.
 
 ### 🧠 AI-metadatagenerering
 
-**Teknologi:** [Google Gemini 2.5 Flash](https://ai.google.dev/)
+**Teknologi:** [Google Gemini Flash](https://ai.google.dev/)
 
 **Vad den gör:**
 - Analyserar dokumentinnehållet på svenska

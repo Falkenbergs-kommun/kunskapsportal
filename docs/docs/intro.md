@@ -76,7 +76,7 @@ Kunskapsportal bygger på moderna, beprövade teknologier:
 - **[Qdrant](https://qdrant.tech/)** - Vektordatabas för RAG
 
 ### AI-stack
-- **[Google Gemini 2.5 Flash](https://ai.google.dev/)** - OCR, chatt, metadatagenerering
+- **[Google Gemini Flash](https://ai.google.dev/)** - OCR, chatt, metadatagenerering
 - **[OpenAI Embeddings](https://platform.openai.com/)** - Text-to-vector för semantisk sökning
 - **[Mistral AI](https://mistral.ai/)** - Alternativ OCR-motor
 

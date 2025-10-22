@@ -77,7 +77,7 @@ const GenerateMetadataButton = () => {
         <Button onClick={handleGenerateMetadata} disabled={isGenerating}>
           {isGenerating ? 'Generating...' : '✨ Generate Metadata with AI'}
         </Button>
-        <span style={{ fontSize: '12px', color: '#6b7280' }}>Powered by Gemini 2.5 Flash</span>
+        <span style={{ fontSize: '12px', color: '#6b7280' }}>Powered by Gemini Flash</span>
       </div>
 
       {error && (

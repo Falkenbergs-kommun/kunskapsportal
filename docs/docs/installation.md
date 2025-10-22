@@ -539,7 +539,7 @@ docker run -d -p 6333:6333 -p 6334:6334 \
 **Testa direkt:**
 ```bash
 # Gemini
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_KEY" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=YOUR_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"contents":[{"parts":[{"text":"Hello"}]}]}'
 
