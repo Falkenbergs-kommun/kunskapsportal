@@ -175,6 +175,8 @@ export interface Media {
  */
 export interface Article {
   id: number;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
   /**
    * Upload documents to be used as a source for the content.
    */
@@ -199,7 +201,7 @@ export interface Article {
    */
   title?: string | null;
   /**
-   * En kort sammanfattning av dokumentets innehåll, genererad av AI.
+   * En kort sammanfattning av dokumentets innehåll.
    */
   summary?: string | null;
   /**
@@ -226,7 +228,7 @@ export interface Article {
     | null;
   department?: (number | null) | Department;
   /**
-   * Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv".
+   * Dokumentets status i den kommunala arbetsflödet. "Aktiva" dokument bäddas in i kunskapsdatabasen för sökning. Publicering sätter automatiskt statusen till "Aktiv". För att ändra status måste artikeln först avpubliceras.
    */
   documentStatus?: ('draft' | 'review' | 'approved' | 'active' | 'archived' | 'superseded') | null;
   targetAudience?: ('citizens' | 'staff' | 'officials' | 'businesses' | 'municipalities')[] | null;
@@ -280,6 +282,8 @@ export interface Article {
  */
 export interface Department {
   id: number;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
   name: string;
   /**
    * Leave this empty if this is a top-level department.
@@ -402,6 +406,8 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
+  createdBy?: T;
+  updatedBy?: T;
   source_documents?: T;
   content?: T;
   title?: T;
@@ -450,6 +456,8 @@ export interface ArticlesSelect<T extends boolean = true> {
  * via the `definition` "departments_select".
  */
 export interface DepartmentsSelect<T extends boolean = true> {
+  createdBy?: T;
+  updatedBy?: T;
   name?: T;
   parent?: T;
   slug?: T;

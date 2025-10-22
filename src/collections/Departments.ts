@@ -11,6 +11,44 @@ export const Departments: CollectionConfig = {
   },
   fields: [
     {
+      name: 'createdBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+      hooks: {
+        beforeChange: [
+          ({ req, operation, value }) => {
+            if (operation === 'create' && req.user) {
+              return req.user.id
+            }
+            return value
+          },
+        ],
+      },
+    },
+    {
+      name: 'updatedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+      },
+      hooks: {
+        beforeChange: [
+          ({ req, value }) => {
+            if (req.user) {
+              return req.user.id
+            }
+            return value
+          },
+        ],
+      },
+    },
+    {
       name: 'name',
       type: 'text',
       required: true,
