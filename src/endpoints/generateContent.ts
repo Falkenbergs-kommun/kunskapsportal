@@ -2,6 +2,8 @@ import type { Endpoint, PayloadRequest } from 'payload'
 import { processDocumentWithGemini } from '@/services/gemini'
 import { processDocumentWithMistral } from '@/services/mistralSimple'
 import type { Media } from '@/payload-types'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 // Simple markdown to Lexical conversion - for production, consider using a proper converter
 function convertMarkdownToLexical(markdown: string) {
@@ -118,19 +120,22 @@ export const generateContentEndpoint: Endpoint = {
           doc = docRef as Media
         }
 
-        if (!doc?.url) {
-          console.warn(`Skipping document ${doc?.id} - no URL found`)
+        if (!doc?.filename) {
+          console.warn(`Skipping document ${doc?.id} - no filename found`)
           continue
         }
 
-        // Download the file
-        const response = await fetch(doc.url)
-        if (!response.ok) {
-          console.warn(`Failed to download document ${doc.id}`)
+        // Read the file directly from the filesystem instead of fetching via HTTP
+        // This avoids authentication issues in production where nginx requires cookies
+        const filePath = path.join(process.cwd(), 'media', doc.filename)
+        let buffer: Buffer
+
+        try {
+          buffer = await fs.readFile(filePath)
+        } catch (error) {
+          console.warn(`Failed to read document ${doc.id} from ${filePath}:`, error)
           continue
         }
-
-        const buffer = Buffer.from(await response.arrayBuffer())
 
         // Choose extractor based on environment variable
         const extractor = process.env.PDF_EXTRACTOR || 'gemini'

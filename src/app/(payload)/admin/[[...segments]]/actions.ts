@@ -8,6 +8,8 @@ import { convertMarkdownToLexical } from '@payloadcms/richtext-lexical'
 import { editorConfigFactory } from '@payloadcms/richtext-lexical'
 import type { Media } from '../../../../payload-types'
 import { GoogleGenAI } from '@google/genai'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 // Helper function to parse markdown tables
 function parseMarkdownTableFromText(
@@ -83,30 +85,27 @@ export async function generateContentFromDocuments(articleId: string) {
         doc = docRef as Media
       }
 
-      if (!doc?.url) {
-        console.warn(`[AI] Skipping document ${doc?.id} - no URL found`)
+      if (!doc?.filename) {
+        console.warn(`[AI] Skipping document ${doc?.id} - no filename found`)
         continue
       }
 
-      // Download the file
-      let fileUrl = doc.url
-      if (fileUrl.startsWith('/')) {
-        // For local development, assume localhost:3000
-        const payloadUrl = process.env.PAYLOAD_URL || 'http://localhost:3000'
-        fileUrl = `${payloadUrl}${fileUrl}`
-      }
+      // Read the file directly from the filesystem instead of fetching via HTTP
+      // This avoids authentication issues in production where nginx requires cookies
+      const filePath = path.join(process.cwd(), 'media', doc.filename)
+      let buffer: Buffer
 
-      const response = await fetch(fileUrl)
-      console.log(`[AI] Fetched document from ${fileUrl} - Status: ${response.status}`)
-      if (!response.ok) {
-        console.warn(`[AI] Failed to download document ${doc.id}`)
+      try {
+        buffer = await fs.readFile(filePath)
+        console.log(`[AI] Read document from ${filePath}, size: ${buffer.length} bytes`)
+      } catch (error) {
+        console.warn(`[AI] Failed to read document ${doc.id} from ${filePath}:`, error)
         continue
       }
 
-      let buffer = Buffer.from(await response.arrayBuffer())
       let currentMimeType = doc.mimeType || 'application/octet-stream'
       console.log(
-        `[AI] Document downloaded into buffer, size: ${buffer.length} bytes. Type: ${currentMimeType}`,
+        `[AI] Document loaded into buffer, size: ${buffer.length} bytes. Type: ${currentMimeType}`,
       )
 
       // Check if document needs conversion to PDF (prefer Mistral OCR)
