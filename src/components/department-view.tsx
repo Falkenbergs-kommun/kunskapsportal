@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, FileText, Calendar, User, Building } from 'lucide-react'
+import { Search, FileText, Calendar, User, Building, Folder, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FavoriteStar } from '@/components/favorite-star'
 import { getDepartmentFullPath } from '@/lib/utils'
 
-import { Article } from '@/payload-types'
+import { Article, Department } from '@/payload-types'
 
 const documentTypeLabels: Record<string, string> = {
   policy: 'Policy',
@@ -24,16 +24,22 @@ const documentTypeLabels: Record<string, string> = {
   faq: 'FAQ',
 }
 
+interface SubdepartmentWithCount extends Department {
+  articleCount: number
+}
+
 interface DepartmentViewProps {
   departmentName: string
   departmentSlug?: string
   articles: Article[]
+  subdepartments?: SubdepartmentWithCount[]
 }
 
 export default function DepartmentView({
   departmentName,
   departmentSlug,
   articles,
+  subdepartments = [],
 }: DepartmentViewProps) {
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -70,6 +76,35 @@ export default function DepartmentView({
         </div>
       </header>
 
+      {/* Subdepartments Section */}
+      {subdepartments.length > 0 && (
+        <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {subdepartments.map((subdept) => {
+              const subdeptPath = getDepartmentFullPath(subdept)
+              return (
+                <Link key={subdept.id} href={`/${subdeptPath}`}>
+                  <Card className="hover:shadow-md transition-all hover:border-blue-300 bg-slate-50 h-full py-2">
+                    <CardContent>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-slate-900">{subdept.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <FileText className="h-4 w-4" />
+                            <span>{subdept.articleCount} dokument</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-slate-400 shrink-0" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="mb-8">
         <div className="relative">
@@ -94,7 +129,9 @@ export default function DepartmentView({
         {filteredArticles.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-            <p className="text-slate-500">Inga dokument hittades för &ldquo;{searchTerm}&rdquo;</p>
+            <p className="text-slate-500">
+              {searchTerm ? `Inga dokument hittades för "${searchTerm}"` : 'Inga dokument'}
+            </p>
           </div>
         ) : (
           <div className="grid gap-4">

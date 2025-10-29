@@ -45,7 +45,7 @@ export default buildConfig({
     features: ({ defaultFeatures }) => [
       // Fixed toolbar at the top (like Microsoft Word)
       FixedToolbarFeature(),
-      // Include all default features
+      // Include all default features (includes undo/redo via Cmd+Z/Cmd+Shift+Z)
       ...defaultFeatures,
       // Add custom features
       // Table feature (experimental)

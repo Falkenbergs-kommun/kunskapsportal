@@ -75,8 +75,7 @@ export default async function SlugPage({
 
   if (department) {
     // It's a department. Render the DepartmentView.
-    // NOTE: Your DepartmentView also uses mock data. You will need to
-    // adapt it to fetch and display the actual articles for this department.
+    // Query articles for this department
     const articlesQuery = await payload.find({
       collection: 'articles',
       where: {
@@ -90,11 +89,45 @@ export default async function SlugPage({
       depth: 3,
       limit: 100, // Adjust limit as needed
     })
+
+    // Query subdepartments (departments that have this department as parent)
+    const subdepartmentsQuery = await payload.find({
+      collection: 'departments',
+      where: {
+        parent: {
+          equals: department.id,
+        },
+      },
+      depth: 3, // Need full parent chain for getDepartmentFullPath
+    })
+
+    // For each subdepartment, count the published articles
+    const subdepartmentsWithCounts = await Promise.all(
+      subdepartmentsQuery.docs.map(async (subdept) => {
+        const count = await payload.count({
+          collection: 'articles',
+          where: {
+            department: {
+              equals: subdept.id,
+            },
+            _status: {
+              equals: 'published',
+            },
+          },
+        })
+        return {
+          ...subdept,
+          articleCount: count.totalDocs,
+        }
+      }),
+    )
+
     return (
       <DepartmentView
         departmentName={department.name}
         departmentSlug={`/${fullPath}`}
         articles={articlesQuery.docs}
+        subdepartments={subdepartmentsWithCounts}
       />
     )
   }
