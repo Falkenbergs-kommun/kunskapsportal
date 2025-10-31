@@ -313,7 +313,7 @@ export default function ArticleDisplay({ article }: { article: Article | null })
         </div>
       )}
       <div data-testid="article-content" className="mb-12">
-        {article.content && article.content.root?.children?.length > 0 ? (
+        {article.content && typeof article.content === 'string' && article.content.trim().length > 0 ? (
           <RichText data={article.content} />
         ) : (
           <p>No content available.</p>

@@ -20,53 +20,42 @@ export async function POST(request: NextRequest) {
       collection: 'articles',
       id: articleId,
     })
-    
-    if (!article.content || !article.content.root || !article.content.root.children) {
-      return NextResponse.json(
-        { error: 'Article has no content' },
-        { status: 400 }
-      )
-    }
-    
+
+    const currentContent = typeof article.content === 'string' ? article.content : ''
+
     console.log(`Adding ${imageIds.length} images to article ${articleId}`)
-    
-    // Create upload blocks for each image with proper Lexical structure
-    const uploadBlocks = imageIds.map((imageId: number) => ({
-      type: 'upload',
-      version: 1,
-      value: {
-        id: imageId
-      },
-      relationTo: 'media',
-      fields: {}
-    }))
-    
-    // Add a separator before images
-    const separator = {
-      type: 'horizontalRule',
-      version: 1,
-      children: []
-    }
-    
-    // Add the separator and upload blocks to the content
-    const newContent = {
-      ...article.content,
-      root: {
-        ...article.content.root,
-        children: [
-          ...article.content.root.children,
-          separator,
-          ...uploadBlocks
-        ]
-      }
-    }
-    
+
+    // Fetch image details to create markdown references
+    const images = await Promise.all(
+      imageIds.map(async (imageId: number) => {
+        try {
+          const media = await payload.findByID({
+            collection: 'media',
+            id: imageId,
+          })
+          return media
+        } catch (error) {
+          console.error(`Failed to fetch image ${imageId}:`, error)
+          return null
+        }
+      })
+    )
+
+    // Create markdown image syntax for each image
+    const imageMarkdown = images
+      .filter((img) => img !== null)
+      .map((img) => `![${img.filename || 'Image'}](${img.url || ''})`)
+      .join('\n\n')
+
+    // Add a separator and images to the content
+    const newContent = `${currentContent}\n\n---\n\n${imageMarkdown}`
+
     // Update the article
     await payload.update({
       collection: 'articles',
       id: articleId,
       data: {
-        content: newContent as any
+        content: newContent
       }
     })
     

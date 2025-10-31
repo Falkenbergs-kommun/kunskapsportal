@@ -1,5 +1,4 @@
 import type { SanitizedConfig } from 'payload'
-import { convertLexicalToMarkdown, editorConfigFactory } from '@payloadcms/richtext-lexical'
 import OpenAI from 'openai'
 import { QdrantClient } from '@qdrant/js-client-rest'
 import type { Article } from '../payload-types'
@@ -108,18 +107,12 @@ async function buildDepartmentPath(departmentId: number, payload: any): Promise<
 export const embed = async (doc: Article, config: SanitizedConfig, payload: any): Promise<void> => {
   await ensureCollection()
 
-  const editorConfig = await editorConfigFactory.default({
-    config,
-  })
-
   if (!doc.content) {
     return
   }
 
-  const markdown = await convertLexicalToMarkdown({
-    data: doc.content,
-    editorConfig,
-  })
+  // Content is now stored as plain markdown text
+  const markdown = typeof doc.content === 'string' ? doc.content : ''
 
   // Build full department path for URL construction
   let departmentPath: string[] = []

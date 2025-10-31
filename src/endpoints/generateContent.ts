@@ -5,89 +5,6 @@ import type { Media } from '@/payload-types'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-// Simple markdown to Lexical conversion - for production, consider using a proper converter
-function convertMarkdownToLexical(markdown: string) {
-  const lines = markdown.split('\n')
-  const children: any[] = []
-
-  for (const line of lines) {
-    if (line.trim() === '') {
-      // Skip empty lines
-      continue
-    }
-
-    if (line.startsWith('![') && line.includes('](/api/media/file/')) {
-      // Handle image references
-      const match = line.match(/!\[(.*?)\]\(\/api\/media\/file\/(.+?)\)/)
-      if (match) {
-        const [, alt, mediaId] = match
-        children.push({
-          type: 'upload',
-          value: {
-            id: mediaId,
-          },
-          relationTo: 'media',
-        })
-      }
-    } else if (line.startsWith('# ')) {
-      // Handle h1
-      children.push({
-        type: 'h1',
-        children: [
-          {
-            text: line.substring(2),
-          },
-        ],
-      })
-    } else if (line.startsWith('## ')) {
-      // Handle h2
-      children.push({
-        type: 'h2',
-        children: [
-          {
-            text: line.substring(3),
-          },
-        ],
-      })
-    } else if (line.startsWith('### ')) {
-      // Handle h3
-      children.push({
-        type: 'h3',
-        children: [
-          {
-            text: line.substring(4),
-          },
-        ],
-      })
-    } else if (line.trim() === '---') {
-      // Handle horizontal rules
-      children.push({
-        type: 'hr',
-      })
-    } else {
-      // Handle regular paragraphs
-      children.push({
-        type: 'p',
-        children: [
-          {
-            text: line,
-          },
-        ],
-      })
-    }
-  }
-
-  return {
-    root: {
-      children,
-      direction: 'ltr' as const,
-      format: '' as const,
-      indent: 0,
-      version: 1,
-    },
-  }
-}
-
 export const generateContentEndpoint: Endpoint = {
   path: '/generate-content/:id',
   method: 'post',
@@ -163,15 +80,12 @@ export const generateContentEndpoint: Endpoint = {
         combinedContent += `\n\n# ${doc.filename || 'Document'}\n\n${documentContent}\n\n---\n`
       }
 
-      // Convert markdown to Lexical format
-      const lexicalContent = convertMarkdownToLexical(combinedContent)
-
-      // Update the article with the generated content
+      // Update the article with the generated markdown content
       await payload.update({
         collection: 'articles',
         id,
         data: {
-          content: lexicalContent,
+          content: combinedContent,
         },
       })
 

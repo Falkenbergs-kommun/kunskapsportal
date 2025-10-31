@@ -9,6 +9,10 @@ import ArticleDisplay from '../../../../components/ArticleDisplay'
 import { LivePreviewListener } from '../../../../components/LivePreviewListener'
 import type { Article } from '../../../../payload-types'
 
+// Ensure this page is always dynamically rendered, never cached
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function ArticlePreview({
   params: paramsPromise,
 }: {

@@ -1,7 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { Department } from '../payload-types'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { convertLexicalToMarkdown, editorConfigFactory } from '@payloadcms/richtext-lexical'
 import { Schema, SchemaType } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
@@ -172,56 +171,16 @@ export const generateMetadataEndpoint: Endpoint = {
         .map((dep: Department) => `- ${dep.name} (ID: ${dep.id})`)
         .join('\n')
 
-      // Convert Lexical content to markdown for analysis
-      let markdown = ''
-      try {
-        const editorConfig = await editorConfigFactory.default({ config: payload.config })
-        markdown = await convertLexicalToMarkdown({ data: article.content, editorConfig })
-      } catch (error) {
-        console.warn('Failed to convert Lexical content to markdown:', error)
-        
-        // Fallback: Try to extract text content directly from the Lexical state
-        try {
-          if (article.content && typeof article.content === 'object' && 'root' in article.content) {
-            const extractText = (node: any): string => {
-              let text = ''
-              
-              if (node.text) {
-                text += node.text
-              }
-              
-              if (node.children && Array.isArray(node.children)) {
-                for (const child of node.children) {
-                  text += extractText(child) + ' '
-                }
-              }
-              
-              return text
-            }
-            
-            markdown = extractText(article.content.root)
-          }
-        } catch (fallbackError) {
-          console.error('Fallback text extraction also failed:', fallbackError)
-        }
-      }
-      
-      // If we still don't have content, try to get it as a string
-      if (!markdown || markdown.trim().length === 0) {
-        if (typeof article.content === 'string') {
-          markdown = article.content
-        } else {
-          markdown = JSON.stringify(article.content, null, 2)
-        }
-      }
-      
+      // Content is now stored as plain markdown
+      const markdown = typeof article.content === 'string' ? article.content : ''
+
       console.log('Extracted content for analysis:', markdown.substring(0, 1000)) // Show first 1000 chars in logs
       console.log(`Total content length: ${markdown.length} characters`)
-      
+
       // Ensure we have meaningful content
       if (!markdown || markdown.trim().length < 10) {
         return Response.json({
-          message: 'Article content could not be extracted or is too short. Please ensure the article has meaningful content.'
+          message: 'Article content is too short. Please ensure the article has meaningful content.'
         }, { status: 400 })
       }
 

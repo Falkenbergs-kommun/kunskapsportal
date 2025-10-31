@@ -161,7 +161,12 @@ export const Articles: CollectionConfig = {
           fields: [
             {
               name: 'content',
-              type: 'richText',
+              type: 'textarea',
+              admin: {
+                components: {
+                  Field: '@/components/ToastUIEditor',
+                },
+              },
             },
           ],
         },
