@@ -163,10 +163,13 @@ export class MistralOcrService {
         }
       }
 
+      // Clean LaTeX notation from the extracted text
+      let cleanedMarkdown = this.cleanLatexNotation(textContent)
+
       // Process markdown to include Payload image references if images were uploaded
-      let finalMarkdown = textContent
+      let finalMarkdown = cleanedMarkdown
       if (uploadToPayload && payload && metadata.payloadMediaIds.length > 0) {
-        finalMarkdown = this.processMarkdownWithPayloadImages(textContent, imagesData)
+        finalMarkdown = this.processMarkdownWithPayloadImages(cleanedMarkdown, imagesData)
       }
 
       return {
@@ -251,6 +254,38 @@ export class MistralOcrService {
     }
   }
 
+  private cleanLatexNotation(text: string): string {
+    let cleaned = text
+
+    // Remove inline math delimiters: $...$ but preserve file paths like C:/Users
+    // Only remove $ if it's followed/preceded by non-path characters
+    cleaned = cleaned.replace(/\$([^\$\n]+?)\$/g, (match, content) => {
+      // If content looks like a file path (contains : or multiple /\), keep the dollars
+      if (content.includes(':\\') || content.includes(':/') || content.match(/[\/\\]{2,}/)) {
+        return match
+      }
+      // Otherwise remove the dollars
+      return content
+    })
+
+    // Remove display math delimiters: $$...$$
+    cleaned = cleaned.replace(/\$\$([^\$]+?)\$\$/g, '$1')
+
+    // Convert \mathrm{text} to plain text
+    cleaned = cleaned.replace(/\\mathrm\{([^}]+)\}/g, '$1')
+
+    // Convert \text{text} to plain text
+    cleaned = cleaned.replace(/\\text\{([^}]+)\}/g, '$1')
+
+    // Convert \frac{a}{b} to a/b
+    cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2')
+
+    // Remove other common LaTeX commands (keep the content)
+    cleaned = cleaned.replace(/\\(?:textbf|textit|emph|mathbf|mathit)\{([^}]+)\}/g, '$1')
+
+    return cleaned
+  }
+
   private processMarkdownWithPayloadImages(markdown: string, imageInfos: ImageInfo[]): string {
     let processedMarkdown = markdown
 
@@ -266,10 +301,10 @@ export class MistralOcrService {
           relationTo: 'media',
         }
 
-        // Insert the image block reference in a custom format for Lexical processing
-        // Use a special marker that our custom converter can recognize
+        // Insert the image block reference in a custom format
+        // Use a special marker for image placeholders
         const imageReference = `[PAYLOAD_MEDIA:${imgInfo.payloadMediaId}:${imgInfo.filename}]`
-        
+
         // Find a good place to insert the image (after paragraphs on the same page)
         const pageMarker = `<!-- Page ${imgInfo.page} -->`
         if (processedMarkdown.includes(pageMarker)) {

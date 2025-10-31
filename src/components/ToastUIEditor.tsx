@@ -68,8 +68,8 @@ const ToastUIEditor: TextareaFieldClientComponent = ({ field, path }) => {
         <Editor
           ref={editorRef}
           initialValue={value || ''}
-          previewStyle="vertical"
-          height="600px"
+          previewStyle="tab"
+          height="calc(100vh - 200px)"
           initialEditType="wysiwyg"
           useCommandShortcut={true}
           usageStatistics={false}
@@ -102,6 +102,18 @@ const ToastUIEditor: TextareaFieldClientComponent = ({ field, path }) => {
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          min-height: 600px;
+          max-height: calc(100vh - 150px);
+        }
+
+        /* Fullscreen mode styling */
+        .toastui-editor-wrapper .toastui-editor-defaultUI.te-ww-mode.fullscreen,
+        .toastui-editor-wrapper .toastui-editor-defaultUI.te-md-mode.fullscreen {
+          z-index: 9999;
+        }
+
+        .toastui-editor-wrapper .toastui-editor-defaultUI.fullscreen .toastui-editor {
+          height: 100vh !important;
         }
 
         /* Override default Toast UI styles for better appearance */

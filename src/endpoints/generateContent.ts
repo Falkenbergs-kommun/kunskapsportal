@@ -1,6 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { processDocumentWithGemini } from '@/services/gemini'
-import { processDocumentWithMistral } from '@/services/mistralSimple'
+import { mistralOcr } from '@/services/mistralOcr'
 import type { Media } from '@/payload-types'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -60,14 +60,13 @@ export const generateContentEndpoint: Endpoint = {
 
         if (extractor === 'mistral') {
           // Process with Mistral (includes Payload image integration)
-          documentContent = await processDocumentWithMistral(
-            buffer,
-            doc.mimeType || 'application/pdf',
-            `Extract and structure the content from this document titled "${
-              doc.filename || 'Untitled'
-            }". Format as markdown with clear headings and organization.`,
-            payload, // Pass payload instance for image uploads
-          )
+          const result = await mistralOcr.pdfToMarkdown(buffer, {
+            saveImages: true,
+            uploadToPayload: true,
+            payload,
+            debug: false,
+          })
+          documentContent = result.markdown
         } else {
           // Process with Gemini (default)
           documentContent = await processDocumentWithGemini(

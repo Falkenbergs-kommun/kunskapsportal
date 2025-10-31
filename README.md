@@ -72,7 +72,7 @@ Komplett guide för installation, användning, API, utveckling och deployment.
   - Extraherar: Versionsnummer, Datum, Författare
 
 - **Innehållsstrukturering**
-  - Konverterar till sökbart rich-text format (Lexical)
+  - Konverterar till sökbart markdown-format
   - Bevarar rubriker, tabeller, listor
   - Extraherar och bäddar in bilder
 
@@ -269,10 +269,10 @@ Kunskapsportal bygger på moderna, beprövade teknologier för att leverera en r
 - Fullt anpassningsbara
 - [📖 shadcn/ui Dokumentation](https://ui.shadcn.com/docs)
 
-**[Lexical](https://lexical.dev/)** - Rich text-editor
-- Meta's moderna editor-ramverk
+**[Toast UI Editor](https://ui.toast.com/tui-editor)** - Markdown WYSIWYG-editor
+- WYSIWYG markdown-redigering med Word-liknande upplevelse
 - Används för artikelinnehåll
-- [📖 Lexical Dokumentation](https://lexical.dev/docs/intro)
+- [📖 Toast UI Editor Dokumentation](https://github.com/nhn/tui.editor)
 
 ### DevOps & Infrastruktur
 

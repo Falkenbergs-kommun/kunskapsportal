@@ -2,7 +2,7 @@
 
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { processDocumentWithMistral } from '../../../../services/mistralSimple'
+import { mistralOcr } from '../../../../services/mistralOcr'
 import { processDocumentWithGemini } from '../../../../services/gemini'
 import type { Media } from '../../../../payload-types'
 import { GoogleGenAI } from '@google/genai'
@@ -133,14 +133,15 @@ export async function generateContentFromDocuments(articleId: string) {
           continue
         }
         console.log(`[AI] Processing PDF document with Mistral OCR...`)
-        documentContent = await processDocumentWithMistral(
-          buffer,
-          currentMimeType,
-          `Extrahera och strukturera innehållet från detta dokument som heter "${doc.filename || 'Untitled'}".
-           Formatera som markdown med tydliga rubriker och organisation.
-           Bevara originalspråket (svenska).`,
-          payload, // Pass payload instance for image uploads
-        )
+        const result = await mistralOcr.pdfToMarkdown(buffer, {
+          saveImages: true,
+          uploadToPayload: true,
+          payload,
+          debug: false,
+        })
+        documentContent = result.markdown
+        console.log(`[AI] Extracted ${documentContent.length} characters`)
+        console.log(`[AI] Found ${result.metadata.imageCount} images`)
       } else {
         // Gemini fallback - can handle some formats directly
         const supportedTypes = [
