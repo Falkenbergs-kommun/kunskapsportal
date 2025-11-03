@@ -21,26 +21,39 @@ export async function GET(request: NextRequest) {
         or: [
           {
             title: {
-              like: query,
+              contains: query,
+            },
+          },
+          {
+            content: {
+              contains: query,
             },
           },
           {
             summary: {
-              like: query,
+              contains: query,
+            },
+          },
+          {
+            author: {
+              contains: query,
             },
           },
           {
             'keywords.keyword': {
-              like: query,
+              contains: query,
             },
           },
         ],
       },
       depth: 2, // Ensure department and its parents are populated for URL generation
-      limit: 10,
+      limit: 100, // Increased from 10 to show more results
     })
 
-    return NextResponse.json({ articles: articlesQuery.docs })
+    return NextResponse.json({
+      articles: articlesQuery.docs,
+      total: articlesQuery.totalDocs
+    })
   } catch (error) {
     console.error('Search API error:', error)
     return NextResponse.json({ error: 'An error occurred during search.' }, { status: 500 })
