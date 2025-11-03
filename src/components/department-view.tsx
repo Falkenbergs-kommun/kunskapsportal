@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Search, FileText, Calendar, User, Building, ChevronRight, ArrowUpDown, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -68,27 +68,71 @@ export default function DepartmentView({
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<Article[] | null>(null)
+  const [searchResultsTotal, setSearchResultsTotal] = useState(0)
 
-  // Get all unique document types from loaded articles
+  // Debounced search function
+  const performSearch = useCallback(
+    async (term: string) => {
+      if (!term.trim()) {
+        setSearchResults(null)
+        setSearchResultsTotal(0)
+        setIsSearching(false)
+        return
+      }
+
+      setIsSearching(true)
+      try {
+        const response = await fetch(
+          `/api/departments/articles?departmentId=${departmentId}&search=${encodeURIComponent(term)}&sort=${sortBy}`,
+        )
+        const data = await response.json()
+
+        if (data.docs) {
+          setSearchResults(data.docs)
+          setSearchResultsTotal(data.totalDocs)
+        }
+      } catch (error) {
+        console.error('Search failed:', error)
+      } finally {
+        setIsSearching(false)
+      }
+    },
+    [departmentId, sortBy],
+  )
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(searchTerm)
+    }, 500) // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer)
+  }, [searchTerm, performSearch])
+
+  // Use search results if searching, otherwise use loaded articles
+  const displayArticles = searchResults !== null ? searchResults : articles
+  const displayTotal = searchResults !== null ? searchResultsTotal : totalArticles
+
+  // Get all unique document types from displayed articles
   const availableDocTypes = Array.from(
-    new Set(articles.map((a) => a.documentType).filter(Boolean)),
+    new Set(displayArticles.map((a) => a.documentType).filter(Boolean)),
   )
 
   // Count articles per document type
   const docTypeCounts = availableDocTypes.reduce(
     (acc, type) => {
-      acc[type as string] = articles.filter((a) => a.documentType === type).length
+      acc[type as string] = displayArticles.filter((a) => a.documentType === type).length
       return acc
     },
     {} as Record<string, number>,
   )
 
-  // Filter articles by search term and document type
-  const filteredArticles = articles
-    .filter((article) => article.title?.toLowerCase()?.includes(searchTerm.toLowerCase()))
-    .filter((article) =>
-      selectedDocTypes.length === 0 || selectedDocTypes.includes(article.documentType || '')
-    )
+  // Filter articles by document type only (search is handled server-side)
+  const filteredArticles = displayArticles.filter((article) =>
+    selectedDocTypes.length === 0 || selectedDocTypes.includes(article.documentType || '')
+  )
 
   // Sort filtered articles
   const sortedArticles = [...filteredArticles].sort((a, b) => {
@@ -106,7 +150,7 @@ export default function DepartmentView({
     }
   })
 
-  const hasMoreArticles = articles.length < totalArticles
+  const hasMoreArticles = searchResults === null && articles.length < totalArticles
 
   const loadMoreArticles = async () => {
     if (isLoadingMore || !hasMoreArticles) return
@@ -201,11 +245,14 @@ export default function DepartmentView({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder="Sök dokument och policies..."
+              placeholder="Sök i titel, innehåll, sammanfattning..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-12 text-base"
             />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />
+            )}
           </div>
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
             <SelectTrigger className="w-[180px] h-12">
@@ -253,7 +300,18 @@ export default function DepartmentView({
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-slate-900">Dokument och policies</h2>
           <span className="text-sm text-slate-500">
-            Visar {sortedArticles.length} av {totalArticles} dokument
+            {searchResults !== null ? (
+              <>
+                {sortedArticles.length} sökresultat
+                {searchTerm && (
+                  <span className="ml-2 text-xs text-slate-400">
+                    av {displayTotal} totalt
+                  </span>
+                )}
+              </>
+            ) : (
+              <>Visar {sortedArticles.length} av {displayTotal} dokument</>
+            )}
           </span>
         </div>
 
