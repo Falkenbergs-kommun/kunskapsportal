@@ -112,9 +112,8 @@ export async function searchKnowledgeBase({
 
     const results: SearchResult[] = []
 
-    // Search internal collection (unless only external sources requested)
-    const searchInternal =
-      externalSourceIds.length === 0 || externalSourceIds.includes('internal')
+    // Always search internal collection (no UI option to exclude it)
+    const searchInternal = true
 
     if (searchInternal) {
       try {

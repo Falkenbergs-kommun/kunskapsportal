@@ -1,58 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { hybridSearch, type SearchMode } from '@/services/hybridSearch'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q')
+  const mode = (searchParams.get('mode') || 'hybrid') as SearchMode
+  const limit = parseInt(searchParams.get('limit') || '100')
 
   if (!query || query.length < 2) {
-    return NextResponse.json({ articles: [] })
+    return NextResponse.json({ articles: [], total: 0, mode: 'hybrid' })
   }
 
   try {
-    const payload = await getPayload({ config })
-    const articlesQuery = await payload.find({
-      collection: 'articles',
-      where: {
-        _status: {
-          equals: 'published',
-        },
-        or: [
-          {
-            title: {
-              contains: query,
-            },
-          },
-          {
-            content: {
-              contains: query,
-            },
-          },
-          {
-            summary: {
-              contains: query,
-            },
-          },
-          {
-            author: {
-              contains: query,
-            },
-          },
-          {
-            'keywords.keyword': {
-              contains: query,
-            },
-          },
-        ],
-      },
-      depth: 2, // Ensure department and its parents are populated for URL generation
-      limit: 100, // Increased from 10 to show more results
+    const result = await hybridSearch({
+      query,
+      mode,
+      limit,
     })
 
     return NextResponse.json({
-      articles: articlesQuery.docs,
-      total: articlesQuery.totalDocs
+      articles: result.results.map((r) => r.article),
+      total: result.total,
+      mode: result.mode,
+      timings: result.timings,
     })
   } catch (error) {
     console.error('Search API error:', error)

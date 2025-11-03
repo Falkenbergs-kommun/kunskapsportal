@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Search, FileText, Calendar, User, Building, ChevronRight, ArrowUpDown, Loader2 } from 'lucide-react'
+import { Search, FileText, Calendar, User, Building, ChevronRight, ArrowUpDown, Loader2, Sparkles, AlignLeft, Zap } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -53,6 +53,7 @@ interface DepartmentViewProps {
 }
 
 type SortOption = '-updatedAt' | 'updatedAt' | 'title' | '-title'
+type SearchMode = 'hybrid' | 'semantic' | 'exact'
 
 export default function DepartmentView({
   departmentName,
@@ -63,6 +64,7 @@ export default function DepartmentView({
   subdepartments = [],
 }: DepartmentViewProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [searchMode, setSearchMode] = useState<SearchMode>('hybrid')
   const [sortBy, setSortBy] = useState<SortOption>('-updatedAt')
   const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([])
   const [articles, setArticles] = useState<Article[]>(initialArticles)
@@ -85,7 +87,7 @@ export default function DepartmentView({
       setIsSearching(true)
       try {
         const response = await fetch(
-          `/api/departments/articles?departmentId=${departmentId}&search=${encodeURIComponent(term)}&sort=${sortBy}`,
+          `/api/departments/articles?departmentId=${departmentId}&search=${encodeURIComponent(term)}&sort=${sortBy}&mode=${searchMode}`,
         )
         const data = await response.json()
 
@@ -99,7 +101,7 @@ export default function DepartmentView({
         setIsSearching(false)
       }
     },
-    [departmentId, sortBy],
+    [departmentId, sortBy, searchMode],
   )
 
   // Debounce search input
@@ -267,6 +269,45 @@ export default function DepartmentView({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Search Mode Toggle */}
+        {searchTerm && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600">Sökläge:</span>
+            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+              <Button
+                variant={searchMode === 'hybrid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSearchMode('hybrid')}
+                className="h-8"
+                title="Bästa av båda - snabba exakta resultat + smarta semantiska matchningar"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                Smart
+              </Button>
+              <Button
+                variant={searchMode === 'semantic' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSearchMode('semantic')}
+                className="h-8"
+                title="AI-driven semantisk sökning - hittar relaterat innehåll baserat på mening"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Semantisk
+              </Button>
+              <Button
+                variant={searchMode === 'exact' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSearchMode('exact')}
+                className="h-8"
+                title="Blixtsnabb exakt nyckelordsmatchning"
+              >
+                <AlignLeft className="h-3 w-3 mr-1" />
+                Exakt
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Document Type Filters */}
         {availableDocTypes.length > 0 && (

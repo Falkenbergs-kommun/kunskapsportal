@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { hybridSearch, type SearchMode } from '@/services/hybridSearch'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,55 +11,48 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const sortParam = searchParams.get('sort') || '-updatedAt'
     const searchTerm = searchParams.get('search') || ''
+    const mode = (searchParams.get('mode') || 'hybrid') as SearchMode
 
     if (!departmentId) {
       return NextResponse.json({ error: 'departmentId is required' }, { status: 400 })
     }
 
-    const payload = await getPayload({ config })
-
-    // Build where clause with search conditions
-    const whereClause: any = {
-      department: {
-        equals: departmentId,
-      },
-      _status: {
-        equals: 'published',
-      },
-    }
-
-    // If search term is provided, add OR conditions for full-text search
+    // If searching, use hybrid search
     if (searchTerm.trim()) {
-      whereClause.or = [
-        {
-          title: {
-            contains: searchTerm,
-          },
-        },
-        {
-          content: {
-            contains: searchTerm,
-          },
-        },
-        {
-          summary: {
-            contains: searchTerm,
-          },
-        },
-        {
-          author: {
-            contains: searchTerm,
-          },
-        },
-      ]
+      const result = await hybridSearch({
+        query: searchTerm,
+        mode,
+        departmentId,
+        limit: 200,
+      })
+
+      return NextResponse.json({
+        docs: result.results.map((r) => r.article),
+        totalDocs: result.total,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        mode: result.mode,
+        timings: result.timings,
+      })
     }
 
+    // No search - use regular pagination
+    const payload = await getPayload({ config })
     const articlesQuery = await payload.find({
       collection: 'articles',
-      where: whereClause,
+      where: {
+        department: {
+          equals: departmentId,
+        },
+        _status: {
+          equals: 'published',
+        },
+      },
       depth: 3,
-      limit: searchTerm.trim() ? 200 : limit, // When searching, return more results
-      page: searchTerm.trim() ? 1 : page, // When searching, always start from page 1
+      limit,
+      page,
       sort: sortParam,
     })
 
