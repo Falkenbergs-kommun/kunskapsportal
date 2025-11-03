@@ -91,14 +91,14 @@ export default function ArticleDisplay({ article }: { article: Article | null })
 
   if (!article) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8 text-center">
+      <div className="w-[896px] mx-auto px-6 py-8 text-center">
         <p className="text-slate-500">Article not found.</p>
       </div>
     )
   }
 
   return (
-    <article className="max-w-4xl mx-auto px-6 py-8" data-testid="article-view">
+    <article className="w-[896px] mx-auto px-6 py-8" data-testid="article-view">
       {article.coverPhoto && typeof article.coverPhoto === 'object' && article.coverPhoto.url && (
         <div className="mb-8">
           <img

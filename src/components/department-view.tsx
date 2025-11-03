@@ -4,8 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Search, FileText, Calendar, User, Building, Folder, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Item,
+  ItemGroup,
+  ItemContent,
+  ItemTitle,
+  ItemFooter,
+} from '@/components/ui/item'
 import { FavoriteStar } from '@/components/favorite-star'
 import { getDepartmentFullPath } from '@/lib/utils'
 
@@ -134,46 +141,36 @@ export default function DepartmentView({
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <ItemGroup className="gap-2">
             {filteredArticles.map((article) => (
-              <Card key={article.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900 mb-1">
-                        <Link
-                          href={`/${getDepartmentFullPath(article.department || null)}/${
-                            article.slug
-                          }`}
-                          className="hover:text-blue-600 transition-colors"
-                        >
-                          {article.title}
-                        </Link>
-                      </h3>
-                      <p className="text-slate-600 text-sm leading-relaxed">
-                        {/* {article.summary} */}
-                      </p>
+              <Item key={article.id} variant="outline" size="sm" asChild>
+                <Link
+                  href={`/${getDepartmentFullPath(article.department || null)}/${article.slug}`}
+                >
+                  <ItemContent>
+                    <ItemTitle>{article.title}</ItemTitle>
+                  </ItemContent>
+                  <Badge variant="secondary" className="shrink-0">
+                    {article.documentType
+                      ? documentTypeLabels[article.documentType] || article.documentType
+                      : 'Okänd typ'}
+                  </Badge>
+                  <ItemFooter className="text-xs text-slate-500">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center">
+                        <User className="mr-1 h-3 w-3" />
+                        {article.author}
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="mr-1 h-3 w-3" />
+                        {formatDate(article.updatedAt)}
+                      </div>
                     </div>
-                    <Badge variant="secondary" className="ml-4 shrink-0">
-                      {article.documentType ? (documentTypeLabels[article.documentType] || article.documentType) : 'Okänd typ'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
-                    <div className="flex items-center">
-                      <User className="mr-1 h-3 w-3" />
-                      {article.author}
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="mr-1 h-3 w-3" />
-                      {formatDate(article.updatedAt)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </ItemFooter>
+                </Link>
+              </Item>
             ))}
-          </div>
+          </ItemGroup>
         )}
       </div>
     </div>
