@@ -119,9 +119,7 @@ export async function searchKnowledgeBase({
       try {
         // Check if internal collection exists
         const collections = await qdrant.getCollections()
-        const collectionExists = collections.collections.some(
-          (col) => col.name === COLLECTION_NAME,
-        )
+        const collectionExists = collections.collections.some((col) => col.name === COLLECTION_NAME)
 
         if (collectionExists) {
           // Build filter for departments if provided
@@ -136,13 +134,15 @@ export async function searchKnowledgeBase({
           }
 
           // Search in internal Qdrant collection
-          const searchResult = await qdrant.search(COLLECTION_NAME, {
+          const searchParams = {
             vector: queryEmbedding,
-            limit,
+            limit: Math.min(limit, 10), // Cap semantic search at 10 results for quality
             with_payload: true,
             filter: Object.keys(filter).length > 0 ? filter : undefined,
-            score_threshold: 0.8, // Only return results with >80% similarity
-          })
+            score_threshold: 0.3, // Return results with >30% similarity (better balance)
+          }
+
+          const searchResult = await qdrant.search(COLLECTION_NAME, searchParams)
 
           // Transform internal results
           const internalResults = searchResult.map((result) => {
@@ -207,10 +207,10 @@ export async function searchKnowledgeBase({
 // Function to get all departments and their children recursively
 export async function getDepartmentHierarchy(
   departmentId: string,
-  payload: any
+  payload: any,
 ): Promise<string[]> {
   const departmentIds = [departmentId]
-  
+
   try {
     // Find all departments that have this department as parent
     const childDepartments = await payload.find({
