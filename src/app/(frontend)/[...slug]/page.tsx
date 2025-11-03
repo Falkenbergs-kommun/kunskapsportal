@@ -87,7 +87,8 @@ export default async function SlugPage({
         },
       },
       depth: 3,
-      limit: 100, // Adjust limit as needed
+      limit: 50, // Initial load - users can load more
+      sort: '-updatedAt', // Newest first by default
     })
 
     // Query subdepartments (departments that have this department as parent)
@@ -126,7 +127,9 @@ export default async function SlugPage({
       <DepartmentView
         departmentName={department.name}
         departmentSlug={`/${fullPath}`}
+        departmentId={String(department.id)}
         articles={articlesQuery.docs}
+        totalArticles={articlesQuery.totalDocs}
         subdepartments={subdepartmentsWithCounts}
       />
     )
