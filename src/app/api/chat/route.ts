@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { chatWithKnowledge, type ChatMessage } from '@/services/geminiChat'
-import { getDepartmentHierarchy } from '@/services/qdrantSearch'
 import { getExternalSources } from '@/config/externalSources'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -51,19 +50,8 @@ export async function POST(request: NextRequest) {
       console.warn('Some external source IDs not found in configuration')
     }
 
-    // If department IDs are provided, expand them to include all child departments
-    let expandedDepartmentIds: string[] = []
-    if (departmentIds.length > 0) {
-      const payload = await getPayload({ config })
-
-      for (const deptId of departmentIds) {
-        const hierarchyIds = await getDepartmentHierarchy(deptId, payload)
-        expandedDepartmentIds.push(...hierarchyIds)
-      }
-
-      // Remove duplicates
-      expandedDepartmentIds = [...new Set(expandedDepartmentIds)]
-    }
+    // Use department IDs directly - no hierarchical expansion
+    // Users explicitly select which departments to include via checkboxes
 
     // Validate history format
     const validatedHistory: ChatMessage[] = []
@@ -86,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Call the chat service
     const response = await chatWithKnowledge({
       message,
-      departmentIds: expandedDepartmentIds,
+      departmentIds,
       externalSourceIds: validExternalSourceIds,
       history: validatedHistory,
       articleContext: articleContext || null,
@@ -94,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       response,
-      departmentIds: expandedDepartmentIds, // Return expanded IDs for transparency
+      departmentIds, // Return expanded IDs for transparency
       externalSourceIds: validExternalSourceIds, // Return validated IDs
     })
   } catch (error) {

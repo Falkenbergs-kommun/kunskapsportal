@@ -317,22 +317,8 @@ export function PlainChat() {
       {/* Settings/Department Filter Section */}
       {showSettings && (
         <div className="p-4 border-b border-gray-200 space-y-2">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2">
             <span className="text-xs font-semibold text-gray-600">Kunskapskällor</span>
-            {(selectedDepartments.length > 0 || selectedExternalSources.length > 0) && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedDepartments([])
-                  setSelectedExternalSources([])
-                }}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                Rensa alla
-              </Button>
-            )}
           </div>
           <DepartmentSelector
             selectedDepartments={selectedDepartments}

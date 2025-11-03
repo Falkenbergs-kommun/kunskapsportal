@@ -203,34 +203,3 @@ export async function searchKnowledgeBase({
     throw new Error('Failed to search knowledge base')
   }
 }
-
-// Function to get all departments and their children recursively
-export async function getDepartmentHierarchy(
-  departmentId: string,
-  payload: any,
-): Promise<string[]> {
-  const departmentIds = [departmentId]
-
-  try {
-    // Find all departments that have this department as parent
-    const childDepartments = await payload.find({
-      collection: 'departments',
-      where: {
-        parent: {
-          equals: departmentId,
-        },
-      },
-      limit: 100,
-    })
-
-    // Recursively get children of children
-    for (const child of childDepartments.docs) {
-      const childIds = await getDepartmentHierarchy(child.id, payload)
-      departmentIds.push(...childIds)
-    }
-  } catch (error) {
-    console.error('Error getting department hierarchy:', error)
-  }
-
-  return departmentIds
-}
