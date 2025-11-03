@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { File, Home, Newspaper } from 'lucide-react'
+import { Newspaper, Zap, Sparkles, AlignLeft } from 'lucide-react'
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,8 +11,11 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { Button } from '@/components/ui/button'
 import { getDepartmentFullPath } from '@/lib/utils'
 import type { Article } from '@/payload-types'
+
+type SearchMode = 'hybrid' | 'semantic' | 'exact'
 
 export function CommandMenu({
   open,
@@ -26,6 +29,26 @@ export function CommandMenu({
   const [results, setResults] = React.useState<Article[]>([])
   const [totalResults, setTotalResults] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
+
+  // Load search mode from cookie
+  const [searchMode, setSearchMode] = React.useState<SearchMode>(() => {
+    if (typeof document !== 'undefined') {
+      const saved = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('searchMode='))
+        ?.split('=')[1]
+      return (saved as SearchMode) || 'hybrid'
+    }
+    return 'hybrid'
+  })
+
+  // Save search mode to cookie when it changes
+  const handleSearchModeChange = (mode: SearchMode) => {
+    setSearchMode(mode)
+    const expiryDate = new Date()
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1)
+    document.cookie = `searchMode=${mode}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`
+  }
 
   React.useEffect(() => {
     if (!open) {
@@ -44,7 +67,9 @@ export function CommandMenu({
       }
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(query)}&mode=${searchMode}`
+        )
         const data = await response.json()
         setResults(data.articles || [])
         setTotalResults(data.total || 0)
@@ -59,7 +84,7 @@ export function CommandMenu({
 
     const timeoutId = setTimeout(fetchResults, 200) // Debounce search
     return () => clearTimeout(timeoutId)
-  }, [query])
+  }, [query, searchMode])
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -77,31 +102,61 @@ export function CommandMenu({
   )
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} className="max-w-5xl">
-      <CommandInput
-        placeholder="Search articles by title, content, summary, author..."
-        value={query}
-        onValueChange={setQuery}
-      />
+    <CommandDialog open={open} onOpenChange={setOpen} className="max-w-5xl" shouldFilter={false}>
+      <div className="border-b">
+        <div className="px-3 py-2">
+          <CommandInput
+            placeholder="Search articles by title, content, summary, author..."
+            value={query}
+            onValueChange={setQuery}
+            className="border-0"
+          />
+        </div>
+        {query && (
+          <div className="flex items-center gap-1 px-3 pb-2">
+            <span className="text-xs text-slate-600 mr-1">Sökläge:</span>
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded">
+              <Button
+                variant={searchMode === 'hybrid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleSearchModeChange('hybrid')}
+                className="h-6 px-2 text-xs"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                Smart
+              </Button>
+              <Button
+                variant={searchMode === 'semantic' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleSearchModeChange('semantic')}
+                className="h-6 px-2 text-xs"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Semantisk
+              </Button>
+              <Button
+                variant={searchMode === 'exact' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleSearchModeChange('exact')}
+                className="h-6 px-2 text-xs"
+              >
+                <AlignLeft className="h-3 w-3 mr-1" />
+                Exakt
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
       <CommandList className="!max-h-[600px]">
         {isLoading && <CommandEmpty>Searching...</CommandEmpty>}
         {!isLoading && query.length > 1 && results.length === 0 && (
           <CommandEmpty>No results found.</CommandEmpty>
         )}
 
-        <CommandGroup heading="Suggestions">
-          <CommandItem onSelect={() => runCommand(() => router.push('/'))}>
-            <Home className="mr-2 h-4 w-4" />
-            <span>Home</span>
-          </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push('/admin'))}>
-            <File className="mr-2 h-4 w-4" />
-            <span>Go to Admin</span>
-          </CommandItem>
-        </CommandGroup>
-
         {results.length > 0 && (
-          <CommandGroup heading={`Articles (${results.length}${totalResults > results.length ? ` of ${totalResults}` : ''})`}>
+          <CommandGroup
+            heading={`Articles (${results.length}${totalResults > results.length ? ` of ${totalResults}` : ''})`}
+          >
             {results.map((article) => {
               const departmentPath = getDepartmentFullPath(article.department || null)
               const url = `/${departmentPath}/${article.slug}`
@@ -110,7 +165,7 @@ export function CommandMenu({
                   key={article.id}
                   value={article.title || ''}
                   onSelect={() => handleArticleClick(url)}
-                  className="cursor-pointer py-3"
+                  className="cursor-pointer py-3 data-[selected=true]:bg-slate-200 data-[selected=true]:text-slate-900"
                 >
                   <Newspaper className="mr-2 h-4 w-4 flex-shrink-0" />
                   <div className="flex flex-col flex-1 min-w-0">

@@ -171,9 +171,9 @@ export async function generateContentFromDocuments(articleId: string) {
     console.log('[AI] All documents processed. Updating article with markdown content...')
 
     // Clean up PAYLOAD_MEDIA references and convert to standard markdown images
-    let processedMarkdown = combinedContent.replace(
+    const processedMarkdown = combinedContent.replace(
       /\[PAYLOAD_MEDIA:([^:]+):([^\]]+)\]/g,
-      (match, id, filename) => {
+      () => {
         // Convert to standard markdown image syntax
         // The Mistral OCR already includes these as proper markdown images
         return ''
