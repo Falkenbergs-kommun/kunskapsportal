@@ -83,7 +83,7 @@ export function CommandMenu({
         value={query}
         onValueChange={setQuery}
       />
-      <CommandList className="max-h-[600px]">
+      <CommandList className="!max-h-[600px]">
         {isLoading && <CommandEmpty>Searching...</CommandEmpty>}
         {!isLoading && query.length > 1 && results.length === 0 && (
           <CommandEmpty>No results found.</CommandEmpty>

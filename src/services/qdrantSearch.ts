@@ -141,6 +141,7 @@ export async function searchKnowledgeBase({
             limit,
             with_payload: true,
             filter: Object.keys(filter).length > 0 ? filter : undefined,
+            score_threshold: 0.8, // Only return results with >80% similarity
           })
 
           // Transform internal results

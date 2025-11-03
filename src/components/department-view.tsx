@@ -64,7 +64,17 @@ export default function DepartmentView({
   subdepartments = [],
 }: DepartmentViewProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchMode, setSearchMode] = useState<SearchMode>('hybrid')
+  const [searchMode, setSearchMode] = useState<SearchMode>(() => {
+    // Load from cookie on mount
+    if (typeof document !== 'undefined') {
+      const saved = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('searchMode='))
+        ?.split('=')[1]
+      return (saved as SearchMode) || 'hybrid'
+    }
+    return 'hybrid'
+  })
   const [sortBy, setSortBy] = useState<SortOption>('-updatedAt')
   const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([])
   const [articles, setArticles] = useState<Article[]>(initialArticles)
@@ -182,6 +192,14 @@ export default function DepartmentView({
     )
   }
 
+  const handleSearchModeChange = (mode: SearchMode) => {
+    setSearchMode(mode)
+    // Save to cookie (expires in 1 year)
+    const expiryDate = new Date()
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1)
+    document.cookie = `searchMode=${mode}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('sv-SE', {
       year: 'numeric',
@@ -278,7 +296,7 @@ export default function DepartmentView({
               <Button
                 variant={searchMode === 'hybrid' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setSearchMode('hybrid')}
+                onClick={() => handleSearchModeChange('hybrid')}
                 className="h-8"
                 title="Bästa av båda - snabba exakta resultat + smarta semantiska matchningar"
               >
@@ -288,7 +306,7 @@ export default function DepartmentView({
               <Button
                 variant={searchMode === 'semantic' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setSearchMode('semantic')}
+                onClick={() => handleSearchModeChange('semantic')}
                 className="h-8"
                 title="AI-driven semantisk sökning - hittar relaterat innehåll baserat på mening"
               >
@@ -298,7 +316,7 @@ export default function DepartmentView({
               <Button
                 variant={searchMode === 'exact' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setSearchMode('exact')}
+                onClick={() => handleSearchModeChange('exact')}
                 className="h-8"
                 title="Blixtsnabb exakt nyckelordsmatchning"
               >

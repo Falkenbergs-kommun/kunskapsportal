@@ -84,10 +84,11 @@ async function semanticSearch(
 ): Promise<{ results: SearchResult[]; time: number }> {
   const startTime = Date.now()
 
+  // For semantic search, request more but Qdrant will filter by score_threshold
   const results = await searchKnowledgeBase({
     query,
     departmentIds: departmentId ? [departmentId] : [],
-    limit,
+    limit: Math.min(limit * 2, 100), // Request up to 2x limit, capped at 100
   })
 
   return {
@@ -291,8 +292,15 @@ export async function hybridSearch({
       }
     })
 
-    // Sort by score
-    const mergedResults = hybridResults.sort((a, b) => b.score - a.score)
+    // Sort by score and filter low-quality semantic results
+    const mergedResults = hybridResults
+      .filter((r) => {
+        // Keep all exact matches
+        if (r.matchType === 'exact-title' || r.matchType === 'exact-content') return true
+        // For semantic-only matches, only keep high-quality ones (>0.8)
+        return r.score >= 0.8
+      })
+      .sort((a, b) => b.score - a.score)
 
     timings.total = Date.now() - startTime
 
