@@ -55,8 +55,19 @@ export function CommandMenu({
       setQuery('')
       setResults([])
       setTotalResults(0)
+    } else {
+      // Re-read search mode from cookie when dialog opens (in case it was changed elsewhere)
+      if (typeof document !== 'undefined') {
+        const saved = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('searchMode='))
+          ?.split('=')[1]
+        if (saved && saved !== searchMode) {
+          setSearchMode(saved as SearchMode)
+        }
+      }
     }
-  }, [open])
+  }, [open, searchMode])
 
   React.useEffect(() => {
     const fetchResults = async () => {
