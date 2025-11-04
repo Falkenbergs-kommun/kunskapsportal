@@ -20,7 +20,7 @@ interface BaseSourceConfig {
 
 // Standard Qdrant source (current implementation)
 export interface QdrantSourceConfig extends BaseSourceConfig {
-  type?: 'qdrant' // Optional for backwards compatibility
+  type?: 'qdrant' | 'hierarchical-qdrant' // Support both types
   collection: string
   qdrantUrl: string
   qdrantApiKey: string

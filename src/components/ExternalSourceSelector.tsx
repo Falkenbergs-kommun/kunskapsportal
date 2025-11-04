@@ -120,7 +120,7 @@ export function ExternalSourceSelector({
                   type="checkbox"
                   checked={isSelected || allSubSourcesSelected}
                   ref={(el) => {
-                    if (el) el.indeterminate = isIndeterminate
+                    if (el) el.indeterminate = isIndeterminate || false
                   }}
                   onChange={() => handleToggleSource(source.id)}
                   className="mr-2 h-3 w-3"
