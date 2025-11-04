@@ -472,16 +472,25 @@ function formatSearchResults(results: SearchResult[]): string {
     return 'No relevant information found in the knowledge base.'
   }
 
+  // Get base URL for internal links
+  const baseUrl = process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL || ''
+
   return results
     .map((result, index) => {
       const sourceLabel = result.isExternal
         ? `[External Source: ${result.source}]`
         : '[Internal Knowledge Base]'
 
+      // For internal sources with relative URLs, prepend base URL
+      let fullUrl = result.url || 'URL not available'
+      if (!result.isExternal && fullUrl && fullUrl.startsWith('/') && baseUrl) {
+        fullUrl = `${baseUrl}${fullUrl}`
+      }
+
       return `**Result ${index + 1}:** ${sourceLabel}
 Title: ${result.title}
 
-IMPORTANT - USE THIS EXACT URL FOR CITATIONS: ${result.url || 'URL not available'}
+IMPORTANT - USE THIS EXACT URL FOR CITATIONS: ${fullUrl}
 
 ${!result.isExternal ? `Department: ${result.department || 'N/A'}` : ''}
 Document Type: ${result.documentType || 'N/A'}
