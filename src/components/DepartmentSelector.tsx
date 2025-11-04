@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ChevronDownIcon, ChevronRightIcon, CheckSquare, Square } from 'lucide-react'
 import { Button } from './ui/button'
 
 interface Department {
@@ -52,7 +51,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
     return ids
   }
 
-  // Get all child department IDs recursively
+  // Get all child department IDs (including the department itself)
   const getChildDepartmentIds = (dept: Department): string[] => {
     const ids: string[] = []
     const traverse = (d: Department) => {
@@ -61,7 +60,6 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
         d.children.forEach(traverse)
       }
     }
-    // Include the department itself and all children
     traverse(dept)
     return ids
   }
@@ -99,8 +97,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
   }
 
   // Toggle all children of a department
-  const handleToggleChildren = (dept: Department, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleToggleAllChildren = (dept: Department) => {
     const childIds = dept.children.map((child) => child.id)
     const allChildrenSelected = childIds.every((id) => selectedDepartments.includes(id))
 
@@ -133,86 +130,80 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
     const hasChildren = dept.children && dept.children.length > 0
     const childrenSelected = hasChildren && hasSelectedChildren(dept)
 
-    return (
-      <div key={dept.id} className="select-none">
-        <div
-          className={`flex items-center py-1 px-2 hover:bg-gray-100 rounded cursor-pointer group`}
-          style={{ paddingLeft: `${level * 16 + 8}px` }}
-        >
-          {hasChildren && (
-            <button
-              onClick={() => toggleExpanded(dept.id)}
-              className="p-1 hover:bg-gray-200 rounded mr-1"
-              title="Expandera/dölj"
-            >
-              {isExpanded ? (
-                <ChevronDownIcon className="h-3 w-3" />
-              ) : (
-                <ChevronRightIcon className="h-3 w-3" />
-              )}
-            </button>
-          )}
-          {!hasChildren && <div className="w-5 mr-1" />}
+    // For hierarchical departments: show indeterminate state if children selected but parent isn't
+    const isIndeterminate = hasChildren && !isSelected && childrenSelected
+    const allChildrenSelected = hasChildren && dept.children.every(child => selectedDepartments.includes(child.id))
 
-          <label className="flex items-center cursor-pointer flex-1">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => handleToggleDepartment(dept.id)}
-              className="mr-2 h-3 w-3"
-            />
-            <span className="text-sm flex items-center gap-1">
-              {dept.name}
-              {/* Indicator: show if children are selected but parent is not */}
-              {!isSelected && childrenSelected && (
-                <span
-                  className="text-xs text-blue-600 font-medium"
-                  title="Vissa underavdelningar är valda"
-                >
-                  (•)
-                </span>
-              )}
-            </span>
-          </label>
+    // Only show at top level (level 0) - don't indent or show nested beyond first level
+    if (level === 0) {
+      return (
+        <div key={dept.id}>
+          <div className="flex items-center py-1 px-2 hover:bg-gray-100 rounded">
+            <label className="flex items-center cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                checked={isSelected || allChildrenSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = isIndeterminate
+                }}
+                onChange={() => handleToggleDepartment(dept.id)}
+                className="mr-2 h-3 w-3"
+              />
+              <span className="text-sm">{dept.name}</span>
+            </label>
 
-          {/* Toggle all children button - only visible on hover and if has children */}
-          {hasChildren && (
-            <button
-              onClick={(e) => handleToggleChildren(dept, e)}
-              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded ml-1 transition-opacity"
-              title="Välj/avmarkera alla underavdelningar"
-            >
-              {childrenSelected ? (
-                <CheckSquare className="h-3 w-3 text-blue-600" />
-              ) : (
-                <Square className="h-3 w-3 text-gray-400" />
-              )}
-            </button>
+            {hasChildren && (
+              <button
+                onClick={() => toggleExpanded(dept.id)}
+                className="ml-2 text-gray-500 hover:text-gray-700 text-xs"
+                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isExpanded ? '▼' : '▶'}
+              </button>
+            )}
+          </div>
+
+          {/* Hierarchical sub-departments */}
+          {hasChildren && isExpanded && (
+            <div className="ml-6 mt-1 border-l-2 border-gray-200 pl-2">
+              {/* Select all option */}
+              <label className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
+                <input
+                  type="checkbox"
+                  checked={
+                    dept.children.every((child) => selectedDepartments.includes(child.id)) &&
+                    dept.children.length > 0
+                  }
+                  onChange={() => handleToggleAllChildren(dept)}
+                  className="mr-2 h-3 w-3"
+                />
+                <span className="text-xs font-medium text-gray-600">Alla</span>
+              </label>
+
+              {/* Individual sub-departments (non-recursive, just direct children) */}
+              {dept.children.map((child) => (
+                <label key={child.id} className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedDepartments.includes(child.id)}
+                    onChange={() => handleToggleDepartment(child.id)}
+                    className="mr-2 h-3 w-3"
+                  />
+                  <span className="text-xs">{child.name}</span>
+                </label>
+              ))}
+            </div>
           )}
         </div>
+      )
+    }
 
-        {hasChildren && isExpanded && (
-          <div>{dept.children.map((child) => renderDepartment(child, level + 1))}</div>
-        )}
-      </div>
-    )
+    return null
   }
 
-  if (loading) {
-    return (
-      <div className="p-4 text-sm text-gray-500">
-        Laddar avdelningar...
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 text-sm text-red-500">
-        Kunde inte ladda avdelningar
-      </div>
-    )
-  }
+  if (loading) return null
+  if (error) return null
+  if (departments.length === 0) return null
 
   return (
     <div className="border rounded-lg p-2 bg-white">
@@ -240,11 +231,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
         </div>
       </div>
       <div className="max-h-60 overflow-y-auto">
-        {departments.length === 0 ? (
-          <div className="text-sm text-gray-500 px-2">Inga avdelningar tillgängliga</div>
-        ) : (
-          departments.map((dept) => renderDepartment(dept))
-        )}
+        {departments.map((dept) => renderDepartment(dept))}
       </div>
     </div>
   )

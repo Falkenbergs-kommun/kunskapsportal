@@ -9,7 +9,15 @@ export async function POST(request: NextRequest) {
 
   try {
     body = await request.json()
-    const { message, departmentIds = [], externalSourceIds = [], history = [], articleContext } = body
+    const {
+      message,
+      departmentIds = [],
+      externalSourceIds = [],
+      subSourceFilters = {},
+      useGoogleGrounding = false,
+      history = [],
+      articleContext,
+    } = body
 
     if (!message || typeof message !== 'string' || message.trim() === '') {
       return NextResponse.json(
@@ -47,7 +55,12 @@ export async function POST(request: NextRequest) {
     )
 
     if (validExternalSourceIds.length !== externalSourceIds.length) {
-      console.warn('Some external source IDs not found in configuration')
+      const invalidIds = externalSourceIds.filter((id: string) => !validExternalSourceIds.includes(id))
+      console.warn('Some external source IDs not found in configuration:', {
+        requested: externalSourceIds,
+        invalid: invalidIds,
+        available: availableSources.map(s => s.id),
+      })
     }
 
     // Use department IDs directly - no hierarchical expansion
@@ -76,6 +89,8 @@ export async function POST(request: NextRequest) {
       message,
       departmentIds,
       externalSourceIds: validExternalSourceIds,
+      subSourceFilters,
+      useGoogleGrounding,
       history: validatedHistory,
       articleContext: articleContext || null,
     })
@@ -203,11 +218,14 @@ export async function GET(request: NextRequest) {
       label: source.label,
       icon: source.icon,
       color: source.color,
+      type: source.type,
+      subSources: 'subSources' in source ? source.subSources : undefined,
     }))
 
     return NextResponse.json({
       departments: departmentTree,
       externalSources, // Dynamically from config
+      geminiGroundingEnabled: process.env.GEMINI_GROUNDING_ENABLED === 'true',
       total: departments.totalDocs,
     })
   } catch (error) {

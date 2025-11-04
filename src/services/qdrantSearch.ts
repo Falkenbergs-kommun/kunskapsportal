@@ -4,7 +4,10 @@ import {
   getExternalSources,
   createQdrantClientForSource,
   getNestedValue,
+  isHierarchicalSource,
   type ExternalSourceConfig,
+  type HierarchicalQdrantSourceConfig,
+  type QdrantSourceConfig,
 } from '@/config/externalSources'
 
 const openai = new OpenAI({
@@ -42,6 +45,7 @@ export interface SearchOptions {
   query: string
   departmentIds?: string[]
   externalSourceIds?: string[]
+  subSourceFilters?: Record<string, string[]> // e.g., { 'svensk-lag': ['pbl', 'miljöbalken'] }
   limit?: number
 }
 
@@ -59,16 +63,31 @@ async function getEmbedding(text: string): Promise<number[]> {
  * Search an external Qdrant collection using field mappings
  */
 async function searchExternalCollection(
-  source: ExternalSourceConfig,
+  source: QdrantSourceConfig | HierarchicalQdrantSourceConfig,
   queryEmbedding: number[],
+  subSourceIds: string[] | undefined,
   limit: number,
 ): Promise<SearchResult[]> {
   const client = createQdrantClientForSource(source)
+
+  // Build filter for hierarchical sources (similar to department filtering)
+  let filter: any = undefined
+
+  if (isHierarchicalSource(source) && subSourceIds && subSourceIds.length > 0) {
+    // Filter by selected sub-sources (e.g., specific laws)
+    filter = {
+      should: subSourceIds.map((subId) => ({
+        key: source.mapping.filterField,
+        match: { value: subId },
+      })),
+    }
+  }
 
   const searchResult = await client.search(source.collection, {
     vector: queryEmbedding,
     limit,
     with_payload: true,
+    filter,
   })
 
   return searchResult.map((result) => {
@@ -76,12 +95,6 @@ async function searchExternalCollection(
     const urlField = getNestedValue(result.payload, source.mapping.url)
     const titleField = getNestedValue(result.payload, source.mapping.title)
     const contentField = getNestedValue(result.payload, source.mapping.content)
-
-    // Construct full URL
-    let fullUrl = urlField || ''
-    if (fullUrl && !fullUrl.startsWith('http') && source.urlBase) {
-      fullUrl = `${source.urlBase}${fullUrl.startsWith('/') ? '' : '/'}${fullUrl}`
-    }
 
     return {
       id: result.id as string,
@@ -93,7 +106,7 @@ async function searchExternalCollection(
       articleId: '',
       slug: null,
       departmentPath: null,
-      url: fullUrl,
+      url: urlField || '',
       source: source.id,
       isExternal: true,
     }
@@ -104,6 +117,7 @@ export async function searchKnowledgeBase({
   query,
   departmentIds = [],
   externalSourceIds = [],
+  subSourceFilters = {},
   limit = 5,
 }: SearchOptions): Promise<SearchResult[]> {
   try {
@@ -188,9 +202,16 @@ export async function searchKnowledgeBase({
     const sourcesToSearch = externalSources.filter((s) => externalSourceIds.includes(s.id))
 
     if (sourcesToSearch.length > 0) {
-      const externalSearches = sourcesToSearch.map((source) =>
-        searchExternalCollection(source, queryEmbedding, limit),
-      )
+      const externalSearches = sourcesToSearch.map((source) => {
+        // Get sub-source filters for this source (if hierarchical)
+        const subSourceIds = subSourceFilters[source.id]
+        return searchExternalCollection(
+          source as QdrantSourceConfig | HierarchicalQdrantSourceConfig,
+          queryEmbedding,
+          subSourceIds,
+          limit,
+        )
+      })
 
       const externalResults = await Promise.all(externalSearches)
       results.push(...externalResults.flat())

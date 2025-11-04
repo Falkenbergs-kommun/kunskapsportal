@@ -31,6 +31,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# external sources config (contains API keys)
+external-sources.config.json
+
 # vercel
 .vercel
 

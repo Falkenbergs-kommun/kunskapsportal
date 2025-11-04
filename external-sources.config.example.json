@@ -1,0 +1,50 @@
+[
+  {
+    "id": "example-source",
+    "type": "qdrant",
+    "collection": "YourCollection_RAG",
+    "label": "Example Source",
+    "qdrantUrl": "https://your-qdrant-instance.com",
+    "qdrantApiKey": "your-api-key-here",
+    "mapping": {
+      "url": "metadata.url",
+      "title": "metadata.title",
+      "content": "content",
+      "description": "metadata.description",
+      "updatedAt": "metadata.updated_at"
+    },
+    "icon": "📚",
+    "color": "blue",
+    "enabled": true
+  },
+  {
+    "id": "hierarchical-example",
+    "type": "hierarchical-qdrant",
+    "collection": "SwedishLaw_RAG",
+    "label": "Svensk lag",
+    "qdrantUrl": "https://your-qdrant-instance.com",
+    "qdrantApiKey": "your-api-key-here",
+    "mapping": {
+      "url": "metadata.source_url",
+      "title": "metadata.title",
+      "content": "content",
+      "filterField": "metadata.law_id"
+    },
+    "icon": "⚖️",
+    "color": "purple",
+    "subSources": [
+      {
+        "id": "miljöbalken",
+        "label": "Miljöbalken (1998:808)"
+      },
+      {
+        "id": "pbl",
+        "label": "Plan- och bygglagen (2010:900)"
+      },
+      {
+        "id": "förvaltningslagen",
+        "label": "Förvaltningslagen (2017:900)"
+      }
+    ]
+  }
+]

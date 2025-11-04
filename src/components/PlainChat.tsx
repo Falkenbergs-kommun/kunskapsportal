@@ -46,6 +46,14 @@ export function PlainChat() {
     'chat_selected_external_sources',
     []
   )
+  const [selectedSubSources, setSelectedSubSources] = usePersistedState<Record<string, string[]>>(
+    'chat_selected_sub_sources',
+    {}
+  )
+  const [useGoogleGrounding, setUseGoogleGrounding] = usePersistedState<boolean>(
+    'chat_use_google_grounding',
+    false
+  )
   const [articleContext, setArticleContext] = usePersistedState<ArticleContext | null>(
     'chat_article_context',
     null
@@ -53,6 +61,7 @@ export function PlainChat() {
   const [showSettings, setShowSettings] = useState(false)
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([])
   const [availableExternalSources, setAvailableExternalSources] = useState<any[]>([])
+  const [geminiGroundingEnabled, setGeminiGroundingEnabled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const { open, setOpen } = useSidebar()
@@ -74,7 +83,7 @@ export function PlainChat() {
     }
   }, [isLoading, messages.length])
 
-  // Fetch available departments and external sources
+  // Fetch available departments, external sources, and check Google Grounding availability
   useEffect(() => {
     const fetchAvailableSources = async () => {
       try {
@@ -83,6 +92,7 @@ export function PlainChat() {
           const data = await response.json()
           setAvailableDepartments(data.departments || [])
           setAvailableExternalSources(data.externalSources || [])
+          setGeminiGroundingEnabled(data.geminiGroundingEnabled || false)
 
           // Validate and clean up selected departments
           const validDeptIds = getAllDepartmentIds(data.departments || [])
@@ -92,12 +102,29 @@ export function PlainChat() {
           }
 
           // Validate and clean up selected external sources
+          // IMPORTANT: Filter out "google" - it's not an external source, it's handled by useGoogleGrounding
           const validSourceIds = (data.externalSources || []).map((s: any) => s.id)
-          const validSelectedSources = selectedExternalSources.filter((id) =>
-            validSourceIds.includes(id),
-          )
+          const validSelectedSources = selectedExternalSources
+            .filter((id) => id !== 'google') // Remove legacy "google" entries
+            .filter((id) => validSourceIds.includes(id))
           if (validSelectedSources.length !== selectedExternalSources.length) {
             setSelectedExternalSources(validSelectedSources)
+          }
+
+          // Validate and clean up selected sub-sources
+          const newSelectedSubSources: Record<string, string[]> = {}
+          for (const [sourceId, subIds] of Object.entries(selectedSubSources)) {
+            const source = (data.externalSources || []).find((s: any) => s.id === sourceId)
+            if (source && source.subSources) {
+              const validSubIds = source.subSources.map((sub: any) => sub.id)
+              const validSubs = subIds.filter((id) => validSubIds.includes(id))
+              if (validSubs.length > 0) {
+                newSelectedSubSources[sourceId] = validSubs
+              }
+            }
+          }
+          if (JSON.stringify(newSelectedSubSources) !== JSON.stringify(selectedSubSources)) {
+            setSelectedSubSources(newSelectedSubSources)
           }
         }
       } catch (error) {
@@ -179,6 +206,15 @@ export function PlainChat() {
           content: msg.text,
         }))
 
+      // Include parent source IDs if they have sub-sources selected (even if parent not explicitly checked)
+      const sourcesWithSubSelections = Object.keys(selectedSubSources).filter(
+        sourceId => selectedSubSources[sourceId].length > 0
+      )
+      const allExternalSourceIds = Array.from(new Set([
+        ...selectedExternalSources,
+        ...sourcesWithSubSelections
+      ]))
+
       // Call the chat API
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -188,7 +224,9 @@ export function PlainChat() {
         body: JSON.stringify({
           message: trimmedInput,
           departmentIds: selectedDepartments,
-          externalSourceIds: selectedExternalSources,
+          externalSourceIds: allExternalSourceIds,
+          subSourceFilters: selectedSubSources,
+          useGoogleGrounding,
           history,
           articleContext: articleContext ? {
             id: articleContext.id,
@@ -326,8 +364,31 @@ export function PlainChat() {
           />
           <ExternalSourceSelector
             selectedSources={selectedExternalSources}
+            selectedSubSources={selectedSubSources}
             onSelectionChange={setSelectedExternalSources}
+            onSubSourceSelectionChange={(sourceId, subSources) => {
+              setSelectedSubSources((prev) => ({
+                ...prev,
+                [sourceId]: subSources,
+              }))
+            }}
           />
+
+          {/* Google Grounding Toggle */}
+          {geminiGroundingEnabled && (
+            <div className="border rounded-lg p-2 bg-white mt-2">
+              <label className="flex items-center py-1 px-2 cursor-pointer hover:bg-gray-50 rounded">
+                <input
+                  type="checkbox"
+                  checked={useGoogleGrounding}
+                  onChange={(e) => setUseGoogleGrounding(e.target.checked)}
+                  className="mr-2 h-3 w-3"
+                />
+                <span className="mr-2">🔍</span>
+                <span className="text-sm">Google Search</span>
+              </label>
+            </div>
+          )}
         </div>
       )}
 
@@ -359,10 +420,27 @@ export function PlainChat() {
             className="text-gray-500 hover:text-gray-700"
           >
             <SettingsIcon className="h-4 w-4 mr-1" />
-            {selectedDepartments.length > 0 || selectedExternalSources.length > 0
-              ? `${selectedDepartments.length + selectedExternalSources.length} källor valda`
-              : 'Filtrera kunskap'
-            }
+            {(() => {
+              // Count sources: departments + external sources (parent-level) + hierarchical sources with sub-selections
+              const sourcesWithSubSources = Object.keys(selectedSubSources).filter(
+                sourceId => {
+                  // Only count if this source has sub-sources selected AND parent isn't already counted
+                  return selectedSubSources[sourceId].length > 0 && !selectedExternalSources.includes(sourceId)
+                }
+              ).length
+
+              const totalSources = selectedDepartments.length + selectedExternalSources.length + sourcesWithSubSources
+
+              if (totalSources > 0 && useGoogleGrounding) {
+                return `${totalSources} källor + Google valda`
+              } else if (totalSources > 0) {
+                return `${totalSources} källor valda`
+              } else if (useGoogleGrounding) {
+                return 'Google Search vald'
+              } else {
+                return 'Filtrera kunskap'
+              }
+            })()}
           </Button>
           {messages.length > 1 && (
             <Button
