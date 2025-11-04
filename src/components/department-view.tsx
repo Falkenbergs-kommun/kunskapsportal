@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Search, FileText, Calendar, User, Building, ChevronRight, ArrowUpDown, Loader2, Sparkles, AlignLeft, Zap } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -63,9 +64,19 @@ export default function DepartmentView({
   totalArticles,
   subdepartments = [],
 }: DepartmentViewProps) {
-  const [searchTerm, setSearchTerm] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Initialize state from URL params
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
   const [searchMode, setSearchMode] = useState<SearchMode>(() => {
-    // Load from cookie on mount
+    // First try URL param, then cookie, then default
+    const urlMode = searchParams.get('mode') as SearchMode
+    if (urlMode && ['hybrid', 'semantic', 'exact'].includes(urlMode)) {
+      return urlMode
+    }
+    // Fall back to cookie
     if (typeof document !== 'undefined') {
       const saved = document.cookie
         .split('; ')
@@ -75,14 +86,67 @@ export default function DepartmentView({
     }
     return 'hybrid'
   })
-  const [sortBy, setSortBy] = useState<SortOption>('-updatedAt')
-  const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<SortOption>(
+    (searchParams.get('sort') as SortOption) || '-updatedAt'
+  )
+  const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>(() => {
+    const types = searchParams.get('types')
+    return types ? types.split(',') : []
+  })
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<Article[] | null>(null)
   const [searchResultsTotal, setSearchResultsTotal] = useState(0)
+
+  // Helper to update URL with current search state
+  const updateURL = useCallback((params: {
+    q?: string
+    mode?: SearchMode
+    sort?: SortOption
+    types?: string[]
+  }) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()))
+
+    // Update or remove query param
+    if (params.q !== undefined) {
+      if (params.q) {
+        current.set('q', params.q)
+      } else {
+        current.delete('q')
+      }
+    }
+
+    // Update or remove mode param
+    if (params.mode !== undefined) {
+      current.set('mode', params.mode)
+    }
+
+    // Update or remove sort param
+    if (params.sort !== undefined) {
+      if (params.sort !== '-updatedAt') {
+        current.set('sort', params.sort)
+      } else {
+        current.delete('sort')
+      }
+    }
+
+    // Update or remove types param
+    if (params.types !== undefined) {
+      if (params.types.length > 0) {
+        current.set('types', params.types.join(','))
+      } else {
+        current.delete('types')
+      }
+    }
+
+    const search = current.toString()
+    const query = search ? `?${search}` : ''
+
+    // Use replace to not add to history stack for every keystroke
+    router.replace(`${pathname}${query}`, { scroll: false })
+  }, [searchParams, router, pathname])
 
   // Debounced search function
   const performSearch = useCallback(
@@ -114,14 +178,15 @@ export default function DepartmentView({
     [departmentId, sortBy, searchMode],
   )
 
-  // Debounce search input
+  // Debounce search input and update URL
   useEffect(() => {
     const timer = setTimeout(() => {
       performSearch(searchTerm)
+      updateURL({ q: searchTerm })
     }, 500) // Wait 500ms after user stops typing
 
     return () => clearTimeout(timer)
-  }, [searchTerm, performSearch])
+  }, [searchTerm, performSearch, updateURL])
 
   // Use search results if searching, otherwise use loaded articles
   const displayArticles = searchResults !== null ? searchResults : articles
@@ -187,13 +252,16 @@ export default function DepartmentView({
   }
 
   const toggleDocType = (docType: string) => {
-    setSelectedDocTypes((prev) =>
-      prev.includes(docType) ? prev.filter((t) => t !== docType) : [...prev, docType],
-    )
+    setSelectedDocTypes((prev) => {
+      const newTypes = prev.includes(docType) ? prev.filter((t) => t !== docType) : [...prev, docType]
+      updateURL({ types: newTypes })
+      return newTypes
+    })
   }
 
   const handleSearchModeChange = (mode: SearchMode) => {
     setSearchMode(mode)
+    updateURL({ mode })
     // Save to cookie (expires in 1 year)
     const expiryDate = new Date()
     expiryDate.setFullYear(expiryDate.getFullYear() + 1)
@@ -274,7 +342,11 @@ export default function DepartmentView({
               <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />
             )}
           </div>
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+          <Select value={sortBy} onValueChange={(value) => {
+            const newSort = value as SortOption
+            setSortBy(newSort)
+            updateURL({ sort: newSort })
+          }}>
             <SelectTrigger className="w-[180px] h-12">
               <ArrowUpDown className="mr-2 h-4 w-4" />
               <SelectValue />
@@ -344,7 +416,10 @@ export default function DepartmentView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedDocTypes([])}
+                onClick={() => {
+                  setSelectedDocTypes([])
+                  updateURL({ types: [] })
+                }}
                 className="h-6 px-2 text-xs"
               >
                 Rensa filter
@@ -388,6 +463,7 @@ export default function DepartmentView({
                 onClick={() => {
                   setSearchTerm('')
                   setSelectedDocTypes([])
+                  updateURL({ q: '', types: [] })
                 }}
               >
                 Rensa alla filter
