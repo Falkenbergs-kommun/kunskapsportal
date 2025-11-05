@@ -39,7 +39,6 @@ export interface ChatOptions {
   message: string
   departmentIds?: string[]
   externalSourceIds?: string[]
-  subSourceFilters?: Record<string, string[]>
   useGoogleGrounding?: boolean
   history?: ChatMessage[]
   articleContext?: ArticleContext | null
@@ -50,13 +49,11 @@ async function executeSearchKnowledge(
   args: any,
   departmentIds: string[],
   externalSourceIds: string[],
-  subSourceFilters: Record<string, string[]>,
 ): Promise<{ formattedResults: string; sources: SearchResult[] }> {
   const searchResults = await searchKnowledgeBase({
     query: args.query,
     departmentIds,
     externalSourceIds,
-    subSourceFilters,
     limit: 10, // Get more results per source, let AI choose best ones
   })
 
@@ -70,7 +67,6 @@ export async function chatWithKnowledge({
   message,
   departmentIds = [],
   externalSourceIds = [],
-  subSourceFilters = {},
   useGoogleGrounding = false,
   history = [],
   articleContext = null,
@@ -273,7 +269,6 @@ export async function chatWithKnowledge({
               functionCall.args,
               departmentIds,
               externalSourceIds,
-              subSourceFilters,
             )
 
             // Collect unique sources

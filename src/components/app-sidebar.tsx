@@ -66,6 +66,7 @@ const data = {
       title: 'Administratör',
       url: '/admin',
       icon: UserCheck,
+      target: '_blank',
     },
     // {
     //   title: 'Inställningar',

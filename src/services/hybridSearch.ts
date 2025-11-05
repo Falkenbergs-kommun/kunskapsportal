@@ -9,6 +9,7 @@ export interface HybridSearchOptions {
   query: string
   mode?: SearchMode
   departmentId?: string
+  departmentIds?: string[]
   limit?: number
   offset?: number
 }
@@ -37,6 +38,7 @@ export interface HybridSearchResponse {
 async function exactSearch(
   query: string,
   departmentId?: string,
+  departmentIds?: string[],
   limit: number = 50,
 ): Promise<{ articles: Article[]; total: number; time: number }> {
   const startTime = Date.now()
@@ -46,7 +48,12 @@ async function exactSearch(
     _status: { equals: 'published' },
   }
 
-  if (departmentId) {
+  // Handle department filtering
+  if (departmentIds && departmentIds.length > 0) {
+    // Multiple departments
+    whereClause.department = { in: departmentIds }
+  } else if (departmentId) {
+    // Single department
     whereClause.department = { equals: departmentId }
   }
 
@@ -80,14 +87,20 @@ async function exactSearch(
 async function semanticSearch(
   query: string,
   departmentId?: string,
+  departmentIds?: string[],
   limit: number = 50,
 ): Promise<{ results: SearchResult[]; time: number }> {
   const startTime = Date.now()
 
+  // Use departmentIds if provided, otherwise use single departmentId
+  const deptIds = departmentIds && departmentIds.length > 0
+    ? departmentIds
+    : departmentId ? [departmentId] : []
+
   // For semantic search, keep it focused with max 10 results
   const results = await searchKnowledgeBase({
     query,
-    departmentIds: departmentId ? [departmentId] : [],
+    departmentIds: deptIds,
     limit: 10, // Cap at 10 for quality semantic results
   })
 
@@ -156,6 +169,7 @@ export async function hybridSearch({
   query,
   mode = 'hybrid',
   departmentId,
+  departmentIds,
   limit = 50,
   offset = 0,
 }: HybridSearchOptions): Promise<HybridSearchResponse> {
@@ -165,7 +179,7 @@ export async function hybridSearch({
   try {
     if (mode === 'exact') {
       // Exact PostgreSQL search only
-      const { articles, total, time } = await exactSearch(query, departmentId, limit)
+      const { articles, total, time } = await exactSearch(query, departmentId, departmentIds, limit)
       timings.postgres = time
       timings.total = Date.now() - startTime
 
@@ -183,7 +197,7 @@ export async function hybridSearch({
 
     if (mode === 'semantic') {
       // Semantic Qdrant search only
-      const { results, time } = await semanticSearch(query, departmentId, limit)
+      const { results, time } = await semanticSearch(query, departmentId, departmentIds, limit)
       timings.qdrant = time
 
       // Fetch full articles from PostgreSQL
@@ -226,8 +240,8 @@ export async function hybridSearch({
 
     // Hybrid mode: Run both searches in parallel
     const [exactResult, semanticResult] = await Promise.all([
-      exactSearch(query, departmentId, limit),
-      semanticSearch(query, departmentId, limit),
+      exactSearch(query, departmentId, departmentIds, limit),
+      semanticSearch(query, departmentId, departmentIds, limit),
     ])
 
     timings.postgres = exactResult.time

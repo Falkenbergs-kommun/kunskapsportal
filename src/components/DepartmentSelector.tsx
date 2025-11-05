@@ -32,7 +32,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
       const data = await response.json()
       setDepartments(data.departments)
       setLoading(false)
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to load departments')
       setLoading(false)
     }
@@ -48,19 +48,6 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
       }
     }
     depts.forEach(traverse)
-    return ids
-  }
-
-  // Get all child department IDs (including the department itself)
-  const getChildDepartmentIds = (dept: Department): string[] => {
-    const ids: string[] = []
-    const traverse = (d: Department) => {
-      ids.push(d.id)
-      if (d.children) {
-        d.children.forEach(traverse)
-      }
-    }
-    traverse(dept)
     return ids
   }
 
@@ -96,9 +83,21 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
     onSelectionChange(newSelection)
   }
 
-  // Toggle all children of a department
+  // Toggle all children of a department (recursively)
   const handleToggleAllChildren = (dept: Department) => {
-    const childIds = dept.children.map((child) => child.id)
+    // Get all descendant IDs recursively (not including the parent department itself)
+    const getAllDescendantIds = (d: Department): string[] => {
+      const ids: string[] = []
+      if (d.children) {
+        d.children.forEach((child) => {
+          ids.push(child.id)
+          ids.push(...getAllDescendantIds(child))
+        })
+      }
+      return ids
+    }
+
+    const childIds = getAllDescendantIds(dept)
     const allChildrenSelected = childIds.every((id) => selectedDepartments.includes(id))
 
     let newSelection: string[]
@@ -134,8 +133,8 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
     const isIndeterminate = hasChildren && !isSelected && childrenSelected
     const allChildrenSelected = hasChildren && dept.children.every(child => selectedDepartments.includes(child.id))
 
-    // Only show at top level (level 0) - don't indent or show nested beyond first level
-    if (level === 0) {
+    // Support up to 3 levels (0, 1, 2)
+    if (level <= 2) {
       return (
         <div key={dept.id}>
           <div className="flex items-center py-1 px-2 hover:bg-gray-100 rounded">
@@ -149,7 +148,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
                 onChange={() => handleToggleDepartment(dept.id)}
                 className="mr-2 h-3 w-3"
               />
-              <span className="text-sm">{dept.name}</span>
+              <span className={level === 0 ? "text-sm" : "text-xs"}>{dept.name}</span>
             </label>
 
             {hasChildren && (
@@ -166,32 +165,35 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
           {/* Hierarchical sub-departments */}
           {hasChildren && isExpanded && (
             <div className="ml-6 mt-1 border-l-2 border-gray-200 pl-2">
-              {/* Select all option */}
-              <label className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
-                <input
-                  type="checkbox"
-                  checked={
-                    dept.children.every((child) => selectedDepartments.includes(child.id)) &&
-                    dept.children.length > 0
-                  }
-                  onChange={() => handleToggleAllChildren(dept)}
-                  className="mr-2 h-3 w-3"
-                />
-                <span className="text-xs font-medium text-gray-600">Alla</span>
-              </label>
-
-              {/* Individual sub-departments (non-recursive, just direct children) */}
-              {dept.children.map((child) => (
-                <label key={child.id} className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
+              {/* Select all option - only show at level 0 and 1 */}
+              {level < 2 && (
+                <label className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
                   <input
                     type="checkbox"
-                    checked={selectedDepartments.includes(child.id)}
-                    onChange={() => handleToggleDepartment(child.id)}
+                    checked={(() => {
+                      // Check if all descendants are selected (not just direct children)
+                      const getAllDescendantIds = (d: Department): string[] => {
+                        const ids: string[] = []
+                        if (d.children) {
+                          d.children.forEach((child) => {
+                            ids.push(child.id)
+                            ids.push(...getAllDescendantIds(child))
+                          })
+                        }
+                        return ids
+                      }
+                      const allDescendantIds = getAllDescendantIds(dept)
+                      return allDescendantIds.length > 0 && allDescendantIds.every((id) => selectedDepartments.includes(id))
+                    })()}
+                    onChange={() => handleToggleAllChildren(dept)}
                     className="mr-2 h-3 w-3"
                   />
-                  <span className="text-xs">{child.name}</span>
+                  <span className="text-xs font-medium text-gray-600">Alla</span>
                 </label>
-              ))}
+              )}
+
+              {/* Individual sub-departments - now recursive */}
+              {dept.children.map((child) => renderDepartment(child, level + 1))}
             </div>
           )}
         </div>

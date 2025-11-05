@@ -41,11 +41,13 @@ export interface SearchResult {
   isExternal: boolean
 }
 
+export type SearchMode = 'exact' | 'semantic' | 'hybrid'
+
 export interface SearchOptions {
   query: string
+  mode?: SearchMode
   departmentIds?: string[]
-  externalSourceIds?: string[]
-  subSourceFilters?: Record<string, string[]> // e.g., { 'svensk-lag': ['pbl', 'miljöbalken'] }
+  externalSourceIds?: string[] // Can include dot notation like "svensk-lag.pbl"
   limit?: number
 }
 
@@ -60,9 +62,9 @@ async function getEmbedding(text: string): Promise<number[]> {
 }
 
 /**
- * Search an external Qdrant collection using field mappings
+ * Search an external Qdrant collection using semantic vector search
  */
-async function searchExternalCollection(
+async function searchExternalCollectionSemantic(
   source: QdrantSourceConfig | HierarchicalQdrantSourceConfig,
   queryEmbedding: number[],
   subSourceIds: string[] | undefined,
@@ -113,18 +115,96 @@ async function searchExternalCollection(
   })
 }
 
+/**
+ * Search an external Qdrant collection using exact keyword matching
+ */
+async function searchExternalCollectionExact(
+  source: QdrantSourceConfig | HierarchicalQdrantSourceConfig,
+  query: string,
+  subSourceIds: string[] | undefined,
+  limit: number,
+): Promise<SearchResult[]> {
+  const client = createQdrantClientForSource(source)
+
+  // Build filter combining keyword search and sub-source filtering
+  const filters: any[] = []
+
+  // Add keyword filter (search in title and content)
+  const queryLower = query.toLowerCase()
+  filters.push({
+    should: [
+      {
+        key: source.mapping.title,
+        match: { text: queryLower },
+      },
+      {
+        key: source.mapping.content,
+        match: { text: queryLower },
+      },
+    ],
+  })
+
+  // Add sub-source filter if hierarchical
+  if (isHierarchicalSource(source) && subSourceIds && subSourceIds.length > 0) {
+    filters.push({
+      should: subSourceIds.map((subId) => ({
+        key: source.mapping.filterField,
+        match: { value: subId },
+      })),
+    })
+  }
+
+  const filter = filters.length > 0 ? { must: filters } : undefined
+
+  // Use scroll for keyword-based filtering (no vector search)
+  const scrollResult = await client.scroll(source.collection, {
+    limit,
+    with_payload: true,
+    filter,
+  })
+
+  return scrollResult.points.map((result) => {
+    const urlField = getNestedValue(result.payload, source.mapping.url)
+    const titleField = getNestedValue(result.payload, source.mapping.title)
+    const contentField = getNestedValue(result.payload, source.mapping.content)
+
+    // Simple keyword scoring for exact matches
+    const titleMatch = titleField?.toLowerCase().includes(queryLower)
+    const score = titleMatch ? 0.9 : 0.6
+
+    return {
+      id: result.id as string,
+      title: titleField || 'Untitled',
+      text: contentField || '',
+      department: null,
+      documentType: 'external',
+      score,
+      articleId: '',
+      slug: null,
+      departmentPath: null,
+      url: urlField || '',
+      source: source.id,
+      isExternal: true,
+    }
+  })
+}
+
 export async function searchKnowledgeBase({
   query,
+  mode = 'hybrid',
   departmentIds = [],
   externalSourceIds = [],
-  subSourceFilters = {},
   limit = 5,
 }: SearchOptions): Promise<SearchResult[]> {
   try {
-    // Generate query embedding once (reuse for all collections)
-    const queryEmbedding = await getEmbedding(query)
-
     const results: SearchResult[] = []
+    const queryLower = query.toLowerCase()
+
+    // Generate query embedding for semantic/hybrid search
+    let queryEmbedding: number[] | null = null
+    if (mode === 'semantic' || mode === 'hybrid') {
+      queryEmbedding = await getEmbedding(query)
+    }
 
     // Always search internal collection (no UI option to exclude it)
     const searchInternal = true
@@ -136,56 +216,130 @@ export async function searchKnowledgeBase({
         const collectionExists = collections.collections.some((col) => col.name === COLLECTION_NAME)
 
         if (collectionExists) {
-          // Build filter for departments if provided
-          const filter: any = {}
+          // Build department filter
+          let departmentFilter: any = undefined
           if (departmentIds.length > 0) {
             const numericDeptIds = departmentIds.map((id) => parseInt(id))
-
-            filter.should = numericDeptIds.map((deptId) => ({
-              key: 'department.id',
-              match: { value: deptId },
-            }))
+            departmentFilter = {
+              should: numericDeptIds.map((deptId) => ({
+                key: 'department.id',
+                match: { value: deptId },
+              })),
+            }
           }
 
-          // Search in internal Qdrant collection
-          const searchParams = {
-            vector: queryEmbedding,
-            limit: Math.min(limit, 10), // Cap semantic search at 10 results for quality
-            with_payload: true,
-            filter: Object.keys(filter).length > 0 ? filter : undefined,
-            score_threshold: 0.3, // Return results with >30% similarity (better balance)
+          const internalResults: SearchResult[] = []
+
+          // EXACT MODE: Use payload filtering for keyword matching
+          if (mode === 'exact' || mode === 'hybrid') {
+            const keywordFilter: any = {
+              should: [
+                { key: 'title', match: { text: queryLower } },
+                { key: 'text', match: { text: queryLower } },
+                { key: 'summary', match: { text: queryLower } },
+              ],
+            }
+
+            const filters: any[] = [keywordFilter]
+            if (departmentFilter) {
+              filters.push(departmentFilter)
+            }
+
+            const finalFilter = filters.length > 0 ? { must: filters } : undefined
+
+            const scrollResult = await qdrant.scroll(COLLECTION_NAME, {
+              limit: limit * 2,
+              with_payload: true,
+              filter: finalFilter,
+            })
+
+            const exactResults = scrollResult.points.map((result) => {
+              const slug = result.payload?.slug as string | null
+              const departmentPath = result.payload?.departmentPath as string | null
+              const title = (result.payload?.title as string) || ''
+
+              let url = ''
+              if (slug && departmentPath) {
+                url = `/${departmentPath}/${slug}`
+              }
+
+              // Score based on where the match occurs
+              const titleMatch = title.toLowerCase().includes(queryLower)
+              const score = titleMatch ? 0.95 : 0.75
+
+              return {
+                id: result.id as string,
+                title,
+                text: (result.payload?.text as string) || '',
+                department: (result.payload?.department as string) || null,
+                documentType: (result.payload?.documentType as string) || null,
+                score,
+                articleId: (result.payload?.articleId as string) || '',
+                slug,
+                departmentPath,
+                url,
+                source: 'internal' as const,
+                isExternal: false,
+              }
+            })
+
+            internalResults.push(...exactResults)
           }
 
-          const searchResult = await qdrant.search(COLLECTION_NAME, searchParams)
+          // SEMANTIC MODE: Use vector search
+          if ((mode === 'semantic' || mode === 'hybrid') && queryEmbedding) {
+            const searchResult = await qdrant.search(COLLECTION_NAME, {
+              vector: queryEmbedding,
+              limit: Math.min(limit, 10),
+              with_payload: true,
+              filter: departmentFilter,
+              score_threshold: 0.3,
+            })
 
-          // Transform internal results
-          const internalResults = searchResult.map((result) => {
-            const slug = result.payload?.slug as string | null
-            const departmentPath = result.payload?.departmentPath as string | null
+            const semanticResults = searchResult.map((result) => {
+              const slug = result.payload?.slug as string | null
+              const departmentPath = result.payload?.departmentPath as string | null
 
-            // Construct URL with full department hierarchy
-            let url = ''
-            if (slug && departmentPath) {
-              url = `/${departmentPath}/${slug}`
-            }
+              let url = ''
+              if (slug && departmentPath) {
+                url = `/${departmentPath}/${slug}`
+              }
 
-            return {
-              id: result.id as string,
-              title: (result.payload?.title as string) || 'Untitled',
-              text: (result.payload?.text as string) || '',
-              department: (result.payload?.department as string) || null,
-              documentType: (result.payload?.documentType as string) || null,
-              score: result.score || 0,
-              articleId: (result.payload?.articleId as string) || '',
-              slug,
-              departmentPath,
-              url,
-              source: 'internal' as const,
-              isExternal: false,
-            }
-          })
+              return {
+                id: result.id as string,
+                title: (result.payload?.title as string) || 'Untitled',
+                text: (result.payload?.text as string) || '',
+                department: (result.payload?.department as string) || null,
+                documentType: (result.payload?.documentType as string) || null,
+                score: result.score || 0,
+                articleId: (result.payload?.articleId as string) || '',
+                slug,
+                departmentPath,
+                url,
+                source: 'internal' as const,
+                isExternal: false,
+              }
+            })
 
-          results.push(...internalResults)
+            internalResults.push(...semanticResults)
+          }
+
+          // For hybrid mode, deduplicate and merge scores
+          if (mode === 'hybrid') {
+            const merged = new Map<string, SearchResult>()
+            internalResults.forEach((result) => {
+              const existing = merged.get(result.id)
+              if (existing) {
+                // Boost score if found in both exact and semantic
+                existing.score = Math.min(existing.score + result.score * 0.3, 1.0)
+              } else {
+                merged.set(result.id, result)
+              }
+            })
+            results.push(...Array.from(merged.values()))
+          } else {
+            results.push(...internalResults)
+          }
         } else {
           console.log(
             `Internal collection '${COLLECTION_NAME}' does not exist yet - skipping internal search`,
@@ -199,22 +353,80 @@ export async function searchKnowledgeBase({
 
     // Search external sources in parallel
     const externalSources = getExternalSources()
-    const sourcesToSearch = externalSources.filter((s) => externalSourceIds.includes(s.id))
+
+    // Parse dot notation from externalSourceIds to extract parent sources and sub-sources
+    // e.g., ["svensk-lag", "svensk-lag.pbl", "kommun"] =>
+    //   parents: ["svensk-lag", "kommun"]
+    //   subSourceMap: { "svensk-lag": ["pbl"] }
+    const parentSourceIds = new Set<string>()
+    const subSourceMap: Record<string, string[]> = {}
+
+    for (const id of externalSourceIds) {
+      if (id.includes('.')) {
+        // This is a sub-source like "svensk-lag.pbl"
+        const [parentId, subId] = id.split('.')
+        parentSourceIds.add(parentId)
+        if (!subSourceMap[parentId]) {
+          subSourceMap[parentId] = []
+        }
+        subSourceMap[parentId].push(subId)
+      } else {
+        // This is a parent source
+        parentSourceIds.add(id)
+      }
+    }
+
+    const sourcesToSearch = externalSources.filter((s) => parentSourceIds.has(s.id))
 
     if (sourcesToSearch.length > 0) {
-      const externalSearches = sourcesToSearch.map((source) => {
-        // Get sub-source filters for this source (if hierarchical)
-        const subSourceIds = subSourceFilters[source.id]
-        return searchExternalCollection(
-          source as QdrantSourceConfig | HierarchicalQdrantSourceConfig,
-          queryEmbedding,
-          subSourceIds,
-          limit,
-        )
-      })
+      const externalResults: SearchResult[] = []
 
-      const externalResults = await Promise.all(externalSearches)
-      results.push(...externalResults.flat())
+      // EXACT MODE: Use keyword filtering
+      if (mode === 'exact' || mode === 'hybrid') {
+        const exactSearches = sourcesToSearch.map((source) => {
+          const subSourceIds = subSourceMap[source.id]
+          return searchExternalCollectionExact(
+            source as QdrantSourceConfig | HierarchicalQdrantSourceConfig,
+            query,
+            subSourceIds,
+            limit,
+          )
+        })
+        const exactResults = await Promise.all(exactSearches)
+        externalResults.push(...exactResults.flat())
+      }
+
+      // SEMANTIC MODE: Use vector search
+      if ((mode === 'semantic' || mode === 'hybrid') && queryEmbedding) {
+        const semanticSearches = sourcesToSearch.map((source) => {
+          const subSourceIds = subSourceMap[source.id]
+          return searchExternalCollectionSemantic(
+            source as QdrantSourceConfig | HierarchicalQdrantSourceConfig,
+            queryEmbedding,
+            subSourceIds,
+            limit,
+          )
+        })
+        const semanticResults = await Promise.all(semanticSearches)
+        externalResults.push(...semanticResults.flat())
+      }
+
+      // For hybrid mode, deduplicate external results
+      if (mode === 'hybrid') {
+        const merged = new Map<string, SearchResult>()
+        externalResults.forEach((result) => {
+          const key = `${result.source}-${result.id}`
+          const existing = merged.get(key)
+          if (existing) {
+            existing.score = Math.min(existing.score + result.score * 0.3, 1.0)
+          } else {
+            merged.set(key, result)
+          }
+        })
+        results.push(...Array.from(merged.values()))
+      } else {
+        results.push(...externalResults)
+      }
     }
 
     // Sort by score and limit

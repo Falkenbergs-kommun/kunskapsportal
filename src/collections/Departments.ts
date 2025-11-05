@@ -24,7 +24,7 @@ export const Departments: CollectionConfig = {
       label: 'Parent Department',
       admin: {
         position: 'sidebar',
-        description: 'Leave this empty if this is a top-level department.',
+        description: 'Leave this empty if this is a top-level department. Maximum 3 levels allowed.',
       },
       // Prevent a department from being its own parent
       filterOptions: (({ id }: any) => {
@@ -37,6 +37,55 @@ export const Departments: CollectionConfig = {
         }
         return undefined
       }) as any,
+      // Validate that we don't exceed 3 levels of hierarchy
+      validate: async (value: any, { req }: any) => {
+        // If no parent selected, it's valid (top-level department)
+        if (!value) {
+          return true
+        }
+
+        const parentId =
+          typeof value === 'string' || typeof value === 'number' ? String(value) : (value as any).id
+
+        // Function to recursively count parent depth
+        const getParentDepth = async (deptId: string, currentDepth = 0): Promise<number> => {
+          if (currentDepth >= 3) {
+            // Stop early if we've already found too many levels
+            return currentDepth
+          }
+
+          try {
+            const parent = await req.payload.findByID({
+              collection: 'departments',
+              id: deptId,
+              depth: 1,
+            })
+
+            if (parent?.parent) {
+              const nextParentId =
+                typeof parent.parent === 'string' || typeof parent.parent === 'number'
+                  ? String(parent.parent)
+                  : (parent.parent as any).id
+              return getParentDepth(nextParentId, currentDepth + 1)
+            }
+
+            return currentDepth
+          } catch (error) {
+            // If parent not found, allow it (will fail elsewhere)
+            return currentDepth
+          }
+        }
+
+        // Check the depth of the selected parent
+        const parentDepth = await getParentDepth(parentId)
+
+        // If parent already has 2 levels above it, this would be level 4
+        if (parentDepth >= 2) {
+          return 'Max 3 nivåer tillåtna'
+        }
+
+        return true
+      },
     },
     // A slug is essential for clean URLs
     {

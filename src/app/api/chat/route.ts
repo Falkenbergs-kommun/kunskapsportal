@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
       message,
       departmentIds = [],
       externalSourceIds = [],
-      subSourceFilters = {},
       useGoogleGrounding = false,
       history = [],
       articleContext,
@@ -48,18 +47,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate external source IDs against configuration
+    // Validate external source IDs against configuration (supports dot notation like "svensk-lag.pbl")
     const availableSources = getExternalSources()
-    const validExternalSourceIds = externalSourceIds.filter((id: string) =>
-      availableSources.some((source) => source.id === id),
-    )
+
+    // Build set of valid IDs including parent.child patterns
+    const validIds = new Set<string>()
+    for (const source of availableSources) {
+      validIds.add(source.id)
+      if ('subSources' in source && source.subSources) {
+        for (const subSource of source.subSources) {
+          validIds.add(`${source.id}.${subSource.id}`)
+        }
+      }
+    }
+
+    const validExternalSourceIds = externalSourceIds.filter((id: string) => validIds.has(id))
 
     if (validExternalSourceIds.length !== externalSourceIds.length) {
       const invalidIds = externalSourceIds.filter((id: string) => !validExternalSourceIds.includes(id))
       console.warn('Some external source IDs not found in configuration:', {
         requested: externalSourceIds,
         invalid: invalidIds,
-        available: availableSources.map(s => s.id),
+        available: Array.from(validIds),
       })
     }
 
@@ -89,7 +98,6 @@ export async function POST(request: NextRequest) {
       message,
       departmentIds,
       externalSourceIds: validExternalSourceIds,
-      subSourceFilters,
       useGoogleGrounding,
       history: validatedHistory,
       articleContext: articleContext || null,

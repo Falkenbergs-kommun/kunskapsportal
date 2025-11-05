@@ -70,6 +70,22 @@ async function ensureCollection() {
         distance: 'Cosine',
       },
     })
+
+    // Create text indexes for exact keyword search
+    console.log('[Qdrant] Creating text indexes for title, text, and summary fields...')
+    await qdrant.createPayloadIndex(COLLECTION_NAME, {
+      field_name: 'title',
+      field_schema: 'text',
+    })
+    await qdrant.createPayloadIndex(COLLECTION_NAME, {
+      field_name: 'text',
+      field_schema: 'text',
+    })
+    await qdrant.createPayloadIndex(COLLECTION_NAME, {
+      field_name: 'summary',
+      field_schema: 'text',
+    })
+    console.log('[Qdrant] Text indexes created successfully')
   }
 }
 

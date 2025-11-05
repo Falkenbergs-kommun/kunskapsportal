@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
   Item,
   ItemGroup,
@@ -42,6 +44,7 @@ const documentTypeLabels: Record<string, string> = {
 
 interface SubdepartmentWithCount extends Department {
   articleCount: number
+  children?: SubdepartmentWithCount[]
 }
 
 interface DepartmentViewProps {
@@ -93,6 +96,9 @@ export default function DepartmentView({
     const types = searchParams.get('types')
     return types ? types.split(',') : []
   })
+  const [includeSubdepartments, setIncludeSubdepartments] = useState(
+    searchParams.get('includeSub') === 'true'
+  )
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
@@ -100,12 +106,29 @@ export default function DepartmentView({
   const [searchResults, setSearchResults] = useState<Article[] | null>(null)
   const [searchResultsTotal, setSearchResultsTotal] = useState(0)
 
+  // Get all subdepartment IDs recursively (children and grandchildren)
+  const getAllSubdepartmentIds = useCallback((): string[] => {
+    const ids: string[] = []
+    const traverse = (depts: SubdepartmentWithCount[]) => {
+      depts.forEach((dept) => {
+        ids.push(String(dept.id))
+        // If department has children, traverse them
+        if (dept.children && Array.isArray(dept.children)) {
+          traverse(dept.children as SubdepartmentWithCount[])
+        }
+      })
+    }
+    traverse(subdepartments)
+    return ids
+  }, [subdepartments])
+
   // Helper to update URL with current search state
   const updateURL = useCallback((params: {
     q?: string
     mode?: SearchMode
     sort?: SortOption
     types?: string[]
+    includeSub?: boolean
   }) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()))
 
@@ -141,6 +164,15 @@ export default function DepartmentView({
       }
     }
 
+    // Update or remove includeSub param
+    if (params.includeSub !== undefined) {
+      if (params.includeSub) {
+        current.set('includeSub', 'true')
+      } else {
+        current.delete('includeSub')
+      }
+    }
+
     const search = current.toString()
     const query = search ? `?${search}` : ''
 
@@ -160,8 +192,10 @@ export default function DepartmentView({
 
       setIsSearching(true)
       try {
+        const subdeptIds = includeSubdepartments ? getAllSubdepartmentIds() : []
+        const subdeptParam = subdeptIds.length > 0 ? `&subdepartmentIds=${subdeptIds.join(',')}`  : ''
         const response = await fetch(
-          `/api/departments/articles?departmentId=${departmentId}&search=${encodeURIComponent(term)}&sort=${sortBy}&mode=${searchMode}`,
+          `/api/departments/articles?departmentId=${departmentId}&search=${encodeURIComponent(term)}&sort=${sortBy}&mode=${searchMode}${subdeptParam}`,
         )
         const data = await response.json()
 
@@ -175,7 +209,7 @@ export default function DepartmentView({
         setIsSearching(false)
       }
     },
-    [departmentId, sortBy, searchMode],
+    [departmentId, sortBy, searchMode, includeSubdepartments, getAllSubdepartmentIds],
   )
 
   // Debounce search input and update URL
@@ -235,8 +269,10 @@ export default function DepartmentView({
     setIsLoadingMore(true)
     try {
       const nextPage = currentPage + 1
+      const subdeptIds = includeSubdepartments ? getAllSubdepartmentIds() : []
+      const subdeptParam = subdeptIds.length > 0 ? `&subdepartmentIds=${subdeptIds.join(',')}` : ''
       const response = await fetch(
-        `/api/departments/articles?departmentId=${departmentId}&page=${nextPage}&limit=50&sort=${sortBy}`,
+        `/api/departments/articles?departmentId=${departmentId}&page=${nextPage}&limit=50&sort=${sortBy}${subdeptParam}`,
       )
       const data = await response.json()
 
@@ -399,6 +435,52 @@ export default function DepartmentView({
           </div>
         )}
 
+        {/* Include Subdepartments Checkbox */}
+        {subdepartments.length > 0 && (
+          <div className="flex items-center justify-end gap-2">
+            <Checkbox
+              id="include-subdepartments"
+              checked={includeSubdepartments}
+              onCheckedChange={async (checked) => {
+                const newValue = checked === true
+                setIncludeSubdepartments(newValue)
+                updateURL({ includeSub: newValue })
+
+                // Refetch articles if not searching
+                if (!searchTerm) {
+                  setIsLoadingMore(true)
+                  try {
+                    const subdeptIds = newValue ? getAllSubdepartmentIds() : []
+                    const subdeptParam = subdeptIds.length > 0 ? `&subdepartmentIds=${subdeptIds.join(',')}` : ''
+                    const response = await fetch(
+                      `/api/departments/articles?departmentId=${departmentId}&limit=50&sort=${sortBy}${subdeptParam}`,
+                    )
+                    const data = await response.json()
+
+                    if (data.docs) {
+                      setArticles(data.docs)
+                      setCurrentPage(1)
+                    }
+                  } catch (error) {
+                    console.error('Failed to fetch articles:', error)
+                  } finally {
+                    setIsLoadingMore(false)
+                  }
+                } else {
+                  // If searching, re-run the search with new department filter
+                  performSearch(searchTerm)
+                }
+              }}
+            />
+            <Label
+              htmlFor="include-subdepartments"
+              className="text-xs text-slate-600 cursor-pointer"
+            >
+              Inkludera artiklar från underavdelningar
+            </Label>
+          </div>
+        )}
+
         {/* Document Type Filters */}
         {availableDocTypes.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -482,9 +564,9 @@ export default function DepartmentView({
                       <ItemTitle>{article.title}</ItemTitle>
                     </ItemContent>
                     <Badge variant="secondary" className="shrink-0">
-                      {article.documentType
-                        ? documentTypeLabels[article.documentType] || article.documentType
-                        : 'Okänd typ'}
+                      {article.department && typeof article.department !== 'number'
+                        ? article.department.name
+                        : departmentName}
                     </Badge>
                     <ItemFooter className="text-xs text-slate-500">
                       <div className="flex items-center gap-4">

@@ -270,7 +270,7 @@ export interface Department {
   id: number;
   name: string;
   /**
-   * Leave this empty if this is a top-level department.
+   * Leave this empty if this is a top-level department. Maximum 3 levels allowed.
    */
   parent?: (number | null) | Department;
   slug?: string | null;

@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const departmentId = searchParams.get('departmentId')
+    const subdepartmentIdsParam = searchParams.get('subdepartmentIds')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const sortParam = searchParams.get('sort') || '-updatedAt'
@@ -17,12 +18,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'departmentId is required' }, { status: 400 })
     }
 
+    // Parse subdepartment IDs if provided
+    const subdepartmentIds = subdepartmentIdsParam
+      ? subdepartmentIdsParam.split(',').filter(Boolean)
+      : []
+
+    // Build department IDs array (main department + subdepartments)
+    const allDepartmentIds = subdepartmentIds.length > 0
+      ? [departmentId, ...subdepartmentIds]
+      : undefined
+
     // If searching, use hybrid search
     if (searchTerm.trim()) {
       const result = await hybridSearch({
         query: searchTerm,
         mode,
-        departmentId,
+        departmentId: allDepartmentIds ? undefined : departmentId,
+        departmentIds: allDepartmentIds,
         limit: 200,
       })
 
@@ -40,16 +52,20 @@ export async function GET(request: NextRequest) {
 
     // No search - use regular pagination
     const payload = await getPayload({ config })
+    const whereClause: any = {
+      _status: { equals: 'published' },
+    }
+
+    // Handle department filtering
+    if (allDepartmentIds) {
+      whereClause.department = { in: allDepartmentIds }
+    } else {
+      whereClause.department = { equals: departmentId }
+    }
+
     const articlesQuery = await payload.find({
       collection: 'articles',
-      where: {
-        department: {
-          equals: departmentId,
-        },
-        _status: {
-          equals: 'published',
-        },
-      },
+      where: whereClause,
       depth: 3,
       limit,
       page,

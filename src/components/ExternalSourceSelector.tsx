@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { Button } from './ui/button'
 
 interface SubSource {
   id: string
@@ -18,16 +19,12 @@ interface ExternalSource {
 
 interface ExternalSourceSelectorProps {
   selectedSources: string[]
-  selectedSubSources: Record<string, string[]>
   onSelectionChange: (sources: string[]) => void
-  onSubSourceSelectionChange: (sourceId: string, subSources: string[]) => void
 }
 
 export function ExternalSourceSelector({
   selectedSources,
-  selectedSubSources,
   onSelectionChange,
-  onSubSourceSelectionChange,
 }: ExternalSourceSelectorProps) {
   const [sources, setSources] = useState<ExternalSource[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +44,7 @@ export function ExternalSourceSelector({
       const filteredSources = (data.externalSources || []).filter((s: ExternalSource) => s.id !== 'google')
       setSources(filteredSources)
       setLoading(false)
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to load external sources')
       setLoading(false)
     }
@@ -74,24 +71,45 @@ export function ExternalSourceSelector({
   }
 
   const handleToggleSubSource = (sourceId: string, subSourceId: string) => {
-    const currentSubSources = selectedSubSources[sourceId] || []
-    const newSubSources = currentSubSources.includes(subSourceId)
-      ? currentSubSources.filter((id) => id !== subSourceId)
-      : [...currentSubSources, subSourceId]
-    onSubSourceSelectionChange(sourceId, newSubSources)
+    const fullId = `${sourceId}.${subSourceId}`
+    const newSelection = selectedSources.includes(fullId)
+      ? selectedSources.filter((id) => id !== fullId)
+      : [...selectedSources, fullId]
+    onSelectionChange(newSelection)
   }
 
   const handleToggleAllSubSources = (sourceId: string, allSubSourceIds: string[]) => {
-    const currentSubSources = selectedSubSources[sourceId] || []
-    const allSelected = allSubSourceIds.every((id) => currentSubSources.includes(id))
+    const allFullIds = allSubSourceIds.map((subId) => `${sourceId}.${subId}`)
+    const allSelected = allFullIds.every((id) => selectedSources.includes(id))
 
     if (allSelected) {
-      // Deselect all
-      onSubSourceSelectionChange(sourceId, [])
+      // Deselect all sub-sources for this parent
+      const newSelection = selectedSources.filter((id) => !id.startsWith(`${sourceId}.`))
+      onSelectionChange(newSelection)
     } else {
-      // Select all
-      onSubSourceSelectionChange(sourceId, allSubSourceIds)
+      // Select all sub-sources for this parent
+      const newSelection = [...selectedSources.filter((id) => !id.startsWith(`${sourceId}.`)), ...allFullIds]
+      onSelectionChange(newSelection)
     }
+  }
+
+  const handleSelectAll = () => {
+    // Select all top-level sources AND all their sub-sources
+    const allIds: string[] = []
+    sources.forEach((source) => {
+      allIds.push(source.id)
+      if (source.subSources && source.subSources.length > 0) {
+        source.subSources.forEach((subSource) => {
+          allIds.push(`${source.id}.${subSource.id}`)
+        })
+      }
+    })
+    onSelectionChange(allIds)
+  }
+
+  const handleClearAll = () => {
+    // Clear all sources (including sub-sources with dot notation)
+    onSelectionChange([])
   }
 
   // Don't render anything if no sources configured
@@ -101,16 +119,48 @@ export function ExternalSourceSelector({
 
   return (
     <div className="border rounded-lg p-2 max-h-60 overflow-y-auto bg-white">
-      <div className="text-xs font-semibold text-gray-600 mb-2 px-2">Externa Källor</div>
+      <div className="flex items-center justify-between mb-2 px-2">
+        <div className="text-xs font-semibold text-gray-600">Externa Källor</div>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSelectAll}
+            className="h-6 px-2 text-xs"
+            title="Välj alla externa källor"
+          >
+            Välj alla
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearAll}
+            className="h-6 px-2 text-xs"
+            title="Rensa alla val"
+          >
+            Rensa alla
+          </Button>
+        </div>
+      </div>
       {sources.map((source) => {
         const isSelected = selectedSources.includes(source.id)
         const isExpanded = expandedSources.has(source.id)
         const hasSubSources = source.subSources && source.subSources.length > 0
-        const currentSubSources = selectedSubSources[source.id] || []
+
+        // Calculate selected sub-sources from dot notation (e.g., "svensk-lag.pbl")
+        const selectedSubSourceIds = hasSubSources
+          ? selectedSources
+              .filter((id) => id.startsWith(`${source.id}.`))
+              .map((id) => id.substring(source.id.length + 1))
+          : []
 
         // For hierarchical sources: show indeterminate state if sub-sources selected but parent isn't
-        const isIndeterminate = hasSubSources && !isSelected && currentSubSources.length > 0
-        const allSubSourcesSelected = hasSubSources && source.subSources!.every(sub => currentSubSources.includes(sub.id))
+        const isIndeterminate = hasSubSources && !isSelected && selectedSubSourceIds.length > 0
+        const allSubSourcesSelected = Boolean(
+          hasSubSources &&
+          selectedSubSourceIds.length > 0 &&
+          source.subSources!.every(sub => selectedSubSourceIds.includes(sub.id))
+        )
 
         return (
           <div key={source.id} className="mb-1">
@@ -146,10 +196,10 @@ export function ExternalSourceSelector({
                 <label className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded px-1">
                   <input
                     type="checkbox"
-                    checked={
-                      source.subSources!.every((sub) => currentSubSources.includes(sub.id)) &&
-                      currentSubSources.length > 0
-                    }
+                    checked={Boolean(
+                      source.subSources!.every((sub) => selectedSubSourceIds.includes(sub.id)) &&
+                      selectedSubSourceIds.length > 0
+                    )}
                     onChange={() =>
                       handleToggleAllSubSources(
                         source.id,
@@ -169,7 +219,7 @@ export function ExternalSourceSelector({
                   >
                     <input
                       type="checkbox"
-                      checked={currentSubSources.includes(subSource.id)}
+                      checked={selectedSubSourceIds.includes(subSource.id)}
                       onChange={() => handleToggleSubSource(source.id, subSource.id)}
                       className="mr-2 h-3 w-3"
                     />
