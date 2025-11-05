@@ -33,6 +33,7 @@ const documentTypeLabels: Record<string, string> = {
   policy: 'Policy',
   guideline: 'Riktlinje',
   instruction: 'Anvisning',
+  routine: 'Rutin',
   plan: 'Plan',
   protocol: 'Protokoll',
   report: 'Rapport',
@@ -100,6 +101,7 @@ export default function DepartmentView({
     searchParams.get('includeSub') === 'true'
   )
   const [articles, setArticles] = useState<Article[]>(initialArticles)
+  const [articlesTotal, setArticlesTotal] = useState(totalArticles)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
@@ -224,7 +226,7 @@ export default function DepartmentView({
 
   // Use search results if searching, otherwise use loaded articles
   const displayArticles = searchResults !== null ? searchResults : articles
-  const displayTotal = searchResults !== null ? searchResultsTotal : totalArticles
+  const displayTotal = searchResults !== null ? searchResultsTotal : articlesTotal
 
   // Get all unique document types from displayed articles
   const availableDocTypes = Array.from(
@@ -261,7 +263,7 @@ export default function DepartmentView({
     }
   })
 
-  const hasMoreArticles = searchResults === null && articles.length < totalArticles
+  const hasMoreArticles = searchResults === null && articles.length < articlesTotal
 
   const loadMoreArticles = async () => {
     if (isLoadingMore || !hasMoreArticles) return
@@ -338,9 +340,10 @@ export default function DepartmentView({
         <div className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {subdepartments.map((subdept) => {
-              const subdeptPath = getDepartmentFullPath(subdept)
+              // Build path by appending subdepartment slug to current department path
+              const subdeptPath = departmentSlug ? `${departmentSlug}/${subdept.slug}` : `/${subdept.slug}`
               return (
-                <Link key={subdept.id} href={`/${subdeptPath}`}>
+                <Link key={subdept.id} href={subdeptPath}>
                   <Card className="hover:shadow-md transition-all hover:border-blue-300 bg-slate-50 h-full py-2">
                     <CardContent>
                       <div className="flex items-center justify-between gap-3">
@@ -459,6 +462,7 @@ export default function DepartmentView({
 
                     if (data.docs) {
                       setArticles(data.docs)
+                      setArticlesTotal(data.totalDocs || 0)
                       setCurrentPage(1)
                     }
                   } catch (error) {
@@ -589,7 +593,7 @@ export default function DepartmentView({
             {hasMoreArticles && (
               <div className="flex flex-col items-center gap-3 pt-6">
                 <p className="text-sm text-slate-500">
-                  {articles.length} av {totalArticles} dokument laddade
+                  {articles.length} av {articlesTotal} dokument laddade
                 </p>
                 <Button
                   onClick={loadMoreArticles}

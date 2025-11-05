@@ -2,17 +2,9 @@
 
 import * as React from 'react'
 import {
-  AudioWaveform,
-  Blocks,
-  Calendar,
-  Command,
   Home,
-  Inbox,
   MessageCircleQuestion,
-  Search,
-  Settings2,
   Sparkles,
-  Trash2,
   UserCheck,
   BookOpen,
 } from 'lucide-react'
@@ -22,130 +14,42 @@ import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
 import { NavWorkspaces } from '@/components/nav-workspaces'
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar'
-import { SearchForm } from './search-form'
 
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: Command,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-    },
-  ],
-  navMain: [
-    {
-      title: 'Ask AI',
-      url: '#',
-      icon: Sparkles,
-    },
-    {
-      title: 'Home',
-      url: '#',
-      icon: Home,
-      isActive: true,
-    },
-  ],
-  navSecondary: [
-    {
-      title: 'Användarguide',
-      url: '/docs',
-      icon: BookOpen,
-    },
-    {
-      title: 'Administratör',
-      url: '/admin',
-      icon: UserCheck,
-      target: '_blank',
-    },
-    // {
-    //   title: 'Inställningar',
-    //   url: '#',
-    //   icon: Settings2,
-    // },
-    // {
-    //   title: 'Templates',
-    //   url: '#',
-    //   icon: Blocks,
-    // },
-    // {
-    //   title: 'Trash',
-    //   url: '#',
-    //   icon: Trash2,
-    // },
-    {
-      title: 'FAQ',
-      url: '/#faq',
-      icon: MessageCircleQuestion,
-    },
-  ],
-  favorites: [
-    {
-      name: 'Project Management & Task Tracking',
-      url: '#',
-      emoji: '📊',
-    },
-    {
-      name: 'Family Recipe Collection & Meal Planning',
-      url: '#',
-      emoji: '🍳',
-    },
-    {
-      name: 'Fitness Tracker & Workout Routines',
-      url: '#',
-      emoji: '💪',
-    },
-    {
-      name: 'Book Notes & Reading List',
-      url: '#',
-      emoji: '📚',
-    },
-    {
-      name: 'Sustainable Gardening Tips & Plant Care',
-      url: '#',
-      emoji: '🌱',
-    },
-    {
-      name: 'Language Learning Progress & Resources',
-      url: '#',
-      emoji: '🗣️',
-    },
-    {
-      name: 'Home Renovation Ideas & Budget Tracker',
-      url: '#',
-      emoji: '🏠',
-    },
-    {
-      name: 'Personal Finance & Investment Portfolio',
-      url: '#',
-      emoji: '💰',
-    },
-    {
-      name: 'Movie & TV Show Watchlist with Reviews',
-      url: '#',
-      emoji: '🎬',
-    },
-    {
-      name: 'Daily Habit Tracker & Goal Setting',
-      url: '#',
-      emoji: '✅',
-    },
-  ],
-  workspaces: [], // Will be replaced with dynamic data
-}
+const navMain = [
+  {
+    title: 'Ask AI',
+    url: '#',
+    icon: Sparkles,
+  },
+  {
+    title: 'Home',
+    url: '#',
+    icon: Home,
+    isActive: true,
+  },
+]
+
+const navSecondary = [
+  {
+    title: 'Användarguide',
+    url: '/docs',
+    icon: BookOpen,
+  },
+  {
+    title: 'Administratör',
+    url: '/admin',
+    icon: UserCheck,
+    target: '_blank',
+  },
+  {
+    title: 'FAQ',
+    url: '/#faq',
+    icon: MessageCircleQuestion,
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [workspaces, setWorkspaces] = React.useState<any[]>(data.workspaces)
+  const [workspaces, setWorkspaces] = React.useState<any[]>([])
 
   React.useEffect(() => {
     const fetchDepartments = async () => {
@@ -216,13 +120,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <img src="/logo.svg" className="mx-6 mt-8 mb-2" />
         <div className="px-6 text-xl font-bold">Kunskapsportalen</div>
-        {/* <SearchForm /> */}
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarHeader>
       <SidebarContent className="mt-4">
         <NavFavorites />
         <NavWorkspaces workspaces={workspaces} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

@@ -254,6 +254,7 @@ export const Articles: CollectionConfig = {
                     { label: 'Policy', value: 'policy' },
                     { label: 'Riktlinje', value: 'guideline' },
                     { label: 'Anvisning', value: 'instruction' },
+                    { label: 'Rutin', value: 'routine' },
                     { label: 'Plan', value: 'plan' },
                     { label: 'Protokoll', value: 'protocol' },
                     { label: 'Rapport', value: 'report' },

@@ -201,6 +201,7 @@ export interface Article {
         | 'policy'
         | 'guideline'
         | 'instruction'
+        | 'routine'
         | 'plan'
         | 'protocol'
         | 'report'

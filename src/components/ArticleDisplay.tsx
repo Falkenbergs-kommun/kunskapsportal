@@ -16,11 +16,13 @@ import { cn } from '../lib/utils'
 import { FavoriteStar } from './favorite-star'
 import { Article } from '../payload-types'
 import RichText from './RichText' // Import the new component
+import { TableOfContents } from './TableOfContents'
 
 const documentTypeLabels: Record<string, string> = {
   policy: 'Policy',
   guideline: 'Riktlinje',
   instruction: 'Anvisning',
+  routine: 'Rutin',
   plan: 'Plan',
   protocol: 'Protokoll',
   report: 'Rapport',
@@ -312,6 +314,12 @@ export default function ArticleDisplay({ article }: { article: Article | null })
           )}
         </div>
       )}
+
+      {/* Table of Contents */}
+      {article.content && typeof article.content === 'string' && (
+        <TableOfContents content={article.content} />
+      )}
+
       <div data-testid="article-content" className="mb-12">
         {article.content && typeof article.content === 'string' && article.content.trim().length > 0 ? (
           <RichText data={article.content} />

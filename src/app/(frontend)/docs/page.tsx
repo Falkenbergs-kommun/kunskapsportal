@@ -352,6 +352,7 @@ export default function DocsPage() {
                 <li>• Policy - Övergripande riktlinjer</li>
                 <li>• Riktlinje - Detaljerade instruktioner</li>
                 <li>• Anvisning - Praktisk vägledning</li>
+                <li>• Rutin - Återkommande arbetsprocesser</li>
                 <li>• Plan - Strategiska dokument</li>
                 <li>• Protokoll - Mötesanteckningar</li>
                 <li>• Rapport - Analyser och utredningar</li>

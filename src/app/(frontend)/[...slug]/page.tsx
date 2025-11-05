@@ -7,6 +7,45 @@ import type { Article, Department } from '../../../payload-types'
 
 import { getDepartmentFullPath } from '../../../lib/utils'
 
+function buildDepartmentTree(departments: any[]): any[] {
+  const map = new Map()
+  const roots: any[] = []
+
+  // First pass: create all department objects
+  departments.forEach((dept) => {
+    map.set(dept.id, {
+      id: dept.id,
+      name: dept.name,
+      slug: dept.slug,
+      children: [],
+    })
+  })
+
+  // Second pass: build the tree
+  departments.forEach((dept) => {
+    const node = map.get(dept.id)
+    if (dept.parent && typeof dept.parent === 'string') {
+      const parent = map.get(dept.parent)
+      if (parent) {
+        parent.children.push(node)
+      } else {
+        roots.push(node)
+      }
+    } else if (dept.parent && typeof dept.parent === 'object' && dept.parent.id) {
+      const parent = map.get(dept.parent.id)
+      if (parent) {
+        parent.children.push(node)
+      } else {
+        roots.push(node)
+      }
+    } else {
+      roots.push(node)
+    }
+  })
+
+  return roots
+}
+
 export default async function SlugPage({ 
   params 
 }: { 
@@ -91,20 +130,36 @@ export default async function SlugPage({
       sort: '-updatedAt', // Newest first by default
     })
 
-    // Query subdepartments (departments that have this department as parent)
-    const subdepartmentsQuery = await payload.find({
+    // Fetch ALL departments and build a hierarchical tree (to get all descendants, not just direct children)
+    const allDepartmentsQuery = await payload.find({
       collection: 'departments',
-      where: {
-        parent: {
-          equals: department.id,
-        },
-      },
-      depth: 3, // Need full parent chain for getDepartmentFullPath
+      limit: 100,
+      depth: 1,
     })
 
-    // For each subdepartment, count the published articles
+    // Build complete department tree
+    const departmentTree = buildDepartmentTree(allDepartmentsQuery.docs)
+
+    // Find the current department in the tree
+    const findDepartmentInTree = (tree: any[], targetId: string | number): any => {
+      for (const node of tree) {
+        if (String(node.id) === String(targetId)) {
+          return node
+        }
+        if (node.children && node.children.length > 0) {
+          const found = findDepartmentInTree(node.children, targetId)
+          if (found) return found
+        }
+      }
+      return null
+    }
+
+    const departmentNode = findDepartmentInTree(departmentTree, department.id)
+    const subdepartmentsWithChildren = departmentNode?.children || []
+
+    // For each subdepartment (including nested children), count the published articles
     const subdepartmentsWithCounts = await Promise.all(
-      subdepartmentsQuery.docs.map(async (subdept) => {
+      subdepartmentsWithChildren.map(async (subdept: any) => {
         const count = await payload.count({
           collection: 'articles',
           where: {
