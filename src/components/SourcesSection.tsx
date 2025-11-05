@@ -43,21 +43,28 @@ export function SourcesSection({ sources }: SourcesSectionProps) {
                 Intern kunskapsbas ({internalSources.length})
               </h4>
               <ul className="space-y-2">
-                {internalSources.map((source, index) => (
-                  <li key={index}>
-                    <a
-                      href={source.url}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {source.title}
-                    </a>
-                    {(source.department || source.documentType) && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {[source.department, source.documentType].filter(Boolean).join(' · ')}
-                      </div>
-                    )}
-                  </li>
-                ))}
+                {internalSources.map((source, index) => {
+                  // Extract department name if it's an object
+                  const departmentName = typeof source.department === 'object' && source.department !== null
+                    ? (source.department as any).name
+                    : source.department
+
+                  return (
+                    <li key={index}>
+                      <a
+                        href={source.url}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {source.title}
+                      </a>
+                      {(departmentName || source.documentType) && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {[departmentName, source.documentType].filter(Boolean).join(' · ')}
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           )}

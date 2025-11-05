@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
-import { ArrowUpIcon, MessageSquarePlusIcon, SettingsIcon, XIcon, FileTextIcon, Maximize2Icon } from 'lucide-react'
+import { ArrowUpIcon, MessageSquarePlusIcon, SettingsIcon, XIcon, FileTextIcon } from 'lucide-react'
 import { useSidebar } from './ui/sidebar-chat'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { KnowledgeSourceFilter, getFilterButtonText } from './KnowledgeSourceFilter'
@@ -27,7 +27,7 @@ interface ArticleContext {
   summary?: string
 }
 
-export function PlainChat() {
+export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; setIsExpanded: (value: boolean) => void }) {
   const initialMessage: Message = {
     id: 1,
     sender: 'agent',
@@ -57,7 +57,6 @@ export function PlainChat() {
     null
   )
   const [showSettings, setShowSettings] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([])
   const [availableExternalSources, setAvailableExternalSources] = useState<any[]>([])
   const [geminiGroundingEnabled, setGeminiGroundingEnabled] = useState(false)
@@ -315,22 +314,8 @@ export function PlainChat() {
   }
 
   // Render chat content (reusable for both sidebar and dialog)
-  const renderChatContent = (showExpandButton = true) => (
-    <div className="flex flex-col h-full bg-white text-black relative">
-      {/* Expand button (only in sidebar) */}
-      {showExpandButton && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(true)}
-          className="absolute top-3 right-3 z-10 text-gray-500 hover:text-gray-700"
-          title="Expandera chatt"
-        >
-          <Maximize2Icon className="h-5 w-5" />
-        </Button>
-      )}
-
+  const renderChatContent = () => (
+    <div className="flex flex-col h-full bg-white text-black">
       {/* Article Context Indicator */}
       {articleContext && (
         <div className="p-3 bg-blue-50 border-b border-blue-200 flex items-center justify-between">
@@ -453,7 +438,7 @@ export function PlainChat() {
     <>
       {/* Sidebar chat */}
       <div className="relative h-full">
-        {renderChatContent(true)}
+        {renderChatContent()}
       </div>
 
       {/* Expanded dialog */}
