@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { chatWithKnowledge, type ChatMessage } from '@/services/geminiChat'
+import { chatWithKnowledge } from '@/services/geminiChat'
 import { getExternalSources } from '@/config/externalSources'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import type { ChatMessage } from '@/types/chat'
 
 export async function POST(request: NextRequest) {
   let body: any = null
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the chat service
-    const response = await chatWithKnowledge({
+    const chatResponse = await chatWithKnowledge({
       message,
       departmentIds,
       externalSourceIds: validExternalSourceIds,
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
-      response,
+      response: chatResponse.response,
+      sources: chatResponse.sources,
       departmentIds, // Return expanded IDs for transparency
       externalSourceIds: validExternalSourceIds, // Return validated IDs
     })

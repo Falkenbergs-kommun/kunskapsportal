@@ -9,11 +9,13 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import { KnowledgeSourceFilter, getFilterButtonText } from './KnowledgeSourceFilter'
 import { MarkdownMessage } from './MarkdownMessage'
 import { usePersistedState } from '@/hooks/usePersistedState'
+import type { SourceMetadata } from '@/types/chat'
 
 interface Message {
   id: number
   sender: 'user' | 'agent'
   text: string
+  sources?: SourceMetadata[]
 }
 
 interface ArticleContext {
@@ -253,6 +255,7 @@ export function PlainChat() {
         id: Date.now() + 1,
         sender: 'agent',
         text: data.response,
+        sources: data.sources || []
       }
       setMessages((prev) => [...prev, agentMessage])
     } catch (error) {
@@ -294,9 +297,9 @@ export function PlainChat() {
     return (
       <div key={msg.id} className="flex flex-col mb-5 items-start w-full">
         <div className="py-2 px-3 max-w-[95%]">
-          <MarkdownMessage 
-            content={msg.text} 
-            className="text-sm whitespace-pre-wrap break-words leading-relaxed"
+          <MarkdownMessage
+            content={msg.text}
+            sources={msg.sources}
           />
         </div>
       </div>

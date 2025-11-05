@@ -3,201 +3,78 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
+import rehypeRaw from 'rehype-raw'
+import { SourcesSection } from './SourcesSection'
+import type { SourceMetadata } from '@/types/chat'
+import { cn } from '@/lib/utils'
 
 interface MarkdownMessageProps {
   content: string
+  sources?: SourceMetadata[]
   className?: string
 }
 
-export function MarkdownMessage({ content, className = '' }: MarkdownMessageProps) {
+export function MarkdownMessage({ content, sources, className = '' }: MarkdownMessageProps) {
   const router = useRouter()
-  
-  // Simple markdown to JSX converter
-  const renderMarkdown = (text: string) => {
-    // Split by code blocks first
-    const parts = text.split(/(```[\s\S]*?```|`[^`]+`)/g)
-    
-    return parts.map((part, index) => {
-      // Code blocks
-      if (part.startsWith('```')) {
-        const code = part.slice(3, -3).trim()
-        const [language, ...codeLines] = code.split('\n')
-        const codeContent = codeLines.join('\n') || language // Handle single line
-        
-        return (
-          <pre key={index} className="bg-gray-100 rounded p-2 my-2 overflow-x-auto">
-            <code className="text-sm">{codeContent}</code>
-          </pre>
-        )
-      }
-      
-      // Inline code
-      if (part.startsWith('`')) {
-        return (
-          <code key={index} className="bg-gray-100 px-1 py-0.5 rounded text-sm">
-            {part.slice(1, -1)}
-          </code>
-        )
-      }
-      
-      // Process other markdown in text parts
-      const processedPart = part
-        .split('\n')
-        .map((line, lineIndex) => {
-          // Headers
-          if (line.startsWith('### ')) {
-            return <h3 key={`${index}-${lineIndex}`} className="font-semibold mt-2 mb-1">{line.slice(4)}</h3>
-          }
-          if (line.startsWith('## ')) {
-            return <h2 key={`${index}-${lineIndex}`} className="font-bold text-lg mt-2 mb-1">{line.slice(3)}</h2>
-          }
-          if (line.startsWith('# ')) {
-            return <h1 key={`${index}-${lineIndex}`} className="font-bold text-xl mt-2 mb-1">{line.slice(2)}</h1>
-          }
-          
-          // Lists
-          if (line.match(/^[\*\-\+] /)) {
-            return (
-              <li key={`${index}-${lineIndex}`} className="ml-4 list-disc">
-                {processInlineMarkdown(line.slice(2))}
-              </li>
-            )
-          }
-          
-          if (line.match(/^\d+\. /)) {
-            return (
-              <li key={`${index}-${lineIndex}`} className="ml-4 list-decimal">
-                {processInlineMarkdown(line.replace(/^\d+\. /, ''))}
-              </li>
-            )
-          }
-          
-          // Horizontal rule
-          if (line === '---' || line === '***') {
-            return <hr key={`${index}-${lineIndex}`} className="my-2 border-gray-300" />
-          }
-          
-          // Regular paragraph
-          if (line.trim()) {
-            return <p key={`${index}-${lineIndex}`}>{processInlineMarkdown(line)}</p>
-          }
-          
-          return null
-        })
-        .filter(Boolean)
-      
-      return <React.Fragment key={index}>{processedPart}</React.Fragment>
-    })
-  }
-  
-  // Process inline markdown (bold, italic, links)
-  const processInlineMarkdown = (text: string): React.ReactNode => {
-    if (!text) return null
-    
-    const elements: React.ReactNode[] = []
-    let lastIndex = 0
-    
-    // First process links
-    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
-    let linkMatch
-    
-    while ((linkMatch = linkRegex.exec(text)) !== null) {
-      // Add text before the link
-      if (linkMatch.index > lastIndex) {
-        const beforeText = text.substring(lastIndex, linkMatch.index)
-        elements.push(...processTextMarkdown(beforeText))
-      }
-      
-      // Add the link
-      const linkText = linkMatch[1]
-      const linkUrl = linkMatch[2]
-      const isExternal = linkUrl.startsWith('http://') || linkUrl.startsWith('https://')
-      const isInternal = linkUrl.startsWith('/')
 
-      if (isExternal) {
-        // External link - open in new tab with security attributes and icon
-        elements.push(
-          <a
-            key={`link-${linkMatch.index}`}
-            href={linkUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline cursor-pointer inline-flex items-center gap-1"
-          >
-            {linkText}
-            <ExternalLink className="h-3 w-3 inline" />
-          </a>
-        )
-      } else if (isInternal) {
-        // Internal link - use Next.js router
-        elements.push(
-          <a
-            key={`link-${linkMatch.index}`}
-            href={linkUrl}
-            className="text-blue-600 hover:underline cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault()
-              router.push(linkUrl)
-            }}
-          >
-            {linkText}
-          </a>
-        )
-      } else {
-        // Relative or other link
-        elements.push(
-          <a
-            key={`link-${linkMatch.index}`}
-            href={linkUrl}
-            className="text-blue-600 hover:underline cursor-pointer"
-          >
-            {linkText}
-          </a>
-        )
-      }
-      
-      lastIndex = linkMatch.index + linkMatch[0].length
-    }
-    
-    // Add remaining text
-    if (lastIndex < text.length) {
-      const remainingText = text.substring(lastIndex)
-      elements.push(...processTextMarkdown(remainingText))
-    }
-    
-    return elements.length > 0 ? elements : text
-  }
-  
-  // Process bold and italic markdown
-  const processTextMarkdown = (text: string): React.ReactNode[] => {
-    if (!text) return []
-    
-    const elements: React.ReactNode[] = []
-    const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
-    
-    parts.forEach((part, index) => {
-      if (!part) return
-      
-      // Bold
-      if (part.startsWith('**') && part.endsWith('**')) {
-        elements.push(<strong key={`bold-${index}`}>{part.slice(2, -2)}</strong>)
-      }
-      // Italic
-      else if (part.startsWith('*') && part.endsWith('*')) {
-        elements.push(<em key={`italic-${index}`}>{part.slice(1, -1)}</em>)
-      }
-      // Regular text
-      else {
-        elements.push(part)
-      }
-    })
-    
-    return elements
-  }
-  
   return (
-    <div className={`markdown-content space-y-1 ${className}`}>
-      {renderMarkdown(content)}
+    <div className={cn('prose prose-sm max-w-none', className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          // Custom link handler
+          a: ({ node, href, children, ...props }) => {
+            const url = href || ''
+            const isExternal = url.startsWith('http://') || url.startsWith('https://')
+            const isInternal = url.startsWith('/')
+
+            if (isExternal) {
+              // External link - open in new tab with icon
+              return (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  {...props}
+                >
+                  {children}
+                  <ExternalLink className="h-3 w-3 inline" />
+                </a>
+              )
+            } else if (isInternal) {
+              // Internal link - use Next.js router
+              return (
+                <a
+                  href={url}
+                  className="text-blue-600 hover:underline cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    router.push(url)
+                  }}
+                  {...props}
+                >
+                  {children}
+                </a>
+              )
+            }
+
+            // Relative or other links
+            return (
+              <a href={url} className="text-blue-600 hover:underline" {...props}>
+                {children}
+              </a>
+            )
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+      {sources && <SourcesSection sources={sources} />}
     </div>
   )
 }

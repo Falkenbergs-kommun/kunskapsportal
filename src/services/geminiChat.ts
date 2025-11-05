@@ -1,5 +1,7 @@
 import { GoogleGenAI, FunctionCallingConfigMode, FunctionDeclaration } from '@google/genai'
 import { searchKnowledgeBase, type SearchResult } from './qdrantSearch'
+import { getExternalSources, type ExternalSourceConfig } from '@/config/externalSources'
+import type { ChatMessage, ArticleContext, ChatResponse, SourceMetadata } from '@/types/chat'
 
 // Initialize the GenAI client
 const ai = new GoogleGenAI({
@@ -20,19 +22,6 @@ const searchKnowledgeDeclaration: FunctionDeclaration = {
     },
     required: ['query'],
   },
-}
-
-export interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-export interface ArticleContext {
-  id: string
-  title: string
-  slug: string
-  content?: any
-  summary?: string
 }
 
 export interface ChatOptions {
@@ -63,6 +52,53 @@ async function executeSearchKnowledge(
   }
 }
 
+/**
+ * Convert SearchResult[] to SourceMetadata[] for frontend display
+ */
+function convertSearchResultsToMetadata(
+  searchResults: SearchResult[],
+  externalSourceConfigs: ExternalSourceConfig[]
+): SourceMetadata[] {
+  const uniqueUrls = new Set<string>()
+  const metadata: SourceMetadata[] = []
+
+  for (const result of searchResults) {
+    // Deduplicate by URL
+    if (uniqueUrls.has(result.url)) continue
+    uniqueUrls.add(result.url)
+
+    if (result.isExternal) {
+      // Find source config for label/icon/color
+      const sourceConfig = externalSourceConfigs.find(s => s.id === result.source)
+
+      // Check if this is a hierarchical sub-source (source contains ".")
+      const isSubSource = result.source.includes('.')
+
+      metadata.push({
+        type: 'external',
+        title: result.title,
+        url: result.url,
+        source: result.source,
+        sourceLabel: sourceConfig?.label || result.source,
+        sourceIcon: sourceConfig?.icon,
+        sourceColor: sourceConfig?.color,
+        documentType: result.documentType,
+        isSubSource
+      })
+    } else {
+      metadata.push({
+        type: 'internal',
+        title: result.title,
+        url: result.url,
+        department: result.department,
+        documentType: result.documentType
+      })
+    }
+  }
+
+  return metadata
+}
+
 export async function chatWithKnowledge({
   message,
   departmentIds = [],
@@ -70,7 +106,7 @@ export async function chatWithKnowledge({
   useGoogleGrounding = false,
   history = [],
   articleContext = null,
-}: ChatOptions): Promise<string> {
+}: ChatOptions): Promise<ChatResponse> {
   try {
     // Check if Google Grounding is enabled (need this early for system instructions)
     const geminiGroundingEnabled = process.env.GEMINI_GROUNDING_ENABLED === 'true'
@@ -247,7 +283,10 @@ export async function chatWithKnowledge({
               continue
             }
 
-            return `Tyvärr kunde jag inte generera ett svar. Vänligen försök igen.`
+            return {
+              response: `Tyvärr kunde jag inte generera ett svar. Vänligen försök igen.`,
+              sources: []
+            }
           }
 
           console.log(`[Chat Phase 1 Complete] Knowledge base search finished after ${turnCount} turns`)
@@ -319,6 +358,13 @@ IMPORTANT: Review ALL results above. If you have results from BOTH internal and 
     } else {
       console.log('[Chat Phase 1 Skipped] No knowledge base sources selected (only Google Search available)')
     }
+
+    // Prepare source metadata from knowledge base sources
+    const externalSourceConfigs = getExternalSources()
+    let sourceMetadata: SourceMetadata[] = convertSearchResultsToMetadata(allSources, externalSourceConfigs)
+
+    // Track Google sources separately
+    let googleSources: SourceMetadata[] = []
 
     // Phase 2: Google Search
     if (useGrounding) {
@@ -400,14 +446,14 @@ IMPORTANT: Review ALL results above. If you have results from BOTH internal and 
                 }
               }
 
-              // Add sources as a footer section
+              // Collect Google sources for metadata (no longer adding to text)
               if (uniqueSources.size > 0) {
-                const sourcesList = Array.from(uniqueSources.values())
-                  .map((source, index) => `${index + 1}. [${source.title}](${source.uri})`)
-                  .join('\n')
-
-                enhancedText += `\n\n---\n\n**Källor från Google Search:**\n\n${sourcesList}`
-                console.log('[Google Search] Added', uniqueSources.size, 'sources as footer')
+                googleSources = Array.from(uniqueSources.values()).map(source => ({
+                  type: 'google' as const,
+                  title: source.title,
+                  url: source.uri
+                }))
+                console.log('[Google Search] Collected', uniqueSources.size, 'sources for metadata')
               }
             } else {
               console.log('[Google Search] No supports or chunks to process')
@@ -420,7 +466,10 @@ IMPORTANT: Review ALL results above. If you have results from BOTH internal and 
         if (enhancedText && enhancedText.trim()) {
           console.log('[Chat Phase 2 Complete] Answer generated with Google Search')
           usedGoogleSearch = true
-          return enhancedText
+          return {
+            response: enhancedText,
+            sources: [...sourceMetadata, ...googleSources]
+          }
         }
       } catch (groundingError) {
         console.error('[Chat Phase 2 Error]', groundingError)
@@ -430,18 +479,27 @@ IMPORTANT: Review ALL results above. If you have results from BOTH internal and 
 
     // Return knowledge base results (sources should be cited inline by AI)
     if (knowledgeBaseResults) {
-      return knowledgeBaseResults
+      return {
+        response: knowledgeBaseResults,
+        sources: sourceMetadata
+      }
     }
 
     // If we only tried Google Search but it failed, and no knowledge base sources
     if (!hasKnowledgeBaseSources && useGrounding) {
       console.error('[Chat Error] Google Search failed and no knowledge base sources available')
-      return `Tyvärr kunde jag inte generera ett svar med Google Search. Vänligen försök igen.`
+      return {
+        response: `Tyvärr kunde jag inte generera ett svar med Google Search. Vänligen försök igen.`,
+        sources: []
+      }
     }
 
     // If we exhausted turns without getting results
     console.warn('[Chat Warning] Reached maximum turns without response')
-    return `Jag har försökt hitta svar på din fråga men nådde gränsen för antal försök. Vänligen försök igen med en omformulerad fråga.`
+    return {
+      response: `Jag har försökt hitta svar på din fråga men nådde gränsen för antal försök. Vänligen försök igen med en omformulerad fråga.`,
+      sources: []
+    }
   } catch (error) {
     console.error('[Chat Fatal Error]', error)
 
