@@ -3,13 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
-import { ArrowUpIcon, MessageSquarePlusIcon, SettingsIcon, XIcon, FileTextIcon } from 'lucide-react'
+import { ArrowUpIcon, MessageSquarePlusIcon, SettingsIcon, XIcon, FileTextIcon, Maximize2Icon } from 'lucide-react'
 import { useSidebar } from './ui/sidebar-chat'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { KnowledgeSourceFilter, getFilterButtonText } from './KnowledgeSourceFilter'
 import { MarkdownMessage } from './MarkdownMessage'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import type { SourceMetadata } from '@/types/chat'
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 
 interface Message {
   id: number
@@ -56,6 +57,7 @@ export function PlainChat() {
     null
   )
   const [showSettings, setShowSettings] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([])
   const [availableExternalSources, setAvailableExternalSources] = useState<any[]>([])
   const [geminiGroundingEnabled, setGeminiGroundingEnabled] = useState(false)
@@ -312,8 +314,23 @@ export function PlainChat() {
     // setMessages([initialMessage])
   }
 
-  return (
-    <div className="flex flex-col h-full bg-white text-black">
+  // Render chat content (reusable for both sidebar and dialog)
+  const renderChatContent = (showExpandButton = true) => (
+    <div className="flex flex-col h-full bg-white text-black relative">
+      {/* Expand button (only in sidebar) */}
+      {showExpandButton && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(true)}
+          className="absolute top-3 right-3 z-10 text-gray-500 hover:text-gray-700"
+          title="Expandera chatt"
+        >
+          <Maximize2Icon className="h-5 w-5" />
+        </Button>
+      )}
+
       {/* Article Context Indicator */}
       {articleContext && (
         <div className="p-3 bg-blue-50 border-b border-blue-200 flex items-center justify-between">
@@ -430,5 +447,134 @@ export function PlainChat() {
         </form>
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {/* Sidebar chat */}
+      <div className="relative h-full">
+        {renderChatContent(true)}
+      </div>
+
+      {/* Expanded dialog */}
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0 rounded-none flex flex-col overflow-hidden data-[state=open]:slide-in-from-right-full data-[state=closed]:slide-out-to-right-full">
+          <DialogTitle className="px-6 py-4 border-b flex-shrink-0">AI Assistant</DialogTitle>
+
+          {/* Article Context in dialog */}
+          {articleContext && (
+            <div className="p-3 bg-blue-50 border-b border-blue-200 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <FileTextIcon className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <span className="text-sm text-blue-900 truncate">
+                  Chattar om: <strong>{articleContext.title}</strong>
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearArticleContext}
+                className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+              >
+                <XIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Settings in dialog */}
+          {showSettings && (
+            <div className="p-4 border-b border-gray-200 flex-shrink-0 overflow-y-auto max-h-[200px]">
+              <KnowledgeSourceFilter
+                selectedDepartments={selectedDepartments}
+                onDepartmentChange={setSelectedDepartments}
+                selectedExternalSources={selectedExternalSources}
+                onExternalSourceChange={setSelectedExternalSources}
+                useGoogleGrounding={useGoogleGrounding}
+                onGoogleGroundingChange={setUseGoogleGrounding}
+                geminiGroundingEnabled={geminiGroundingEnabled}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
+            {messages.map(renderMessage)}
+            {isLoading && (
+              <div className="flex flex-col mb-5 items-start w-full">
+                <div className="py-2 px-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(!showSettings)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SettingsIcon className="h-4 w-4 mr-1" />
+                {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
+              </Button>
+              {messages.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearChat}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Ny chatt"
+                >
+                  <MessageSquarePlusIcon className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <form
+              onSubmit={handleSendMessage}
+              className="bg-white p-1.5 rounded-xl border border-gray-300 flex items-end space-x-1.5"
+            >
+              <Textarea
+                ref={inputRef}
+                placeholder={
+                  articleContext
+                    ? `Ställ en fråga om "${articleContext.title}"...`
+                    : selectedExternalSources.length > 0
+                      ? "Sök i kunskapsbasen och externa källor..."
+                      : "Ställ en fråga om kommunens dokument..."
+                }
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage(e)
+                  }
+                }}
+                className="flex-grow text-sm resize-none border-none focus:ring-0 p-2 min-h-[38px] max-h-[120px] bg-transparent"
+                rows={3}
+                disabled={isLoading}
+              />
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!input.trim() || isLoading}
+                className="h-8 w-8 bg-black hover:bg-gray-800 text-white rounded-md disabled:bg-gray-200"
+                aria-label="Send message"
+              >
+                <ArrowUpIcon className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
