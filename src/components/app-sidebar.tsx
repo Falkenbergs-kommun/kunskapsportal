@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import {
   Home,
   MessageCircleQuestion,
@@ -113,8 +114,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
-        <img src="/logo.svg" className="mx-6 mt-8 mb-2" />
-        <div className="px-6 text-xl font-bold">Kunskapsportalen</div>
+        <Link href="/" className="block cursor-pointer">
+          <img src="/logo.svg" className="mx-6 mt-8 mb-2" />
+          <div className="px-6 text-xl font-bold">Kunskapsportalen</div>
+        </Link>
         <NavMain items={navMain} />
       </SidebarHeader>
       <SidebarContent className="mt-4">
