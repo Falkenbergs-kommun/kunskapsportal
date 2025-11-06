@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getDepartmentFullPath } from '@/lib/utils'
 import type { Department as PayloadDepartment } from '@/payload-types'
+import { usePlatform } from '@/hooks/usePlatform'
 
 interface Department {
   id: string
@@ -36,6 +37,7 @@ interface SearchResult {
 
 export default function Page() {
   const router = useRouter()
+  const { modKey } = usePlatform()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -195,7 +197,7 @@ export default function Page() {
         {/* Quick hint */}
         {searchQuery.length === 0 && (
           <p className="text-sm text-slate-500 mt-4">
-            Tips: Tryck <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">⌘K</kbd> för avancerad sökning eller <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">⌘J</kbd> för AI-chatt
+            Tips: Tryck <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}K</kbd> för avancerad sökning eller <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}J</kbd> för AI-chatt
           </p>
         )}
       </div>

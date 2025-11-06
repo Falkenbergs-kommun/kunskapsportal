@@ -12,8 +12,11 @@ import {
   Minus,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { usePlatform } from '@/hooks/usePlatform'
 
 export default function DocsPage() {
+  const { modKey } = usePlatform()
+
   return (
     <div className="w-full max-w-4xl mx-auto px-6 py-12">
       {/* Header */}
@@ -37,7 +40,7 @@ export default function DocsPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-black mb-1">Snabbsök</h3>
               <p className="text-slate-600 text-sm mb-2">
-                Tryck <Badge variant="outline" className="mx-1">⌘K</Badge> för att öppna snabbsökningen
+                Tryck <Badge variant="outline" className="mx-1">{modKey}K</Badge> för att öppna snabbsökningen
               </p>
             </div>
           </div>
@@ -49,7 +52,7 @@ export default function DocsPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-black mb-1">AI-assistent</h3>
               <p className="text-slate-600 text-sm mb-2">
-                Tryck <Badge variant="outline" className="mx-1">⌘J</Badge> för att öppna AI-chatten
+                Tryck <Badge variant="outline" className="mx-1">{modKey}J</Badge> för att öppna AI-chatten
               </p>
             </div>
           </div>
@@ -72,9 +75,9 @@ export default function DocsPage() {
       <section className="mb-16">
         <h2 className="text-3xl font-bold text-black mb-6">Sökning</h2>
 
-        <h3 className="text-xl font-semibold text-black mb-4">Snabbsök (⌘K)</h3>
+        <h3 className="text-xl font-semibold text-black mb-4">Snabbsök ({modKey}K)</h3>
         <p className="text-slate-600 mb-4">
-          Det snabbaste sättet att hitta dokument. Tryck <Badge variant="outline">⌘K</Badge> var som helst för att öppna sökfältet.
+          Det snabbaste sättet att hitta dokument. Tryck <Badge variant="outline">{modKey}K</Badge> var som helst för att öppna sökfältet.
         </p>
 
         <ul className="space-y-2 mb-8">
@@ -120,7 +123,7 @@ export default function DocsPage() {
         <ul className="space-y-2 mb-8">
           <li className="flex items-start gap-2 text-slate-700">
             <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
-            <span>Öppna chatten med <Badge variant="outline">⌘J</Badge> eller klicka på "Fråga AI"</span>
+            <span>Öppna chatten med <Badge variant="outline">{modKey}J</Badge> eller klicka på "Fråga AI"</span>
           </li>
           <li className="flex items-start gap-2 text-slate-700">
             <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
@@ -220,21 +223,21 @@ export default function DocsPage() {
               <div className="flex items-center justify-between py-2 border-b border-slate-200">
                 <span className="text-slate-700">Snabbsök</span>
                 <div className="flex gap-1">
-                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">{modKey}</Badge>
                   <Badge variant="outline">K</Badge>
                 </div>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-slate-200">
                 <span className="text-slate-700">Växla vänster meny</span>
                 <div className="flex gap-1">
-                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">{modKey}</Badge>
                   <Badge variant="outline">B</Badge>
                 </div>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-slate-200">
                 <span className="text-slate-700">Öppna AI-chatt</span>
                 <div className="flex gap-1">
-                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">{modKey}</Badge>
                   <Badge variant="outline">J</Badge>
                 </div>
               </div>
