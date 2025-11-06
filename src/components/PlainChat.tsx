@@ -71,9 +71,22 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
   // Focus the input when the sidebar opens
   useEffect(() => {
     if (open) {
-      inputRef.current?.focus()
+      // Small delay to ensure the sidebar has rendered
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 100)
     }
   }, [open])
+
+  // Focus the input when the dialog expands
+  useEffect(() => {
+    if (isExpanded) {
+      // Small delay to ensure the dialog has rendered
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 100)
+    }
+  }, [isExpanded])
 
   // Auto-focus input after receiving a response
   useEffect(() => {
