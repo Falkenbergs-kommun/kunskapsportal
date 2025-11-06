@@ -81,9 +81,9 @@ export default function Page() {
   useEffect(() => {
     const fetchTotalArticles = async () => {
       try {
-        const response = await fetch('/api/articles?limit=1&where[_status][equals]=published')
+        const response = await fetch('/api/articles/count')
         const data = await response.json()
-        setTotalArticles(data.totalDocs || 0)
+        setTotalArticles(data.count || 0)
       } catch (error) {
         console.error('Error fetching total articles:', error)
       }
