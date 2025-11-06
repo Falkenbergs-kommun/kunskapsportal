@@ -145,6 +145,7 @@ export default function Page() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-14 pl-12 pr-12 text-base border-2 border-slate-200 rounded-full focus:border-black transition-colors"
+              autoFocus
             />
             {isSearching && (
               <Loader2 className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 animate-spin text-slate-400" />
