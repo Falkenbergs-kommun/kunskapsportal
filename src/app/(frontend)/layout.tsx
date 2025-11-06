@@ -106,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   onOpenChange={setChatSidebarOpen}
                 >
                   <SidebarInset>
-                    <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                    <header className="bg-background sticky top-0 flex h-12 shrink-0 items-center gap-2 px-4 z-40">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarTrigger className="-ml-1" />
@@ -115,7 +115,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           <p>Expand/collapse sidebar (⌘B)</p>
                         </TooltipContent>
                       </Tooltip>
-                      <Separator orientation="vertical" className="mr-2 h-4" />
                       <DynamicBreadcrumb />
                       <div className="flex-1" />
                       <Tooltip>
@@ -123,11 +122,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           <SidebarTriggerChat />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Expand/collapse AI chat (⌘J)</p>
+                          <p>Toggle AI chat sidebar</p>
                         </TooltipContent>
                       </Tooltip>
                     </header>
-                    <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+                    <div className="flex flex-1 flex-col gap-4 px-4 pb-4">{children}</div>
                   </SidebarInset>
                   <ChatSidebar side="right" />
                 </SidebarProviderChat>

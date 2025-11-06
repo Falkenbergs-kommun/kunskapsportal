@@ -1,472 +1,358 @@
 'use client'
 
-import { 
-  Search, 
-  MessageSquare, 
-  Star, 
-  Keyboard, 
+import {
+  Search,
+  MessageSquare,
+  Star,
+  Keyboard,
   FileText,
   Filter,
   BookOpen,
   Sparkles,
-  MousePointer,
-  ChevronRight,
-  Lightbulb,
-  Users,
-  Globe,
-  Shield,
-  Clock,
-  CheckCircle2,
-  ArrowRight
+  Minus,
 } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 
 export default function DocsPage() {
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      {/* Hero Section */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Välkommen till Kunskapsportalen
+    <div className="w-full max-w-4xl mx-auto px-6 py-12">
+      {/* Header */}
+      <div className="mb-16">
+        <h1 className="text-5xl font-bold text-black mb-4">
+          Användarguide
         </h1>
-        <p className="text-lg text-slate-600 leading-relaxed">
-          Din kompletta guide till kommunens dokumenthanteringssystem. Här hittar du all information 
-          om hur du effektivt navigerar, söker och använder portalens funktioner.
+        <p className="text-lg text-slate-600">
+          Lär dig använda Kunskapsportalen effektivt
         </p>
       </div>
 
       {/* Quick Start */}
-      <Card className="mb-8 border-blue-200 bg-blue-50/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-600" />
-            Snabbstart
-          </CardTitle>
-          <CardDescription>De viktigaste funktionerna för att komma igång</CardDescription>
-        </CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Search className="h-4 w-4 text-blue-600" />
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Snabbstart</h2>
+        <div className="space-y-4">
+          <div className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
+            <div className="p-2 bg-slate-100 rounded">
+              <Search className="h-5 w-5 text-black" />
             </div>
-            <div>
-              <p className="font-medium text-sm">Snabbsök</p>
-              <p className="text-sm text-slate-600">Tryck <Badge variant="outline" className="ml-1">⌘K</Badge> för att söka</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <MessageSquare className="h-4 w-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">AI-assistent</p>
-              <p className="text-sm text-slate-600">Tryck <Badge variant="outline" className="ml-1">⌘J</Badge> för chatt</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Star className="h-4 w-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Favoriter</p>
-              <p className="text-sm text-slate-600">Klicka på stjärnan för att spara</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Features */}
-      <div className="space-y-8 mb-12">
-        <h2 className="text-2xl font-bold mb-6">Huvudfunktioner</h2>
-
-        {/* Search & Navigation */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Sök & Navigation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold mb-2">Snabbsök (Command Palette)</h4>
-              <p className="text-sm text-slate-600 mb-3">
-                Det snabbaste sättet att hitta dokument och navigera i portalen. Tryck <Badge variant="outline">⌘K</Badge> eller <Badge variant="outline">Ctrl+K</Badge> var som helst för att öppna sökfältet.
+            <div className="flex-1">
+              <h3 className="font-semibold text-black mb-1">Snabbsök</h3>
+              <p className="text-slate-600 text-sm mb-2">
+                Tryck <Badge variant="outline" className="mx-1">⌘K</Badge> för att öppna snabbsökningen
               </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Realtidssökning:</strong> Resultat visas direkt medan du skriver</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Smart matchning:</strong> Söker i titel, innehåll och sammanfattning</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Navigeringsgenvägar:</strong> Hoppa direkt till Admin eller Hem</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Avdelningsinfo:</strong> Se vilket område dokumentet tillhör</span>
-                </li>
-              </ul>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h4 className="font-semibold mb-2">Avdelningsnavigering</h4>
-              <p className="text-sm text-slate-600 mb-3">
-                Använd sidomenyn till vänster för att bläddra genom kommunens olika avdelningar och enheter.
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Hierarkisk struktur:</strong> Upp till 3 nivåer djup</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Expanderbara sektioner:</strong> Klicka för att visa underavdelningar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Avdelningssidor:</strong> Översikt över alla dokument per avdelning</span>
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AI Assistant */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              AI-assistent
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm mb-1">Tips!</p>
-                  <p className="text-sm text-slate-600">
-                    AI-assistenten har tillgång till hela kunskapsdatabasen och kan hjälpa dig hitta rätt information snabbt.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">Grundläggande användning</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Öppna chatten:</strong> Klicka på chattikonen eller tryck <Badge variant="outline">⌘J</Badge></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Ställ frågor:</strong> Skriv din fråga på svenska eller engelska</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Få länkar:</strong> AI:n ger direktlänkar till relevanta dokument</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Konversationshistorik:</strong> Chatten sparas mellan sessioner</span>
-                </li>
-              </ul>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h4 className="font-semibold mb-2">Avdelningsfiltrering</h4>
-              <p className="text-sm text-slate-600 mb-3">
-                Begränsa AI-assistentens sökområde till specifika avdelningar för mer relevanta svar.
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <Filter className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>Klicka på <strong>&ldquo;Filtrera avdelningar&rdquo;</strong> i chattfönstret</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>Välj en eller flera avdelningar att söka inom</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Users className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>Underavdelningar inkluderas automatiskt</span>
-                </li>
-              </ul>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h4 className="font-semibold mb-2">Chatta om specifik artikel</h4>
-              <p className="text-sm text-slate-600 mb-3">
-                När du läser ett dokument kan du ställa frågor specifikt om dess innehåll.
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <MousePointer className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>Klicka på <strong>&ldquo;Chatta om artikel&rdquo;</strong> knappen i artikelvyn</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <FileText className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>AI:n fokuserar på det aktuella dokumentets innehåll</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Search className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span>Kan fortfarande söka efter relaterade dokument vid behov</span>
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Favorites */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Favoriter
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
-              Spara viktiga dokument och sidor för snabb åtkomst. Favoriterna visas i sidomenyn för enkel navigation.
-            </p>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold mb-2 text-sm">Lägg till favorit</h4>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <Star className="h-4 w-4 mt-0.5 text-yellow-400 fill-yellow-400" />
-                    <span>Klicka på stjärnikonen på valfri sida</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="h-4 w-4 mt-0.5 text-slate-400" />
-                    <span>Fungerar för artiklar och avdelningssidor</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 text-sm">Hantera favoriter</h4>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <BookOpen className="h-4 w-4 mt-0.5 text-slate-400" />
-                    <span>Visa alla i sidomenyn under &ldquo;Favoriter&rdquo;</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Clock className="h-4 w-4 mt-0.5 text-slate-400" />
-                    <span>Sparas automatiskt mellan sessioner</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Keyboard Shortcuts */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Keyboard className="h-5 w-5" />
-            Tangentbordsgenvägar
-          </CardTitle>
-          <CardDescription>Arbeta snabbare med dessa genvägar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold mb-3 text-sm">Navigation</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Snabbsök</span>
-                  <div className="flex gap-1">
-                    <Badge variant="outline">⌘</Badge>
-                    <Badge variant="outline">K</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Växla vänster meny</span>
-                  <div className="flex gap-1">
-                    <Badge variant="outline">⌘</Badge>
-                    <Badge variant="outline">B</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Växla AI-chatt</span>
-                  <div className="flex gap-1">
-                    <Badge variant="outline">⌘</Badge>
-                    <Badge variant="outline">J</Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3 text-sm">I chatten</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Skicka meddelande</span>
-                  <Badge variant="outline">Enter</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Ny rad</span>
-                  <div className="flex gap-1">
-                    <Badge variant="outline">Shift</Badge>
-                    <Badge variant="outline">Enter</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Rensa konversation</span>
-                  <span className="text-sm text-slate-500">Klicka på ikonen</span>
-                </div>
-              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Document Information */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Om dokumenten
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold mb-2 text-sm">Dokumenttyper</h4>
-              <ul className="space-y-1 text-sm text-slate-600">
-                <li>• Policy - Övergripande riktlinjer</li>
-                <li>• Riktlinje - Detaljerade instruktioner</li>
-                <li>• Anvisning - Praktisk vägledning</li>
-                <li>• Rutin - Återkommande arbetsprocesser</li>
-                <li>• Plan - Strategiska dokument</li>
-                <li>• Protokoll - Mötesanteckningar</li>
-                <li>• Rapport - Analyser och utredningar</li>
-                <li>• Beslut - Formella beslut</li>
-                <li>• Avtal - Juridiska överenskommelser</li>
-                <li>• Mall - Återanvändbara dokument</li>
-                <li>• FAQ - Vanliga frågor</li>
-              </ul>
+          <div className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
+            <div className="p-2 bg-slate-100 rounded">
+              <MessageSquare className="h-5 w-5 text-black" />
             </div>
-            <div>
-              <h4 className="font-semibold mb-2 text-sm">Säkerhetsnivåer</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <Globe className="h-4 w-4 mt-0.5 text-green-600" />
-                  <span><strong>Offentlig:</strong> Tillgänglig för alla</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Users className="h-4 w-4 mt-0.5 text-blue-600" />
-                  <span><strong>Intern:</strong> Endast för anställda</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 mt-0.5 text-orange-600" />
-                  <span><strong>Konfidentiell:</strong> Begränsad åtkomst</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 mt-0.5 text-red-600" />
-                  <span><strong>Begränsad:</strong> Strikt kontrollerad</span>
-                </li>
-              </ul>
+            <div className="flex-1">
+              <h3 className="font-semibold text-black mb-1">AI-assistent</h3>
+              <p className="text-slate-600 text-sm mb-2">
+                Tryck <Badge variant="outline" className="mx-1">⌘J</Badge> för att öppna AI-chatten
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tips & Tricks */}
-      <Card className="border-green-200 bg-green-50/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-green-600" />
-            Tips & tricks
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-green-100 rounded">
-                <ArrowRight className="h-3 w-3 text-green-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium mb-1">Använd snabbsök för allt</p>
-                <p className="text-sm text-slate-600">
-                  CMD+K är det snabbaste sättet att navigera. Du kan söka dokument, hoppa till sidor och mycket mer.
-                </p>
-              </div>
+          <div className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
+            <div className="p-2 bg-slate-100 rounded">
+              <Star className="h-5 w-5 text-black" />
             </div>
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-green-100 rounded">
-                <ArrowRight className="h-3 w-3 text-green-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium mb-1">Ställ följdfrågor till AI:n</p>
-                <p className="text-sm text-slate-600">
-                  AI-assistenten minns konversationen. Ställ följdfrågor för att fördjupa dig i ämnet.
-                </p>
-              </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-black mb-1">Favoriter</h3>
+              <p className="text-slate-600 text-sm mb-2">
+                Klicka på stjärnan för att spara viktiga sidor
+              </p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-green-100 rounded">
-                <ArrowRight className="h-3 w-3 text-green-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium mb-1">Organisera med favoriter</p>
-                <p className="text-sm text-slate-600">
-                  Markera dokument du ofta återkommer till som favoriter för snabb åtkomst från sidomenyn.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-green-100 rounded">
-                <ArrowRight className="h-3 w-3 text-green-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium mb-1">Filtrera för precision</p>
-                <p className="text-sm text-slate-600">
-                  När du söker information från specifika avdelningar, använd avdelningsfiltret i chatten för bättre resultat.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-green-100 rounded">
-                <ArrowRight className="h-3 w-3 text-green-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium mb-1">Läs sammanfattningar först</p>
-                <p className="text-sm text-slate-600">
-                  Många dokument har TLDR-sammanfattningar. Kolla dessa först för en snabb överblick.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Footer */}
-      <div className="mt-12 pt-8 border-t border-slate-200">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-slate-500">
-            Behöver du mer hjälp? Kontakta IT-support eller använd AI-assistenten.
-          </p>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Version 1.0</Badge>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Search */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Sökning</h2>
+
+        <h3 className="text-xl font-semibold text-black mb-4">Snabbsök (⌘K)</h3>
+        <p className="text-slate-600 mb-4">
+          Det snabbaste sättet att hitta dokument. Tryck <Badge variant="outline">⌘K</Badge> var som helst för att öppna sökfältet.
+        </p>
+
+        <ul className="space-y-2 mb-8">
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Realtidssökning - resultat visas direkt medan du skriver</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Smart matchning - söker i titel, innehåll och sammanfattning</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Navigeringsgenvägar - hoppa direkt till Admin eller Hem</span>
+          </li>
+        </ul>
+
+        <h3 className="text-xl font-semibold text-black mb-4">Avdelningsnavigering</h3>
+        <p className="text-slate-600 mb-4">
+          Använd sidomenyn till vänster för att bläddra genom kommunens avdelningar.
+        </p>
+        <ul className="space-y-2">
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Hierarkisk struktur med upp till 3 nivåer</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Expanderbara sektioner för underavdelningar</span>
+          </li>
+        </ul>
+      </section>
+
+      {/* AI Assistant */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">AI-assistent</h2>
+
+        <p className="text-slate-600 mb-6">
+          AI-assistenten har tillgång till hela kunskapsdatabasen och kan hjälpa dig hitta rätt information snabbt.
+        </p>
+
+        <h3 className="text-xl font-semibold text-black mb-4">Grundläggande användning</h3>
+        <ul className="space-y-2 mb-8">
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Öppna chatten med <Badge variant="outline">⌘J</Badge> eller klicka på "Fråga AI"</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Ställ frågor på svenska eller engelska</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Få direktlänkar till relevanta dokument</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Konversationshistorik sparas mellan sessioner</span>
+          </li>
+        </ul>
+
+        <h3 className="text-xl font-semibold text-black mb-4">Källfiltrering</h3>
+        <p className="text-slate-600 mb-4">
+          Begränsa AI-assistentens sökområde till specifika avdelningar eller externa källor.
+        </p>
+        <ul className="space-y-2 mb-8">
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Klicka på "X källor valda" i chattfönstret</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Välj en eller flera avdelningar att söka inom</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Underavdelningar inkluderas automatiskt</span>
+          </li>
+        </ul>
+
+        <h3 className="text-xl font-semibold text-black mb-4">Chatta om specifik artikel</h3>
+        <p className="text-slate-600 mb-4">
+          När du läser ett dokument kan du ställa frågor specifikt om dess innehåll.
+        </p>
+        <ul className="space-y-2">
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>Klicka på "Chatta om artikel" i artikelvyn</span>
+          </li>
+          <li className="flex items-start gap-2 text-slate-700">
+            <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+            <span>AI:n fokuserar på det aktuella dokumentets innehåll</span>
+          </li>
+        </ul>
+      </section>
+
+      {/* Favorites */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Favoriter</h2>
+        <p className="text-slate-600 mb-6">
+          Spara viktiga dokument och sidor för snabb åtkomst. Favoriterna visas i sidomenyn.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-4">Lägg till favorit</h3>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2 text-slate-700">
+                <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                <span>Klicka på stjärnikonen på valfri sida</span>
+              </li>
+              <li className="flex items-start gap-2 text-slate-700">
+                <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                <span>Fungerar för artiklar och avdelningssidor</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-4">Hantera favoriter</h3>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2 text-slate-700">
+                <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                <span>Visa alla i sidomenyn under "Favoriter"</span>
+              </li>
+              <li className="flex items-start gap-2 text-slate-700">
+                <Minus className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                <span>Sparas automatiskt mellan sessioner</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Keyboard Shortcuts */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Tangentbordsgenvägar</h2>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-4">Navigation</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-700">Snabbsök</span>
+                <div className="flex gap-1">
+                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">K</Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-700">Växla vänster meny</span>
+                <div className="flex gap-1">
+                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">B</Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-700">Öppna AI-chatt</span>
+                <div className="flex gap-1">
+                  <Badge variant="outline">⌘</Badge>
+                  <Badge variant="outline">J</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-4">I chatten</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-700">Skicka meddelande</span>
+                <Badge variant="outline">Enter</Badge>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-700">Ny rad</span>
+                <div className="flex gap-1">
+                  <Badge variant="outline">Shift</Badge>
+                  <Badge variant="outline">Enter</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Document Types */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Dokumenttyper</h2>
+
+        <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Policy</span>
+            <span className="text-slate-500 text-sm">- Övergripande riktlinjer</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Riktlinje</span>
+            <span className="text-slate-500 text-sm">- Detaljerade instruktioner</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Anvisning</span>
+            <span className="text-slate-500 text-sm">- Praktisk vägledning</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Rutin</span>
+            <span className="text-slate-500 text-sm">- Arbetsprocesser</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Plan</span>
+            <span className="text-slate-500 text-sm">- Strategiska dokument</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Protokoll</span>
+            <span className="text-slate-500 text-sm">- Mötesanteckningar</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Rapport</span>
+            <span className="text-slate-500 text-sm">- Analyser och utredningar</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Beslut</span>
+            <span className="text-slate-500 text-sm">- Formella beslut</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Avtal</span>
+            <span className="text-slate-500 text-sm">- Juridiska överenskommelser</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">Mall</span>
+            <span className="text-slate-500 text-sm">- Återanvändbara dokument</span>
+          </div>
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-slate-700">FAQ</span>
+            <span className="text-slate-500 text-sm">- Vanliga frågor</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Tips */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-black mb-6">Tips</h2>
+
+        <div className="space-y-4">
+          <div className="p-4 border-l-4 border-black bg-slate-50">
+            <p className="font-semibold text-black mb-1">Använd snabbsök för allt</p>
+            <p className="text-slate-600 text-sm">
+              ⌘K är det snabbaste sättet att navigera. Sök dokument, hoppa till sidor och mycket mer.
+            </p>
+          </div>
+
+          <div className="p-4 border-l-4 border-black bg-slate-50">
+            <p className="font-semibold text-black mb-1">Ställ följdfrågor till AI:n</p>
+            <p className="text-slate-600 text-sm">
+              AI-assistenten minns konversationen. Ställ följdfrågor för att fördjupa dig i ämnet.
+            </p>
+          </div>
+
+          <div className="p-4 border-l-4 border-black bg-slate-50">
+            <p className="font-semibold text-black mb-1">Organisera med favoriter</p>
+            <p className="text-slate-600 text-sm">
+              Markera dokument du ofta återkommer till som favoriter för snabb åtkomst från sidomenyn.
+            </p>
+          </div>
+
+          <div className="p-4 border-l-4 border-black bg-slate-50">
+            <p className="font-semibold text-black mb-1">Filtrera för precision</p>
+            <p className="text-slate-600 text-sm">
+              När du söker information från specifika avdelningar, använd källfiltret i chatten för bättre resultat.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="pt-8 border-t border-slate-200">
+        <p className="text-sm text-slate-500">
+          Behöver du mer hjälp? Kontakta IT-support eller använd AI-assistenten.
+        </p>
+      </footer>
     </div>
   )
 }

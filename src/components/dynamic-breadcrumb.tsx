@@ -117,25 +117,19 @@ export function DynamicBreadcrumb() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/">Home</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={crumb.url}>
+            {index > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link href={crumb.url}>{crumb.name}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
           </React.Fragment>
         ))}
         {currentPage && (
           <>
-            <BreadcrumbSeparator />
+            {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
               <BreadcrumbPage>{currentPage}</BreadcrumbPage>
             </BreadcrumbItem>

@@ -93,25 +93,28 @@ export default function ArticleDisplay({ article }: { article: Article | null })
 
   if (!article) {
     return (
-      <div className="w-[896px] mx-auto px-6 py-8 text-center">
-        <p className="text-slate-500">Article not found.</p>
+      <div className="w-full">
+        <div className="w-full max-w-4xl mx-auto px-6 py-8 text-center">
+          <p className="text-slate-500">Article not found.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <article className="w-[896px] mx-auto px-6 py-8" data-testid="article-view">
+    <article className="w-full" data-testid="article-view">
       {article.coverPhoto && typeof article.coverPhoto === 'object' && article.coverPhoto.url && (
-        <div className="mb-8">
+        <div className="mb-8 w-screen relative left-1/2 right-1/2 -mx-[50vw]">
           <img
             src={article.coverPhoto.url}
             alt={article.title || ''}
-            className="w-full h-64 object-cover rounded-xl shadow-sm"
+            className="w-full h-80 object-cover"
             data-testid="img-article-header"
           />
         </div>
       )}
 
+      <div className="w-full max-w-4xl mx-auto px-6 pb-8">
       <header className="mb-8">
         <div className="mb-4">
           <h1 className="text-4xl font-bold text-slate-900 mb-3" data-testid="text-article-title">
@@ -326,6 +329,7 @@ export default function ArticleDisplay({ article }: { article: Article | null })
         ) : (
           <p>No content available.</p>
         )}
+      </div>
       </div>
     </article>
   )

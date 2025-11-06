@@ -11,6 +11,11 @@ import { MarkdownMessage } from './MarkdownMessage'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import type { SourceMetadata } from '@/types/chat'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from './ui/dropdown-menu'
 
 interface Message {
   id: number
@@ -56,7 +61,6 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
     'chat_article_context',
     null
   )
-  const [showSettings, setShowSettings] = useState(false)
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([])
   const [availableExternalSources, setAvailableExternalSources] = useState<any[]>([])
   const [geminiGroundingEnabled, setGeminiGroundingEnabled] = useState(false)
@@ -337,21 +341,6 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
         </div>
       )}
 
-      {/* Settings/Department Filter Section */}
-      {showSettings && (
-        <div className="p-4 border-b border-gray-200">
-          <KnowledgeSourceFilter
-            selectedDepartments={selectedDepartments}
-            onDepartmentChange={setSelectedDepartments}
-            selectedExternalSources={selectedExternalSources}
-            onExternalSourceChange={setSelectedExternalSources}
-            useGoogleGrounding={useGoogleGrounding}
-            onGoogleGroundingChange={setUseGoogleGrounding}
-            geminiGroundingEnabled={geminiGroundingEnabled}
-          />
-        </div>
-      )}
-
       {/* Message Display Area */}
       <div className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
@@ -372,16 +361,30 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
       {/* Input Form Area */}
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center justify-between mb-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <SettingsIcon className="h-4 w-4 mr-1" />
-            {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SettingsIcon className="h-4 w-4 mr-1" />
+                {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
+              <KnowledgeSourceFilter
+                selectedDepartments={selectedDepartments}
+                onDepartmentChange={setSelectedDepartments}
+                selectedExternalSources={selectedExternalSources}
+                onExternalSourceChange={setSelectedExternalSources}
+                useGoogleGrounding={useGoogleGrounding}
+                onGoogleGroundingChange={setUseGoogleGrounding}
+                geminiGroundingEnabled={geminiGroundingEnabled}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
           {messages.length > 1 && (
             <Button
               type="button"
@@ -467,21 +470,6 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
             </div>
           )}
 
-          {/* Settings in dialog */}
-          {showSettings && (
-            <div className="p-4 border-b border-gray-200 flex-shrink-0 overflow-y-auto max-h-[200px]">
-              <KnowledgeSourceFilter
-                selectedDepartments={selectedDepartments}
-                onDepartmentChange={setSelectedDepartments}
-                selectedExternalSources={selectedExternalSources}
-                onExternalSourceChange={setSelectedExternalSources}
-                useGoogleGrounding={useGoogleGrounding}
-                onGoogleGroundingChange={setUseGoogleGrounding}
-                geminiGroundingEnabled={geminiGroundingEnabled}
-              />
-            </div>
-          )}
-
           <div className="flex-1 overflow-y-auto p-4 min-h-0">
             {messages.map(renderMessage)}
             {isLoading && (
@@ -499,16 +487,30 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
           </div>
           <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(!showSettings)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <SettingsIcon className="h-4 w-4 mr-1" />
-                {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <SettingsIcon className="h-4 w-4 mr-1" />
+                    {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
+                  <KnowledgeSourceFilter
+                    selectedDepartments={selectedDepartments}
+                    onDepartmentChange={setSelectedDepartments}
+                    selectedExternalSources={selectedExternalSources}
+                    onExternalSourceChange={setSelectedExternalSources}
+                    useGoogleGrounding={useGoogleGrounding}
+                    onGoogleGroundingChange={setUseGoogleGrounding}
+                    geminiGroundingEnabled={geminiGroundingEnabled}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
               {messages.length > 1 && (
                 <Button
                   type="button"

@@ -41,11 +41,6 @@ const navSecondary = [
     icon: UserCheck,
     target: '_blank',
   },
-  {
-    title: 'FAQ',
-    url: '/#faq',
-    icon: MessageCircleQuestion,
-  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

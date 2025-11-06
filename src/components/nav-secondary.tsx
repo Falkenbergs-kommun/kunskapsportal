@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { type LucideIcon } from 'lucide-react'
 
 import {
@@ -29,14 +30,21 @@ export function NavSecondary({
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <a
-                  href={item.url}
-                  target={item.target}
-                  rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
-                >
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
+                {item.target === '_blank' ? (
+                  <a
+                    href={item.url}
+                    target={item.target}
+                    rel="noopener noreferrer"
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </a>
+                ) : (
+                  <Link href={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                )}
               </SidebarMenuButton>
               {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
             </SidebarMenuItem>

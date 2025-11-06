@@ -2,13 +2,36 @@
 
 import { Sidebar, SidebarHeader, SidebarContent, useSidebar } from './ui/sidebar-chat'
 import { PlainChat } from './PlainChat'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Maximize2Icon, ChevronRightIcon } from 'lucide-react'
 
 export function ChatSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpen } = useSidebar()
   const [isExpanded, setIsExpanded] = useState(false)
+
+  // Cmd+J keyboard shortcut to open dialog
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'j' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        setIsExpanded(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Listen for custom event to open dialog
+  useEffect(() => {
+    const handleOpenDialog = () => {
+      setIsExpanded(true)
+    }
+
+    window.addEventListener('open-ai-dialog', handleOpenDialog)
+    return () => window.removeEventListener('open-ai-dialog', handleOpenDialog)
+  }, [])
 
   return (
     <Sidebar {...props}>

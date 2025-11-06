@@ -137,7 +137,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
     if (level <= 2) {
       return (
         <div key={dept.id}>
-          <div className="flex items-center py-1 px-2 hover:bg-gray-100 rounded">
+          <div className="flex items-center py-1 px-1 hover:bg-gray-100 rounded">
             <label className="flex items-center cursor-pointer flex-1">
               <input
                 type="checkbox"
@@ -232,7 +232,7 @@ export function DepartmentSelector({ selectedDepartments, onSelectionChange }: D
           </Button>
         </div>
       </div>
-      <div className="max-h-60 overflow-y-auto">
+      <div>
         {departments.map((dept) => renderDepartment(dept))}
       </div>
     </div>

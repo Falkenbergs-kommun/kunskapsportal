@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
     const externalResults = qdrantResults.filter((r) => r.isExternal)
 
     // Fetch full article data for internal results
-    const articleIds = internalResults.map((r) => r.articleId).filter(Boolean)
+    // Deduplicate article IDs to prevent fetching the same article multiple times
+    const articleIds = [...new Set(internalResults.map((r) => r.articleId).filter(Boolean))]
     let articles: any[] = []
 
     if (articleIds.length > 0) {
@@ -56,21 +57,29 @@ export async function GET(request: NextRequest) {
       articles = articlesQuery.docs
     }
 
-    // Map articles back with scores
+    // Map articles back with scores, keeping the highest score if duplicate articleIds exist
     const articlesMap = new Map(articles.map((a) => [String(a.id), a]))
-    const enrichedInternalResults = internalResults
-      .map((r) => {
-        const article = articlesMap.get(String(r.articleId))
-        if (!article) return null
+    const enrichedResultsMap = new Map<string, any>()
 
-        return {
+    internalResults.forEach((r) => {
+      const article = articlesMap.get(String(r.articleId))
+      if (!article) return
+
+      const articleIdStr = String(r.articleId)
+      const existing = enrichedResultsMap.get(articleIdStr)
+
+      // Keep the result with the highest score if duplicate
+      if (!existing || r.score > existing.searchScore) {
+        enrichedResultsMap.set(articleIdStr, {
           ...article,
           searchScore: r.score,
           source: 'internal',
           isExternal: false,
-        }
-      })
-      .filter(Boolean)
+        })
+      }
+    })
+
+    const enrichedInternalResults = Array.from(enrichedResultsMap.values())
 
     // Combine internal and external results
     const allResults = [

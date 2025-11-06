@@ -16,13 +16,10 @@ export function NavMain({
     isActive?: boolean
   }[]
 }) {
-  const triggerRightSidebar = () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'j',
-      metaKey: true, // Use metaKey for Command on Mac
-      bubbles: true,
-    })
-    document.dispatchEvent(event)
+  const triggerAIDialog = () => {
+    // Dispatch custom event to open AI dialog
+    const event = new Event('open-ai-dialog')
+    window.dispatchEvent(event)
   }
   const triggerCommandMenu = () => {
     // We simulate the ⌘K event that the layout is listening for
@@ -45,7 +42,7 @@ export function NavMain({
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton onClick={triggerRightSidebar} className="cursor-pointer">
+        <SidebarMenuButton onClick={triggerAIDialog} className="cursor-pointer">
           <Sparkles />
           <span>Fråga AI</span>
         </SidebarMenuButton>
@@ -57,7 +54,7 @@ export function NavMain({
             </SidebarMenuAction>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Ask AI (⌘J)</p>
+            <p>Open AI dialog (⌘J)</p>
           </TooltipContent>
         </Tooltip>
       </SidebarMenuItem>
