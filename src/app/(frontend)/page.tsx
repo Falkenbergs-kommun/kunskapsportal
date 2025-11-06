@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getDepartmentFullPath } from '@/lib/utils'
+import type { Department as PayloadDepartment } from '@/payload-types'
 
 interface Department {
   id: string
@@ -30,11 +31,7 @@ interface SearchResult {
   title: string
   slug: string
   summary?: string
-  department?: {
-    id: string
-    name: string
-    slug: string
-  }
+  department?: PayloadDepartment | number | null
 }
 
 export default function Page() {
@@ -175,7 +172,7 @@ export default function Page() {
                           <span className="font-medium text-slate-900 truncate">
                             {result.title}
                           </span>
-                          {result.department && (
+                          {result.department && typeof result.department !== 'number' && (
                             <Badge variant="secondary" className="shrink-0 text-xs">
                               {result.department.name}
                             </Badge>
