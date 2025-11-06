@@ -87,13 +87,14 @@ export function TableOfContents({ content }: TableOfContentsProps) {
           data-testid="toc-content"
         >
           <nav>
-            <ol className="space-y-2">
+            <ul className="space-y-2 list-none">
               {headings.map((heading, index) => (
                 <li
                   key={`${heading.id}-${index}`}
                   style={{
                     marginLeft: `${(heading.level - 1) * 1.5}rem`
                   }}
+                  className="list-none"
                 >
                   <button
                     onClick={() => handleLinkClick(heading.id)}
@@ -103,7 +104,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
                   </button>
                 </li>
               ))}
-            </ol>
+            </ul>
           </nav>
         </div>
       )}
