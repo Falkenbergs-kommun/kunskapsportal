@@ -18,12 +18,12 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/component
 
 const navMain = [
   {
-    title: 'Ask AI',
+    title: 'Fråga AI',
     url: '#',
     icon: Sparkles,
   },
   {
-    title: 'Home',
+    title: 'Hem',
     url: '#',
     icon: Home,
     isActive: true,

@@ -159,7 +159,7 @@ export function CommandMenu({
         <div className="border-b">
           <div className="px-3 py-2">
             <CommandInput
-              placeholder="Search articles by title, content, summary, author..."
+              placeholder="Sök artiklar efter titel, innehåll, sammanfattning, författare..."
               value={query}
               onValueChange={setQuery}
               className="border-0"
@@ -218,14 +218,14 @@ export function CommandMenu({
           </div>
         </div>
       <CommandList className="!max-h-[600px]">
-        {isLoading && <CommandEmpty>Searching...</CommandEmpty>}
+        {isLoading && <CommandEmpty>Söker...</CommandEmpty>}
         {!isLoading && query.length > 1 && results.length === 0 && (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>Inga resultat hittades.</CommandEmpty>
         )}
 
         {results.length > 0 && (
           <CommandGroup
-            heading={`Results (${results.length}${totalResults > results.length ? ` of ${totalResults}` : ''})`}
+            heading={`Resultat (${results.length}${totalResults > results.length ? ` av ${totalResults}` : ''})`}
           >
             {results.map((result) => {
               const isExternal = result.isExternal || false

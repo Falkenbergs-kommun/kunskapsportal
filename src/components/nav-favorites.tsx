@@ -48,7 +48,7 @@ export function NavFavorites() {
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel className="border-b">
         <Star className="mr-2" />
-        Favorites
+        Favoriter
       </SidebarGroupLabel>
       <SidebarMenu>
         {isClient && isLoading ? (
@@ -68,7 +68,7 @@ export function NavFavorites() {
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuAction showOnHover>
                     <MoreHorizontal />
-                    <span className="sr-only">More</span>
+                    <span className="sr-only">Mer</span>
                   </SidebarMenuAction>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -78,16 +78,16 @@ export function NavFavorites() {
                 >
                   <DropdownMenuItem onClick={() => handleRemoveFavorite(item.url)}>
                     <StarOff className="text-muted-foreground" />
-                    <span>Remove from Favorites</span>
+                    <span>Ta bort från favoriter</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleCopyLink(item.url)}>
                     <LinkIcon className="text-muted-foreground" />
-                    <span>Copy Link</span>
+                    <span>Kopiera länk</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleOpenInNewTab(item.url)}>
                     <ArrowUpRight className="text-muted-foreground" />
-                    <span>Open in New Tab</span>
+                    <span>Öppna i ny flik</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -96,7 +96,7 @@ export function NavFavorites() {
         ) : (
           <SidebarMenuItem>
             <SidebarMenuButton disabled className="text-sidebar-foreground/50">
-              <span>No favorites yet</span>
+              <span>Inga favoriter ännu</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         )}

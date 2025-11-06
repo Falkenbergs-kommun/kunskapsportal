@@ -77,11 +77,11 @@ export default function Page() {
     fetchDepartments()
   }, [])
 
-  // Fetch total article count
+  // Fetch total article count (published only)
   useEffect(() => {
     const fetchTotalArticles = async () => {
       try {
-        const response = await fetch('/api/articles?limit=1')
+        const response = await fetch('/api/articles?limit=1&where[_status][equals]=published')
         const data = await response.json()
         setTotalArticles(data.totalDocs || 0)
       } catch (error) {
@@ -135,11 +135,6 @@ export default function Page() {
             )}
           </div>
         </form>
-
-        {/* Quick hint */}
-        <p className="text-sm text-slate-500 mt-4">
-          Tips: Tryck <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}K</kbd> för avancerad sökning eller <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}J</kbd> för AI-chatt
-        </p>
       </div>
 
       {/* Departments Section */}

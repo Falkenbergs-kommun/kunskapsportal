@@ -118,11 +118,6 @@ function SearchPageContent() {
             )}
           </div>
         </form>
-
-        {/* Quick hint */}
-        <p className="text-sm text-slate-500 mb-8">
-          Tips: Tryck <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}K</kbd> för avancerad sökning eller <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">{modKey}J</kbd> för AI-chatt
-        </p>
       </div>
 
       {/* Search Results */}

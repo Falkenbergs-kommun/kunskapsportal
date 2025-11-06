@@ -37,7 +37,7 @@ export function ChatSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
     <Sidebar {...props}>
       <SidebarHeader className="border-b">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-lg font-semibold text-black">AI Assistant</h2>
+          <h2 className="text-lg font-semibold text-black">AI-assistent</h2>
           <div className="flex gap-1">
             {/* Expand button */}
             <Button
