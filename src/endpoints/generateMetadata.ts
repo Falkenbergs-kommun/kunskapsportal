@@ -27,7 +27,7 @@ const metadataSchema: Schema = {
     documentType: {
       type: SchemaType.STRING,
       description:
-        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
+        "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'routine', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
     },
     department: {
       type: SchemaType.STRING,
@@ -209,7 +209,7 @@ export const generateMetadataEndpoint: Endpoint = {
         1.  **title:** Skapa en ny, tydlig och beskrivande titel.
         2.  **summary:** Skriv en koncis sammanfattning (2-4 meningar) som förklarar syfte och huvudinnehåll.
         3.  **slug:** Skapa en URL-vänlig slug från titeln.
-        4.  **documentType:** Välj den mest passande dokumenttypen från listan: 'policy', 'guideline', 'instruction', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'.
+        4.  **documentType:** Välj den mest passande dokumenttypen från listan: 'policy', 'guideline', 'instruction', 'routine', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'.
         5.  **department:** Välj det mest relevanta verksamhetsområdet från listan ovan och ange dess ID.
         6.  **targetAudience:** Identifiera alla relevanta målgrupper från listan: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.
         7.  **securityLevel:** Välj den mest lämpliga säkerhetsnivån från listan: 'public', 'internal', 'confidential', 'restricted'.
