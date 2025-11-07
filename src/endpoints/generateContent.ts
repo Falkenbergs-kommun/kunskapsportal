@@ -21,6 +21,7 @@ export const generateContentEndpoint: Endpoint = {
         collection: 'articles',
         id,
         depth: 2,
+        draft: true, // Get the draft version if it exists
       })
 
       if (!article.source_documents || article.source_documents.length === 0) {
@@ -86,6 +87,7 @@ export const generateContentEndpoint: Endpoint = {
         data: {
           content: combinedContent,
         },
+        draft: true, // Update the draft version
       })
 
       return Response.json({
