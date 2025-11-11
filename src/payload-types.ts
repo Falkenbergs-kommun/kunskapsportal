@@ -123,6 +123,14 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Super Admins have access to all departments. Editors only assigned departments.
+   */
+  role: 'superadmin' | 'editor';
+  /**
+   * Departments this user can manage (includes all subdepartments automatically)
+   */
+  departments?: (number | Department)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -140,6 +148,29 @@ export interface User {
       }[]
     | null;
   password?: string | null;
+}
+/**
+ * Main organizational areas and their sub-departments.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "departments".
+ */
+export interface Department {
+  id: number;
+  name: string;
+  /**
+   * Leave this empty if this is a top-level department. Maximum 3 levels allowed. Cannot be changed after creation.
+   */
+  parent?: (number | null) | Department;
+  slug?: string | null;
+  /**
+   * Auto-computed hierarchical path (e.g., HR/Utveckling)
+   */
+  fullPath?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -262,25 +293,6 @@ export interface Article {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Main organizational areas and their sub-departments.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "departments".
- */
-export interface Department {
-  id: number;
-  name: string;
-  /**
-   * Leave this empty if this is a top-level department. Maximum 3 levels allowed.
-   */
-  parent?: (number | null) | Department;
-  slug?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
@@ -350,6 +362,8 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
+  departments?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -446,6 +460,7 @@ export interface DepartmentsSelect<T extends boolean = true> {
   name?: T;
   parent?: T;
   slug?: T;
+  fullPath?: T;
   createdBy?: T;
   updatedBy?: T;
   updatedAt?: T;

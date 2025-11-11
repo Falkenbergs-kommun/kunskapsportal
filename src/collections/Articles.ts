@@ -2,9 +2,54 @@ import type { CollectionConfig } from 'payload'
 import { embed } from '../qdrant'
 import { generateContentEndpoint } from '../endpoints/generateContent'
 import { generateMetadataEndpoint } from '../endpoints/generateMetadata'
+import { canAccessDepartment, getAccessibleDepartmentIds } from '@/lib/access-control'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
+  access: {
+    // Public read access for viewing
+    read: () => true,
+
+    // Only editors with department access can create
+    create: ({ req: { user } }) => {
+      if (!user) return false
+      if (user.role === 'superadmin') return true
+
+      // Must have at least one department assigned
+      return !!(user.departments && user.departments.length > 0)
+    },
+
+    // Can update if user has access to article's department
+    update: async ({ req, id }) => {
+      const user = req.user
+      if (!user) return false
+      if (user.role === 'superadmin') return true
+      if (!id) return false
+
+      // Fetch article to check its department
+      const article = await req.payload.findByID({
+        collection: 'articles',
+        id,
+        depth: 1,
+      })
+
+      if (!article?.department) {
+        // Articles without departments can be edited by any editor
+        return true
+      }
+
+      const deptPath = typeof article.department === 'object' ? article.department.fullPath : null
+
+      if (!deptPath) return false
+
+      return canAccessDepartment(user, deptPath)
+    },
+
+    // Only superadmins can delete
+    delete: ({ req: { user } }) => {
+      return user?.role === 'superadmin'
+    },
+  },
   admin: {
     useAsTitle: 'title',
     preview: (doc) => {
@@ -270,6 +315,17 @@ export const Articles: CollectionConfig = {
                   label: 'Verksamhetsområde', // Renamed to Swedish
                   type: 'relationship',
                   relationTo: 'departments',
+                  // Filter departments based on user access
+                  filterOptions: async ({ req }) => {
+                    const user = req.user
+                    if (!user) return { id: { equals: 'none' } }
+                    if (user.role === 'superadmin') return true
+
+                    const accessibleIds = await getAccessibleDepartmentIds(user, req.payload)
+                    return {
+                      id: { in: accessibleIds },
+                    }
+                  },
                   admin: {},
                 },
                 {
