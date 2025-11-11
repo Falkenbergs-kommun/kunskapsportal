@@ -155,8 +155,8 @@ export async function chatWithKnowledge({
 
       CITATIONS - CRITICAL RULES:
       1. When you reference information from search results, you MUST use the exact URL shown in "IMPORTANT - USE THIS EXACT URL FOR CITATIONS:"
-      2. PREFERRED: Add all source links at the END of your response in a "Källor:" section, formatted as a numbered list
-      3. Format: "**Källor:**\n\n1. [Article Title](EXACT_URL)\n2. [Article Title](EXACT_URL)"
+      2. Cite sources INLINE within your response text using markdown links: [Article Title](EXACT_URL)
+      3. DO NOT add a "Källor:" section at the end - sources will be displayed automatically
       4. NEVER invent or guess URLs - only use URLs explicitly shown in the search results
       5. If you don't have a URL from search results, don't create a link
       6. Copy and paste the exact URL - it looks like: http://localhost:3000/article/slug or https://example.com/page
@@ -190,8 +190,8 @@ export async function chatWithKnowledge({
 
       CITATIONS - CRITICAL RULES:
       1. When you reference information from search results, you MUST use the exact URL shown in "IMPORTANT - USE THIS EXACT URL FOR CITATIONS:"
-      2. PREFERRED: Add all source links at the END of your response in a "Källor:" section, formatted as a numbered list
-      3. Format: "**Källor:**\n\n1. [Article Title](EXACT_URL)\n2. [Article Title](EXACT_URL)"
+      2. Cite sources INLINE within your response text using markdown links: [Article Title](EXACT_URL)
+      3. DO NOT add a "Källor:" section at the end - sources will be displayed automatically
       4. NEVER invent or guess URLs - only use URLs explicitly shown in the search results
       5. If you don't have a URL from search results, don't create a link
       6. Copy and paste the exact URL - it looks like: http://localhost:3000/article/slug or https://example.com/page
