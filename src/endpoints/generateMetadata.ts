@@ -1,119 +1,116 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { Department } from '../payload-types'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { Schema, SchemaType } from '@google/generative-ai'
+import { getGeminiClient } from '@/services/geminiClient'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-
-// 1. UPDATED: The new schema for Gemini's structured output
-const metadataSchema: Schema = {
-  type: SchemaType.OBJECT,
+// Schema for Gemini's structured output (JSON Schema format)
+const metadataSchema = {
+  type: 'object',
   properties: {
     title: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'En kort, koncis och informativ titel för dokumentet på svenska. Titeln ska korrekt spegla dokumentets huvudsakliga innehåll.',
     },
     summary: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'En sammanfattning av dokumentets syfte och viktigaste punkter på 2-4 meningar. Skriven på svenska.',
     },
     slug: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'En unik, URL-vänlig "slug" baserad på titeln. Använd små bokstäver, bindestreck istället för mellanslag och ta bort specialtecken.',
     },
     documentType: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         "Klassificera dokumentet enligt en av de fastställda typerna: 'policy', 'guideline', 'instruction', 'routine', 'plan', 'protocol', 'report', 'decision', 'agreement', 'template', 'faq'",
     },
     department: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'Ange ID för det verksamhetsområde som är mest relevant för dokumentet. Välj från den angivna listan.',
     },
     targetAudience: {
-      type: SchemaType.ARRAY,
+      type: 'array',
       description:
         "Identifiera målgrupp(er). Välj från: 'citizens', 'staff', 'officials', 'businesses', 'municipalities'.",
-      items: { type: SchemaType.STRING },
+      items: { type: 'string' },
     },
     securityLevel: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         "Bestäm säkerhetsnivån. Välj från: 'public', 'internal', 'confidential', 'restricted'.",
     },
     legalBasis: {
-      type: SchemaType.ARRAY,
+      type: 'array',
       description:
         'Om tillämpligt, identifiera den rättsliga grunden. Ange lag/förordning, kapitel/paragraf och en URL.',
       items: {
-        type: SchemaType.OBJECT,
+        type: 'object',
         properties: {
-          law: { type: SchemaType.STRING },
-          chapter: { type: SchemaType.STRING },
-          url: { type: SchemaType.STRING },
+          law: { type: 'string' },
+          chapter: { type: 'string' },
+          url: { type: 'string' },
         },
       },
     },
     gdprRelevant: {
-      type: SchemaType.BOOLEAN,
+      type: 'boolean',
       description: 'Ange true om dokumentet innehåller personuppgifter, annars false.',
     },
     accessibilityCompliant: {
-      type: SchemaType.BOOLEAN,
+      type: 'boolean',
       description: 'Ange true om dokumentet bedöms vara WCAG 2.1 AA-kompatibelt, annars false.',
     },
     version: {
-      type: SchemaType.STRING,
+      type: 'string',
       description: 'Identifiera eller föreslå ett versionsnummer, t.ex. "1.0" eller "2.2".',
     },
     effectiveDate: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'Identifiera datum för fastställelse. Ange som YYYY-MM-DD. Om det inte finns, ange dagens datum.',
     },
     reviewInterval: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         "Bestäm revideringsintervall. Välj från: 'as_needed', 'annual', 'biannual', 'triannual', 'five_years'.",
     },
     appliesTo: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'Beskriv vilka verksamheter, nämnder eller avdelningar dokumentet gäller för. Exempel: "Verksamheter som utför SoL, LSS, HSL".',
     },
     author: {
-      type: SchemaType.STRING,
+      type: 'string',
       description: 'Identifiera författarens namn. Om okänt, ange "Okänd".',
     },
     authorEmail: {
-      type: SchemaType.STRING,
+      type: 'string',
       description: 'Identifiera författarens e-post. Om okänt, lämna tom.',
     },
     reviewer: {
-      type: SchemaType.STRING,
+      type: 'string',
       description:
         'Identifiera revideringsansvarig (person eller avdelning). Om okänt, ange "Okänd".',
     },
     approver: {
-      type: SchemaType.STRING,
+      type: 'string',
       description: 'Identifiera beslutsfattare/godkännare. Om okänt, ange "Okänd".',
     },
     keywords: {
-      type: SchemaType.ARRAY,
+      type: 'array',
       description: 'En lista med 5-10 relevanta svenska nyckelord som underlättar sökning.',
       items: {
-        type: SchemaType.OBJECT,
+        type: 'object',
         properties: {
-          keyword: { type: SchemaType.STRING },
+          keyword: { type: 'string' },
         },
       },
     },
     language: {
-      type: SchemaType.STRING,
+      type: 'string',
       description: "Bestäm dokumentets språk. Välj från: 'sv', 'en', 'sv-lattlast'.",
     },
   },
@@ -162,13 +159,20 @@ export const generateMetadataEndpoint: Endpoint = {
         return Response.json({ message: 'Article must have content to generate metadata.' }, { status: 400 })
       }
 
-      // Fetch all departments to provide as context to the AI
+      // Fetch all departments - we'll validate access when updating
+      // Note: The department field has filterOptions that will enforce access control during update
       const departments = await payload.find({
         collection: 'departments',
-        limit: 100, // Assuming there are not more than 100 departments
+        limit: 100,
+        depth: 0,
       })
+
       const departmentList = departments.docs
-        .map((dep: Department) => `- ${dep.name} (ID: ${dep.id})`)
+        .map((dep: Department) => {
+          // Use fullPath if available, otherwise use name
+          const displayName = dep.fullPath || dep.name
+          return `- ${displayName} (ID: ${dep.id})`
+        })
         .join('\n')
 
       // Content is now stored as plain markdown
@@ -184,13 +188,8 @@ export const generateMetadataEndpoint: Endpoint = {
         }, { status: 400 })
       }
 
-      const model = genAI.getGenerativeModel({
-        model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest',
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: metadataSchema,
-        },
-      })
+      const ai = getGeminiClient()
+      const modelName = process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest'
 
       const prompt = `
         Analysera följande kommunala dokument från Falkenbergs kommun. Agera som en erfaren och noggrann kommunal arkivarie och registrator. Ditt uppdrag är att extrahera, härleda och skapa strukturerad metadata på svenska för **ALLA** fält i det specificerade JSON-schemat. Varje fält måste fyllas i korrekt.
@@ -230,11 +229,20 @@ export const generateMetadataEndpoint: Endpoint = {
         Svara **endast** med ett JSON-objekt som följer det specificerade schemat och fyll i **ALLA** obligatoriska fält.
       `
 
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const generatedMetadata = JSON.parse(response.text())
+      const result = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseJsonSchema: metadataSchema,
+        },
+      })
 
-      console.log('Generated metadata for article', id, ':', generatedMetadata)
+      if (!result.text) {
+        throw new Error('No response text from AI model')
+      }
+
+      const generatedMetadata = JSON.parse(result.text)
 
       let slug = generatedMetadata.slug
       let isUnique = false
@@ -283,13 +291,14 @@ export const generateMetadataEndpoint: Endpoint = {
         console.warn(
           `Gemini returned an invalid department identifier: '${departmentIdentifier}'. Skipping department update.`,
         )
-        delete updateData.department // Remove invalid department
+        delete updateData.department // Remove invalid department - let Payload validation handle if it's required
       }
 
       const updatedArticle = await payload.update({
         collection: 'articles',
         id,
         data: updateData,
+        req, // Pass the authenticated request so Payload enforces access control
       })
 
       return Response.json({ success: true, article: updatedArticle })

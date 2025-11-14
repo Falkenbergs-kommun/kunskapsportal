@@ -248,6 +248,9 @@ export interface Article {
    */
   documentStatus?: ('draft' | 'review' | 'approved' | 'active' | 'archived' | 'superseded') | null;
   targetAudience?: ('citizens' | 'staff' | 'officials' | 'businesses' | 'municipalities')[] | null;
+  /**
+   * VIKTIGT: Endast klass 0 och 1 kan publiceras i systemet. Klass 2-3 kräver andra godkända system med högre säkerhetsnivå.
+   */
   securityLevel?: ('public' | 'internal' | 'confidential' | 'restricted') | null;
   legalBasis?:
     | {
@@ -257,6 +260,9 @@ export interface Article {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Kan dokumentet skrivas utan personuppgifter? Använd helst roller/funktioner istället för namn för att minimera personuppgiftsbehandling.
+   */
   gdprRelevant?: boolean | null;
   accessibilityCompliant?: boolean | null;
   /**

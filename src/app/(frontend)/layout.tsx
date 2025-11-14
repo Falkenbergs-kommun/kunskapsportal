@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar-chat'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { FavoritesProvider } from '@/contexts/favorites-context'
+import { usePlatform } from '@/hooks/usePlatform'
 
 // Note: Because we need client-side state, we can no longer fetch cookies on the server
 // for this component. The sidebar state is handled client-side in the SidebarProvider now.
@@ -29,8 +30,9 @@ function getCookie(name: string): string | null {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const { modKey } = usePlatform()
   const [openCommandMenu, setOpenCommandMenu] = useState(false)
-  
+
   // Initialize sidebar states from cookies
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true) // default to true
   const [chatSidebarOpen, setChatSidebarOpen] = useState(true) // default to true
@@ -112,7 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           <SidebarTrigger className="-ml-1" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Expand/collapse sidebar (⌘B)</p>
+                          <p>Expand/collapse sidebar ({modKey}B)</p>
                         </TooltipContent>
                       </Tooltip>
                       <DynamicBreadcrumb />

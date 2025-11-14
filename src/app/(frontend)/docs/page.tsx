@@ -323,7 +323,7 @@ export default function DocsPage() {
           <div className="p-4 border-l-4 border-black bg-slate-50">
             <p className="font-semibold text-black mb-1">Använd snabbsök för allt</p>
             <p className="text-slate-600 text-sm">
-              ⌘K är det snabbaste sättet att navigera. Sök dokument, hoppa till sidor och mycket mer.
+              {modKey}K är det snabbaste sättet att navigera. Sök dokument, hoppa till sidor och mycket mer.
             </p>
           </div>
 

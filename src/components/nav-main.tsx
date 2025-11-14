@@ -5,6 +5,7 @@ import { Home, Search, Sparkles, type LucideIcon } from 'lucide-react'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SidebarMenuAction } from './ui/sidebar-chat'
+import { usePlatform } from '@/hooks/usePlatform'
 
 export function NavMain({
   items,
@@ -16,6 +17,8 @@ export function NavMain({
     isActive?: boolean
   }[]
 }) {
+  const { modKey } = usePlatform()
+
   const triggerAIDialog = () => {
     // Dispatch custom event to open AI dialog
     const event = new Event('open-ai-dialog')
@@ -50,11 +53,11 @@ export function NavMain({
         <Tooltip>
           <TooltipTrigger asChild>
             <SidebarMenuAction>
-              <kbd className="text-xs">⌘J</kbd>
+              <kbd className="text-xs">{modKey}J</kbd>
             </SidebarMenuAction>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Open AI dialog (⌘J)</p>
+            <p>Open AI dialog ({modKey}J)</p>
           </TooltipContent>
         </Tooltip>
       </SidebarMenuItem>
@@ -67,11 +70,11 @@ export function NavMain({
         <Tooltip>
           <TooltipTrigger asChild>
             <SidebarMenuAction>
-              <kbd className="text-xs">⌘K</kbd>
+              <kbd className="text-xs">{modKey}K</kbd>
             </SidebarMenuAction>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Press ⌘K to search</p>
+            <p>Press {modKey}K to search</p>
           </TooltipContent>
         </Tooltip>
       </SidebarMenuItem>

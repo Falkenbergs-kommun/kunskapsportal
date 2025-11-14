@@ -1,6 +1,6 @@
 'use client'
 
-export const AdminPrivacyLink = () => {
+const AdminPrivacyLink = () => {
   return (
     <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
       <a
@@ -18,3 +18,5 @@ export const AdminPrivacyLink = () => {
     </div>
   )
 }
+
+export default AdminPrivacyLink

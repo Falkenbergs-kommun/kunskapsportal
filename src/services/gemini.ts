@@ -1,15 +1,12 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+import { getGeminiClient } from './geminiClient'
 
 export async function processDocumentWithGemini(
   fileBuffer: Buffer,
   mimeType: string,
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest'
-    })
+    const ai = getGeminiClient()
+    const modelName = process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest'
 
     const prompt = `You are a professional document analysis specialist. Your task is to extract and structure content from documents while preserving the original language and formatting.
 
@@ -85,18 +82,29 @@ export async function processDocumentWithGemini(
     
     Now, please analyze the provided document and extract its content following these guidelines.`
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          data: fileBuffer.toString('base64'),
-          mimeType: mimeType,
+    const result = await ai.models.generateContent({
+      model: modelName,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                data: fileBuffer.toString('base64'),
+                mimeType: mimeType,
+              },
+            },
+            { text: prompt },
+          ],
         },
-      },
-      prompt,
-    ])
+      ],
+    })
 
-    const response = await result.response
-    return response.text()
+    if (!result.text) {
+      throw new Error('No response text from Gemini')
+    }
+
+    return result.text
   } catch (error) {
     console.error('Error processing document with Gemini:', error)
     throw new Error('Failed to process document with AI')

@@ -71,7 +71,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - OCR document extraction from PDFs
 - AI chat with RAG (retrieval augmented generation)
 - Metadata generation (title, summary, keywords)
-- Documentation: https://ai.google.dev/docs
+- **Two deployment options:**
+  - **AI Studio** (ai.google.dev): Easier setup with API key, data processed in USA
+  - **Vertex AI** (Google Cloud): EU region deployment (GDPR compliant), requires GCP project
+- Configurable via `GEMINI_MODE` environment variable
+- Documentation: https://ai.google.dev/docs (AI Studio) or https://cloud.google.com/vertex-ai/docs (Vertex AI)
 
 **[Mistral AI](https://mistral.ai/)** - Alternative OCR
 - Pixtral Large for document processing
@@ -204,15 +208,29 @@ See `.env.example` for full documentation and examples.
 ### Environment Configuration
 
 The application requires several environment variables:
+
+**Core Application:**
 - `DATABASE_URI` - PostgreSQL connection string
 - `PAYLOAD_SECRET` - Payload CMS secret key
 - `PAYLOAD_URL` - Base URL for the application (default: http://localhost:3000)
 - `QDRANT_URL` & `QDRANT_API_KEY` - Vector database connection
 - `QDRANT_ENABLED` - Enable/disable vector database features (true/false)
-- `OPENAI_API_KEY` - For embeddings generation
-- `GEMINI_API_KEY` - For document processing and content generation
+
+**AI Services:**
+- `OPENAI_API_KEY` - For embeddings generation (required for RAG)
 - `MISTRAL_API_KEY` - Alternative AI service for document OCR
 - `PDF_EXTRACTOR` - Choose PDF extraction service: "gemini" or "mistral" (default: "mistral")
+
+**Google Gemini Configuration:**
+- `GEMINI_MODE` - Choose "aistudio" or "vertexai" (default: "aistudio")
+
+*AI Studio Mode* (easier setup, USA):
+- `GEMINI_API_KEY` - API key from ai.google.dev
+
+*Vertex AI Mode* (GDPR compliant, EU region):
+- `GOOGLE_CLOUD_PROJECT` - GCP project ID
+- `GOOGLE_CLOUD_LOCATION` - GCP region (e.g., "europe-west4" for Netherlands)
+- `GOOGLE_APPLICATION_CREDENTIALS` - Path to service account JSON file
 
 **AI Model Configuration (optional):**
 - `GEMINI_FLASH_MODEL` - Gemini model for OCR, metadata, and chat (default: "gemini-flash-latest")
@@ -220,6 +238,58 @@ The application requires several environment variables:
 - `MISTRAL_OCR_MODEL` - Mistral OCR model (default: "mistral-ocr-latest")
 - `OPENAI_EMBEDDING_MODEL` - OpenAI embedding model (default: "text-embedding-3-large")
   - **WARNING:** Changing this requires re-embedding all documents with `pnpm sync:qdrant`
+
+### Vertex AI Setup (GDPR Compliant - EU Region)
+
+For production deployments requiring GDPR compliance, use Vertex AI instead of AI Studio:
+
+**1. Google Cloud Project Setup:**
+```bash
+# Create project (or use existing)
+gcloud projects create your-project-id
+
+# Enable Vertex AI API
+gcloud services enable aiplatform.googleapis.com --project=your-project-id
+```
+
+**2. Create Service Account:**
+```bash
+# Create service account
+gcloud iam service-accounts create kunskapsportal-ai \
+  --display-name="Kunskapsportal AI Service" \
+  --project=your-project-id
+
+# Grant Vertex AI User role
+gcloud projects add-iam-policy-binding your-project-id \
+  --member="serviceAccount:kunskapsportal-ai@your-project-id.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+
+# Download credentials as JSON
+gcloud iam service-accounts keys create service-account.json \
+  --iam-account=kunskapsportal-ai@your-project-id.iam.gserviceaccount.com
+```
+
+**3. Configure Environment Variables:**
+```env
+GEMINI_MODE=vertexai
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=europe-west4
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
+
+**Note:** The path can be absolute or relative to the project root.
+
+**4. Verify Setup:**
+Start the application and check logs for:
+```
+[Gemini] Using Vertex AI in europe-west4 (project: your-project-id)
+```
+
+**GDPR Benefits:**
+- Data stays within EU (europe-west4 is in Netherlands)
+- No third-country transfer for Google services
+- Only OpenAI remains as USA provider (for embeddings)
+- Stronger data protection compliance
 
 ### Testing Architecture
 - **Integration tests** - API and database operations (Vitest)

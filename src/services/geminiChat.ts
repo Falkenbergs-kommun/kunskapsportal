@@ -1,12 +1,8 @@
-import { GoogleGenAI, FunctionCallingConfigMode, FunctionDeclaration } from '@google/genai'
+import { FunctionCallingConfigMode, FunctionDeclaration } from '@google/genai'
+import { getGeminiClient } from './geminiClient'
 import { searchKnowledgeBase, type SearchResult } from './qdrantSearch'
 import { getExternalSources, type ExternalSourceConfig } from '@/config/externalSources'
 import type { ChatMessage, ArticleContext, ChatResponse, SourceMetadata } from '@/types/chat'
-
-// Initialize the GenAI client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-})
 
 // Define the knowledge retrieval tool
 const searchKnowledgeDeclaration: FunctionDeclaration = {
@@ -230,6 +226,7 @@ export async function chatWithKnowledge({
 
     // Multi-turn approach: Knowledge base search first, then optionally Google Search
     // This is needed because Gemini 2.x doesn't support both tools in same request
+    const ai = getGeminiClient()
     const model = process.env.GEMINI_FLASH_MODEL || 'gemini-flash-latest'
 
     let currentContents = fullMessage
