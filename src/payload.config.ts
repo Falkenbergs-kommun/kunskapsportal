@@ -24,6 +24,9 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      beforeLogin: ['@/components/AdminPrivacyLink'],
+    },
   },
   collections: [Users, Media, Articles, Departments],
   secret: process.env.PAYLOAD_SECRET || '',
