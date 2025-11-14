@@ -368,16 +368,28 @@ export const Articles: CollectionConfig = {
                 },
                 {
                   name: 'securityLevel',
-                  label: 'Säkerhetsnivå',
+                  label: 'Informationsklass',
                   type: 'select',
                   defaultValue: 'internal',
                   options: [
-                    { label: 'Offentlig', value: 'public' },
-                    { label: 'Intern', value: 'internal' },
-                    { label: 'Konfidentiell', value: 'confidential' },
-                    { label: 'Begränsad', value: 'restricted' },
+                    { label: 'Klass 0 – Öppen information', value: 'public' },
+                    { label: 'Klass 1 – Allmän information', value: 'internal' },
+                    { label: 'Klass 2 – Känslig information', value: 'confidential' },
+                    { label: 'Klass 3 – Skyddsvärd information', value: 'restricted' },
                   ],
-                  admin: {},
+                  validate: (value: unknown, { data }: { data: any }) => {
+                    // Block publishing of class 2-3 documents
+                    if (data?._status === 'published') {
+                      if (value === 'confidential' || value === 'restricted') {
+                        return 'Dokument med informationsklass 2-3 kan inte publiceras i detta system. Systemet är endast godkänt för Öppen (0) och Allmän (1) information enligt GDPR-konsekvensbedömning. För känslig eller skyddsvärd information, använd annat godkänt system.'
+                      }
+                    }
+                    return true
+                  },
+                  admin: {
+                    description:
+                      'VIKTIGT: Endast klass 0 och 1 kan publiceras i systemet. Klass 2-3 kräver andra godkända system med högre säkerhetsnivå.',
+                  },
                 },
               ],
             },
