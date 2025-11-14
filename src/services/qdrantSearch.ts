@@ -206,8 +206,14 @@ export async function searchKnowledgeBase({
       queryEmbedding = await getEmbedding(query)
     }
 
-    // Always search internal collection (no UI option to exclude it)
-    const searchInternal = true
+    // Determine if this is a broad search (no filters) or filtered search
+    const isBroadSearch = departmentIds.length === 0 && externalSourceIds.length === 0
+
+    // Search internal collection when:
+    // - Broad search (no filters) → search everywhere including internal
+    // - Departments selected (with or without external sources) → include internal
+    // - ONLY external sources selected → skip internal
+    const searchInternal = isBroadSearch || departmentIds.length > 0
 
     if (searchInternal) {
       try {
@@ -376,7 +382,12 @@ export async function searchKnowledgeBase({
       }
     }
 
-    const sourcesToSearch = externalSources.filter((s) => parentSourceIds.has(s.id))
+    // Determine which sources to search:
+    // - Broad search (no filters) → search ALL external sources
+    // - Filtered search → only search selected external sources
+    const sourcesToSearch = isBroadSearch
+      ? externalSources
+      : externalSources.filter((s) => parentSourceIds.has(s.id))
 
     if (sourcesToSearch.length > 0) {
       const externalResults: SearchResult[] = []
