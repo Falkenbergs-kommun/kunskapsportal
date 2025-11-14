@@ -424,7 +424,10 @@ export const Articles: CollectionConfig = {
                   name: 'gdprRelevant',
                   type: 'checkbox',
                   label: 'Innehåller personuppgifter',
-                  admin: {},
+                  admin: {
+                    description:
+                      'Kan dokumentet skrivas utan personuppgifter? Använd helst roller/funktioner istället för namn för att minimera personuppgiftsbehandling.',
+                  },
                 },
                 {
                   name: 'accessibilityCompliant',
