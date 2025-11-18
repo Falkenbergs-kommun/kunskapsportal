@@ -216,7 +216,8 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
           content: msg.text,
         }))
 
-      // Call the chat API (external sources now include sub-sources with dot notation like "svensk-lag.pbl")
+      // Call the chat API
+      // When chatting about an article, exclude external sources and Google grounding
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -224,9 +225,9 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
         },
         body: JSON.stringify({
           message: trimmedInput,
-          departmentIds: selectedDepartments,
-          externalSourceIds: selectedExternalSources,
-          useGoogleGrounding,
+          departmentIds: articleContext ? [] : selectedDepartments,
+          externalSourceIds: articleContext ? [] : selectedExternalSources,
+          useGoogleGrounding: articleContext ? false : useGoogleGrounding,
           history,
           articleContext: articleContext ? {
             id: articleContext.id,
@@ -374,30 +375,35 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
       {/* Input Form Area */}
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center justify-between mb-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <SettingsIcon className="h-4 w-4 mr-1" />
-                {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
-              <KnowledgeSourceFilter
-                selectedDepartments={selectedDepartments}
-                onDepartmentChange={setSelectedDepartments}
-                selectedExternalSources={selectedExternalSources}
-                onExternalSourceChange={setSelectedExternalSources}
-                useGoogleGrounding={useGoogleGrounding}
-                onGoogleGroundingChange={setUseGoogleGrounding}
-                geminiGroundingEnabled={geminiGroundingEnabled}
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Hide filter button when chatting about a specific article */}
+          {!articleContext && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <SettingsIcon className="h-4 w-4 mr-1" />
+                  {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
+                <KnowledgeSourceFilter
+                  selectedDepartments={selectedDepartments}
+                  onDepartmentChange={setSelectedDepartments}
+                  selectedExternalSources={selectedExternalSources}
+                  onExternalSourceChange={setSelectedExternalSources}
+                  useGoogleGrounding={useGoogleGrounding}
+                  onGoogleGroundingChange={setUseGoogleGrounding}
+                  geminiGroundingEnabled={geminiGroundingEnabled}
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {/* Spacer when filter is hidden to keep "Ny chatt" right-aligned */}
+          {articleContext && <div className="flex-1" />}
           {messages.length > 1 && (
             <Button
               type="button"
@@ -500,30 +506,35 @@ export function PlainChat({ isExpanded, setIsExpanded }: { isExpanded: boolean; 
           </div>
           <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <SettingsIcon className="h-4 w-4 mr-1" />
-                    {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
-                  <KnowledgeSourceFilter
-                    selectedDepartments={selectedDepartments}
-                    onDepartmentChange={setSelectedDepartments}
-                    selectedExternalSources={selectedExternalSources}
-                    onExternalSourceChange={setSelectedExternalSources}
-                    useGoogleGrounding={useGoogleGrounding}
-                    onGoogleGroundingChange={setUseGoogleGrounding}
-                    geminiGroundingEnabled={geminiGroundingEnabled}
-                  />
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Hide filter button when chatting about a specific article */}
+              {!articleContext && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <SettingsIcon className="h-4 w-4 mr-1" />
+                      {getFilterButtonText(selectedDepartments, selectedExternalSources, useGoogleGrounding)}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="top" align="start" className="min-w-80 max-w-lg max-h-[600px] overflow-y-auto p-3">
+                    <KnowledgeSourceFilter
+                      selectedDepartments={selectedDepartments}
+                      onDepartmentChange={setSelectedDepartments}
+                      selectedExternalSources={selectedExternalSources}
+                      onExternalSourceChange={setSelectedExternalSources}
+                      useGoogleGrounding={useGoogleGrounding}
+                      onGoogleGroundingChange={setUseGoogleGrounding}
+                      geminiGroundingEnabled={geminiGroundingEnabled}
+                    />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {/* Spacer when filter is hidden to keep "Ny chatt" right-aligned */}
+              {articleContext && <div className="flex-1" />}
               {messages.length > 1 && (
                 <Button
                   type="button"
