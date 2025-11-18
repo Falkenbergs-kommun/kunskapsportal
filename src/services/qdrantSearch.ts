@@ -383,11 +383,10 @@ export async function searchKnowledgeBase({
     }
 
     // Determine which sources to search:
-    // - Broad search (no filters) → search ALL external sources
-    // - Filtered search → only search selected external sources
-    const sourcesToSearch = isBroadSearch
-      ? externalSources
-      : externalSources.filter((s) => parentSourceIds.has(s.id))
+    // - Only search external sources when explicitly requested (externalSourceIds has items)
+    // - Never search external sources on broad searches (homepage default behavior)
+    const sourcesToSearch =
+      externalSourceIds.length > 0 ? externalSources.filter((s) => parentSourceIds.has(s.id)) : []
 
     if (sourcesToSearch.length > 0) {
       const externalResults: SearchResult[] = []
