@@ -7,11 +7,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-service-account-key.json
     env_file:
       - .env
     volumes:
       - media:/app/media
       - temp:/app/temp
+      - ./gcp-service-account-key.json:/app/gcp-service-account-key.json:ro
     depends_on:
       postgres:
         condition: service_healthy
