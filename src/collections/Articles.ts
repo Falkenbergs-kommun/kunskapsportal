@@ -88,6 +88,16 @@ export const Articles: CollectionConfig = {
   },
   timestamps: true,
   hooks: {
+    beforeValidate: [
+      async ({ data, operation, req }) => {
+        // Prevent creation of empty phantom articles
+        // These are created accidentally by UI navigation/interactions
+        if (operation === 'create' && !data?.title?.trim()) {
+          throw new Error('Cannot create article without a title')
+        }
+        return data
+      },
+    ],
     beforeChange: [
       async ({ data, operation, req }) => {
         // Handle publish/draft integration with document status
