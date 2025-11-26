@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3035:3000"
     environment:
       - NODE_ENV=production
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-service-account-key.json
