@@ -24,6 +24,7 @@ interface ImageInfo {
   index: number
   filename: string
   payloadMediaId?: string
+  payloadFilename?: string
 }
 
 export class MistralOcrService {
@@ -132,18 +133,17 @@ export class MistralOcrService {
       if (metadata.hasImages && saveImages) {
         // Upload to Payload if requested and payload instance is provided
         if (uploadToPayload && payload) {
-          console.log('[Mistral OCR] Uploading images to Payload...')
           for (const imgInfo of imagesData) {
             try {
               const imageBuffer = this.decodeImageData(imgInfo.data)
-              const payloadMediaId = await this.uploadImageToPayload(
+              const uploadResult = await this.uploadImageToPayload(
                 imageBuffer,
                 imgInfo.filename,
                 payload,
               )
-              imgInfo.payloadMediaId = payloadMediaId
-              metadata.payloadMediaIds.push(payloadMediaId)
-              console.log(`[Mistral OCR] Uploaded image ${imgInfo.filename} with ID: ${payloadMediaId}`)
+              imgInfo.payloadMediaId = uploadResult.id
+              imgInfo.payloadFilename = uploadResult.filename
+              metadata.payloadMediaIds.push(uploadResult.id)
             } catch (error) {
               console.error(`[Mistral OCR] Failed to upload image ${imgInfo.filename}:`, error)
             }
@@ -169,7 +169,9 @@ export class MistralOcrService {
       // Process markdown to include Payload image references if images were uploaded
       let finalMarkdown = cleanedMarkdown
       if (uploadToPayload && payload && metadata.payloadMediaIds.length > 0) {
-        finalMarkdown = this.processMarkdownWithPayloadImages(cleanedMarkdown, imagesData)
+        // Replace Mistral's image references with correct Payload paths
+        // This keeps images in their original positions in the text
+        finalMarkdown = this.replaceImageReferences(cleanedMarkdown, imagesData)
       }
 
       return {
@@ -215,7 +217,7 @@ export class MistralOcrService {
     imageBuffer: Buffer,
     filename: string,
     payload: Payload,
-  ): Promise<string> {
+  ): Promise<{ id: string; filename: string }> {
     try {
       const result = await payload.create({
         collection: 'media',
@@ -230,7 +232,10 @@ export class MistralOcrService {
         },
       })
 
-      return String(result.id)
+      return {
+        id: String(result.id),
+        filename: result.filename || filename,
+      }
     } catch (error) {
       console.error('[Mistral OCR] Failed to upload image to Payload:', error)
       throw new Error(`Failed to upload image to Payload: ${error}`)
@@ -252,6 +257,27 @@ export class MistralOcrService {
       default:
         return 'image/png'
     }
+  }
+
+  private replaceImageReferences(text: string, imageInfos: ImageInfo[]): string {
+    // Replace Mistral's image references with correct Payload paths
+    // Pattern: ![filename](filename) -> ![filename](/api/media/file/actual-payload-filename.jpg)
+
+    return text.replace(/!\[([^\]]*)\]\(([^/)]+)\)/g, (match, altText, filename) => {
+      // Find the corresponding image info based on the filename
+      const imgInfo = imageInfos.find(img => {
+        // Match either by exact filename or by the base name
+        return img.filename === filename || img.filename.startsWith(filename.split('.')[0])
+      })
+
+      if (imgInfo && imgInfo.payloadFilename) {
+        // Replace with correct Payload path
+        return `![${altText}](/api/media/file/${imgInfo.payloadFilename})`
+      }
+
+      // If no match found, keep the original (though it won't work)
+      return match
+    })
   }
 
   private cleanLatexNotation(text: string): string {
@@ -286,41 +312,6 @@ export class MistralOcrService {
     return cleaned
   }
 
-  private processMarkdownWithPayloadImages(markdown: string, imageInfos: ImageInfo[]): string {
-    let processedMarkdown = markdown
-
-    // Replace image placeholders in markdown with Payload media references
-    for (const imgInfo of imageInfos) {
-      if (imgInfo.payloadMediaId) {
-        // Look for image references and replace with Payload upload blocks
-        const imageBlock = {
-          type: 'upload',
-          value: {
-            id: imgInfo.payloadMediaId,
-          },
-          relationTo: 'media',
-        }
-
-        // Insert the image block reference in a custom format
-        // Use a special marker for image placeholders
-        const imageReference = `[PAYLOAD_MEDIA:${imgInfo.payloadMediaId}:${imgInfo.filename}]`
-
-        // Find a good place to insert the image (after paragraphs on the same page)
-        const pageMarker = `<!-- Page ${imgInfo.page} -->`
-        if (processedMarkdown.includes(pageMarker)) {
-          processedMarkdown = processedMarkdown.replace(
-            pageMarker,
-            `${pageMarker}\n\n${imageReference}\n`,
-          )
-        } else {
-          // If no page marker, append at the end
-          processedMarkdown += `\n\n${imageReference}\n`
-        }
-      }
-    }
-
-    return processedMarkdown
-  }
 }
 
 export const mistralOcr = new MistralOcrService()

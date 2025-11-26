@@ -280,8 +280,11 @@ export const generateMetadataEndpoint: Endpoint = {
             dep.name.toLowerCase() === departmentIdentifier.toLowerCase()),
       )
 
+      // Build updateData with only metadata fields (explicitly exclude content and source_documents)
+      const { content, source_documents, ...metadataOnly } = generatedMetadata
+
       const updateData: any = {
-        ...generatedMetadata,
+        ...metadataOnly,
         slug,
       }
 
@@ -298,6 +301,7 @@ export const generateMetadataEndpoint: Endpoint = {
         collection: 'articles',
         id,
         data: updateData,
+        draft: true, // Update as draft to avoid validation issues with existing content
         req, // Pass the authenticated request so Payload enforces access control
       })
 
