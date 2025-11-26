@@ -43,10 +43,10 @@ const statusLabels: Record<string, string> = {
 }
 
 const securityLevelLabels: Record<string, string> = {
-  public: 'Offentlig',
-  internal: 'Intern',
-  confidential: 'Konfidentiell',
-  restricted: 'Begränsad',
+  public: 'Klass 0 – Öppen information',
+  internal: 'Klass 1 – Allmän information',
+  confidential: 'Klass 2 – Känslig information',
+  restricted: 'Klass 3 – Skyddsvärd information',
 }
 
 const targetAudienceLabels: Record<string, string> = {
@@ -253,8 +253,8 @@ export default function ArticleDisplay({ article }: { article: Article | null })
                 )}
               {article.securityLevel && (
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Säkerhetsnivå</label>
-                  <span className="text-slate-900 capitalize">
+                  <label className="block text-slate-500 font-medium mb-1">Informationsklass</label>
+                  <span className="text-slate-900">
                     {securityLevelLabels[article.securityLevel] || article.securityLevel}
                   </span>
                 </div>
