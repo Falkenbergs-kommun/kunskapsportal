@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchKnowledgeBase, type SearchMode } from '@/services/qdrantSearch'
+import { hybridSearch, type SearchMode } from '@/services/hybridSearch'
+import { searchKnowledgeBase } from '@/services/qdrantSearch'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -26,79 +27,104 @@ export async function GET(request: NextRequest) {
     : []
 
   try {
-    // Search using unified Qdrant search
-    const qdrantResults = await searchKnowledgeBase({
+    // If external sources are specified, use Qdrant-only search
+    // Otherwise, use hybrid search with PostgreSQL fallback for better reliability
+    if (externalSourceIds.length > 0) {
+      // External sources require Qdrant search
+      const qdrantResults = await searchKnowledgeBase({
+        query,
+        mode,
+        departmentIds,
+        externalSourceIds,
+        limit,
+      })
+
+      // For internal results, fetch full article data from Payload
+      const payload = await getPayload({ config })
+      const internalResults = qdrantResults.filter((r) => !r.isExternal)
+      const externalResults = qdrantResults.filter((r) => r.isExternal)
+
+      // Fetch full article data for internal results
+      const articleIds = [...new Set(internalResults.map((r) => r.articleId).filter(Boolean))]
+      let articles: any[] = []
+
+      if (articleIds.length > 0) {
+        const articlesQuery = await payload.find({
+          collection: 'articles',
+          where: {
+            id: { in: articleIds },
+          },
+          depth: 3,
+          limit: articleIds.length,
+        })
+        articles = articlesQuery.docs
+      }
+
+      // Map articles back with scores
+      const articlesMap = new Map(articles.map((a) => [String(a.id), a]))
+      const enrichedResultsMap = new Map<string, any>()
+
+      internalResults.forEach((r) => {
+        const article = articlesMap.get(String(r.articleId))
+        if (!article) return
+
+        const articleIdStr = String(r.articleId)
+        const existing = enrichedResultsMap.get(articleIdStr)
+
+        if (!existing || r.score > existing.searchScore) {
+          enrichedResultsMap.set(articleIdStr, {
+            ...article,
+            searchScore: r.score,
+            source: 'internal',
+            isExternal: false,
+          })
+        }
+      })
+
+      const enrichedInternalResults = Array.from(enrichedResultsMap.values())
+
+      // Combine internal and external results
+      const allResults = [
+        ...enrichedInternalResults,
+        ...externalResults.map((r) => ({
+          id: r.id,
+          title: r.title,
+          summary: r.text.substring(0, 200),
+          url: r.url,
+          source: r.source,
+          isExternal: true,
+          searchScore: r.score,
+        })),
+      ].sort((a, b) => (b.searchScore || 0) - (a.searchScore || 0))
+
+      return NextResponse.json({
+        results: allResults,
+        total: allResults.length,
+        mode,
+      })
+    }
+
+    // No external sources - use hybrid search with PostgreSQL fallback
+    // This provides better reliability when Qdrant is empty or unavailable
+    const result = await hybridSearch({
       query,
       mode,
-      departmentIds,
-      externalSourceIds,
+      departmentIds: departmentIds.length > 0 ? departmentIds : undefined,
       limit,
     })
 
-    // For internal results, fetch full article data from Payload
-    const payload = await getPayload({ config })
-    const internalResults = qdrantResults.filter((r) => !r.isExternal)
-    const externalResults = qdrantResults.filter((r) => r.isExternal)
-
-    // Fetch full article data for internal results
-    // Deduplicate article IDs to prevent fetching the same article multiple times
-    const articleIds = [...new Set(internalResults.map((r) => r.articleId).filter(Boolean))]
-    let articles: any[] = []
-
-    if (articleIds.length > 0) {
-      const articlesQuery = await payload.find({
-        collection: 'articles',
-        where: {
-          id: { in: articleIds },
-        },
-        depth: 3,
-        limit: articleIds.length,
-      })
-      articles = articlesQuery.docs
-    }
-
-    // Map articles back with scores, keeping the highest score if duplicate articleIds exist
-    const articlesMap = new Map(articles.map((a) => [String(a.id), a]))
-    const enrichedResultsMap = new Map<string, any>()
-
-    internalResults.forEach((r) => {
-      const article = articlesMap.get(String(r.articleId))
-      if (!article) return
-
-      const articleIdStr = String(r.articleId)
-      const existing = enrichedResultsMap.get(articleIdStr)
-
-      // Keep the result with the highest score if duplicate
-      if (!existing || r.score > existing.searchScore) {
-        enrichedResultsMap.set(articleIdStr, {
-          ...article,
-          searchScore: r.score,
-          source: 'internal',
-          isExternal: false,
-        })
-      }
-    })
-
-    const enrichedInternalResults = Array.from(enrichedResultsMap.values())
-
-    // Combine internal and external results
-    const allResults = [
-      ...enrichedInternalResults,
-      ...externalResults.map((r) => ({
-        id: r.id,
-        title: r.title,
-        summary: r.text.substring(0, 200),
-        url: r.url,
-        source: r.source,
-        isExternal: true,
-        searchScore: r.score,
-      })),
-    ].sort((a, b) => (b.searchScore || 0) - (a.searchScore || 0))
+    // Map hybrid search results to API response format
+    const allResults = result.results.map((r) => ({
+      ...r.article,
+      searchScore: r.score,
+      source: 'internal',
+      isExternal: false,
+    }))
 
     return NextResponse.json({
       results: allResults,
-      total: allResults.length,
-      mode,
+      total: result.total,
+      mode: result.mode,
     })
   } catch (error) {
     console.error('Search API error:', error)

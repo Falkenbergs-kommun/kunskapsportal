@@ -17,12 +17,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - kunskapsportal
 
   postgres:
     image: postgres:15-alpine
@@ -39,30 +43,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kunskapsportal
 
   qdrant:
     image: qdrant/qdrant:latest
     restart: always
-    container_name: qdrant
-    ports:
-      - "6333:6333"
-      - "6334:6334"
+    container_name: kunskapsportal_qdrant
+    # No external port mapping needed - app connects via internal Docker network
     expose:
       - 6333
-      - 6334
-      - 6335
     volumes:
       - qdrant_data:/qdrant/storage
     environment:
       - QDRANT__LOG_LEVEL=INFO
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    networks:
+      - kunskapsportal
 
 volumes:
   postgres_data:
   qdrant_data:
   media:
   temp:
+
+networks:
+  kunskapsportal:
+    driver: bridge
