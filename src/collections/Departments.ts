@@ -9,22 +9,13 @@ export const Departments: CollectionConfig = {
     read: () => true,
 
     // Editors can create subdepartments under their assigned departments
-    create: async ({ req, data }) => {
+    // Note: Actual validation that editors must select a parent happens in beforeValidate hook
+    create: ({ req }) => {
       const user = req.user
       if (!user) return false
-      if (user.role === 'superadmin') return true
-
-      // If creating root department, only superadmins allowed
-      if (!data?.parent) return false
-
-      // Check if user has access to parent department
-      const parent = await req.payload.findByID({
-        collection: 'departments',
-        id: data.parent,
-        depth: 0,
-      })
-
-      return canAccessDepartment(user, parent.fullPath)
+      // Allow editors and superadmins to see the create button
+      // Validation of parent field happens during form submission
+      return true
     },
 
     // Can update if user has access to the department
@@ -67,7 +58,10 @@ export const Departments: CollectionConfig = {
       label: 'Parent Department',
       admin: {
         position: 'sidebar',
-        description: 'Leave this empty if this is a top-level department. Maximum 3 levels allowed. Cannot be changed after creation.',
+        description: ({ user }: any) =>
+          user?.role === 'editor'
+            ? 'Required: Select the parent department for this subdepartment. You can only create subdepartments under departments you manage. Cannot be changed after creation.'
+            : 'Leave empty for top-level department. Maximum 3 levels allowed. Cannot be changed after creation.',
       },
       // Filter to accessible departments and prevent self-referencing
       filterOptions: async ({ id, req }: any) => {
@@ -243,6 +237,35 @@ export const Departments: CollectionConfig = {
     },
   ],
   hooks: {
+    beforeValidate: [
+      async ({ data, req, operation }) => {
+        // Only validate on create
+        if (operation !== 'create') return data
+
+        const user = req.user
+        if (!user) throw new Error('Authentication required')
+
+        // Editors must select a parent department (cannot create root departments)
+        if (user.role === 'editor' && !data?.parent) {
+          throw new Error('Editors must select a parent department. Only superadmins can create root departments.')
+        }
+
+        // If editor is creating with a parent, validate they have access to it
+        if (user.role === 'editor' && data?.parent) {
+          const parent = await req.payload.findByID({
+            collection: 'departments',
+            id: data.parent,
+            depth: 0,
+          })
+
+          if (!canAccessDepartment(user, parent.fullPath)) {
+            throw new Error('You do not have permission to create subdepartments under this department.')
+          }
+        }
+
+        return data
+      },
+    ],
     beforeDelete: [
       async ({ req, id }) => {
         // Prevent deletion if department has children

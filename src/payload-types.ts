@@ -158,9 +158,6 @@ export interface User {
 export interface Department {
   id: number;
   name: string;
-  /**
-   * Leave this empty if this is a top-level department. Maximum 3 levels allowed. Cannot be changed after creation.
-   */
   parent?: (number | null) | Department;
   slug?: string | null;
   /**
