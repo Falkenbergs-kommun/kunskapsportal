@@ -34,9 +34,20 @@ export const Departments: CollectionConfig = {
       return canAccessDepartment(user, dept.fullPath)
     },
 
-    // Only superadmins can delete departments
-    delete: ({ req: { user } }) => {
-      return user?.role === 'superadmin'
+    // Can delete if user has access to the department
+    delete: async ({ req, id }) => {
+      const user = req.user
+      if (!user) return false
+      if (user.role === 'superadmin') return true
+      if (!id) return false
+
+      const dept = await req.payload.findByID({
+        collection: 'departments',
+        id,
+        depth: 0,
+      })
+
+      return canAccessDepartment(user, dept.fullPath)
     },
   },
   admin: {

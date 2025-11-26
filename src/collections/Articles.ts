@@ -34,7 +34,7 @@ export const Articles: CollectionConfig = {
       })
 
       if (!article?.department) {
-        // Articles without departments can be edited by any editor
+        // Articles without departments can be edited by any editor (not important, can't be published)
         return true
       }
 
@@ -45,9 +45,30 @@ export const Articles: CollectionConfig = {
       return canAccessDepartment(user, deptPath)
     },
 
-    // Only superadmins can delete
-    delete: ({ req: { user } }) => {
-      return user?.role === 'superadmin'
+    // Can delete if user has access to article's department
+    delete: async ({ req, id }) => {
+      const user = req.user
+      if (!user) return false
+      if (user.role === 'superadmin') return true
+      if (!id) return false
+
+      // Fetch article to check its department
+      const article = await req.payload.findByID({
+        collection: 'articles',
+        id,
+        depth: 1,
+      })
+
+      if (!article?.department) {
+        // Articles without departments can be deleted by any editor (not important, can't be published)
+        return true
+      }
+
+      const deptPath = typeof article.department === 'object' ? article.department.fullPath : null
+
+      if (!deptPath) return false
+
+      return canAccessDepartment(user, deptPath)
     },
   },
   admin: {
