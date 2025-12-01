@@ -7,13 +7,15 @@ interface Favorite {
   url: string
   title: string
   emoji: string
+  order: number
 }
 
 interface FavoritesContextType {
   favorites: Favorite[]
   isLoading: boolean
-  addFavorite: (item: Favorite) => void
+  addFavorite: (item: Omit<Favorite, 'order'>) => void
   removeFavorite: (url: string) => void
+  reorderFavorites: (newOrder: Favorite[]) => void
   isFavorite: (url: string) => boolean
 }
 
@@ -30,7 +32,24 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     try {
       const storedFavorites = localStorage.getItem(FAVORITES_KEY)
       if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites))
+        const parsed = JSON.parse(storedFavorites) as Favorite[]
+
+        // Migration: Add order field to old favorites that don't have it
+        const migrated = parsed.map((fav, index) => {
+          if (typeof fav.order !== 'number') {
+            return { ...fav, order: index }
+          }
+          return fav
+        })
+
+        // Sort by order
+        const sorted = migrated.sort((a, b) => a.order - b.order)
+        setFavorites(sorted)
+
+        // Save migrated data back to localStorage if migration occurred
+        if (migrated.some((fav, i) => fav.order !== parsed[i]?.order)) {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(sorted))
+        }
       }
     } catch (error) {
       console.error('Failed to load favorites from localStorage:', error)
@@ -48,10 +67,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addFavorite = (item: Favorite) => {
+  const addFavorite = (item: Omit<Favorite, 'order'>) => {
     // Prevent duplicates
     if (!favorites.some((fav) => fav.url === item.url)) {
-      updateAndPersistFavorites([...favorites, item])
+      // Assign order as max existing order + 1
+      const maxOrder = favorites.length > 0 ? Math.max(...favorites.map((f) => f.order)) : -1
+      const newFavorite: Favorite = { ...item, order: maxOrder + 1 }
+      updateAndPersistFavorites([...favorites, newFavorite])
     }
   }
 
@@ -60,13 +82,19 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     updateAndPersistFavorites(newFavorites)
   }
 
+  const reorderFavorites = (newOrder: Favorite[]) => {
+    // Reassign order numbers based on new array position
+    const reordered = newOrder.map((fav, index) => ({ ...fav, order: index }))
+    updateAndPersistFavorites(reordered)
+  }
+
   const isFavorite = (url: string) => {
     return favorites.some((fav) => fav.url === url)
   }
 
   return (
     <FavoritesContext.Provider
-      value={{ favorites, isLoading, addFavorite, removeFavorite, isFavorite }}
+      value={{ favorites, isLoading, addFavorite, removeFavorite, reorderFavorites, isFavorite }}
     >
       {children}
     </FavoritesContext.Provider>

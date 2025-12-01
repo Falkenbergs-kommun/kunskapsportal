@@ -44,6 +44,26 @@ const navSecondary = [
   },
 ]
 
+// Helper function to strip leading symbols/emojis for alphabetical sorting
+const getTextForSorting = (name: string): string => {
+  if (!name) return ''
+
+  // Remove leading emojis and symbols, keeping only the text part
+  // This regex matches common emoji ranges and other symbols
+  return name
+    .replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\s]*/gu, '')
+    .trim()
+}
+
+// Sort items alphabetically using Swedish locale, ignoring leading symbols
+const sortByNameSwedish = (items: any[]): any[] => {
+  return items.sort((a, b) => {
+    const aText = getTextForSorting(a.name)
+    const bText = getTextForSorting(b.name)
+    return aText.localeCompare(bText, 'sv-SE', { sensitivity: 'base' })
+  })
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [workspaces, setWorkspaces] = React.useState<any[]>([])
 
@@ -68,7 +88,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             return item.parent && item.parent.id === parentId
           })
 
-          return children.map((item: any) => {
+          // Sort children alphabetically (ignoring leading symbols)
+          const sortedChildren = sortByNameSwedish(children)
+
+          return sortedChildren.map((item: any) => {
             const childPages = buildHierarchy(items, item.id, level + 1)
 
             if (level === 0) {
