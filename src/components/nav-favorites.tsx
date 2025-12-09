@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import {
   ArrowUpRight,
-  GripVertical,
   Link as LinkIcon,
   MoreHorizontal,
   Star,
@@ -72,17 +71,12 @@ function SortableFavoriteItem({
   }
 
   return (
-    <SidebarMenuItem ref={setNodeRef} style={style}>
+    <SidebarMenuItem ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <SidebarMenuButton asChild>
         <Link href={item.url} title={item.title}>
           <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
-      {/* Drag handle */}
-      <SidebarMenuAction showOnHover {...attributes} {...listeners}>
-        <GripVertical />
-        <span className="sr-only">Dra för att sortera</span>
-      </SidebarMenuAction>
       {/* More options menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
