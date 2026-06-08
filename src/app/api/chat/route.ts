@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { chatWithKnowledge } from '@/services/geminiChat'
 import { getExternalSources } from '@/config/externalSources'
+import { getGeminiMode } from '@/services/geminiClient'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { ChatMessage } from '@/types/chat'
@@ -26,8 +27,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate environment variables
-    if (!process.env.GEMINI_API_KEY) {
+    // Validate environment variables (mode-aware: Vertex AI uses a service
+    // account instead of an API key, so GEMINI_API_KEY is not required there)
+    if (getGeminiMode() === 'vertexai') {
+      if (!process.env.GOOGLE_CLOUD_PROJECT || !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        return NextResponse.json(
+          { error: 'Vertex AI not configured (GOOGLE_CLOUD_PROJECT and GOOGLE_APPLICATION_CREDENTIALS required)' },
+          { status: 500 }
+        )
+      }
+    } else if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { error: 'Gemini API key not configured' },
         { status: 500 }

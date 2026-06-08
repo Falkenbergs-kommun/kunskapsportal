@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    restart: unless-stopped
     build: .
     ports:
       - "3035:3000"
@@ -29,6 +30,7 @@ services:
       - kunskapsportal
 
   postgres:
+    restart: unless-stopped
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: knowledge_base

@@ -28,6 +28,10 @@ RUN apt-get update && apt-get install -y \
 # Verify LibreOffice installation
 RUN libreoffice --version
 
+# Let corepack auto-provision the pnpm version pinned in package.json
+# (packageManager field) during non-interactive Docker builds
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
 # ===================================
 # Stage 2: Dependencies installation
 # ===================================

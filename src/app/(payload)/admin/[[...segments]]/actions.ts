@@ -5,7 +5,7 @@ import config from '@payload-config'
 import { mistralOcr } from '../../../../services/mistralOcr'
 import { processDocumentWithGemini } from '../../../../services/gemini'
 import type { Media } from '../../../../payload-types'
-import { GoogleGenAI } from '@google/genai'
+import { getGeminiClient } from '../../../../services/geminiClient'
 import { promises as fs } from 'fs'
 import path from 'path'
 
@@ -240,7 +240,7 @@ export async function generateCoverPhoto(articleId: string) {
     - Article Title: "${article.title}"
     - Artiucle summary: "${contentSnippet}..."`
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
+    const ai = getGeminiClient()
 
     const response = await ai.models.generateImages({
       model: process.env.GEMINI_IMAGEN_MODEL || 'imagen-4.0-fast-generate-001',
