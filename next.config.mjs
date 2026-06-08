@@ -4,6 +4,10 @@ import { withPayload } from '@payloadcms/next/withPayload'
 const nextConfig = {
   // Required for Docker deployment
   output: 'standalone',
+  // Keep @google/genai external so it (and its dynamic auth dependency
+  // google-auth-library) loads from node_modules at runtime instead of being
+  // bundled by webpack. Bundling breaks Vertex AI auth -> 401 CREDENTIALS_MISSING.
+  serverExternalPackages: ['@google/genai'],
   // Temporarily disable ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
