@@ -55,21 +55,6 @@ function loadServiceAccountCredentials(filePath: string): object {
 }
 
 /**
- * Configure environment for Google Auth to pick up service account credentials
- */
-function setupGoogleAuthCredentials(credentialsPath: string): void {
-  const credentials = loadServiceAccountCredentials(credentialsPath)
-
-  // Set up credentials for google-auth-library to automatically use
-  if (typeof process !== 'undefined' && process.env) {
-    const originalEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
-    if (!originalEnv) {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON = JSON.stringify(credentials)
-    }
-  }
-}
-
-/**
  * Create a GoogleGenAI client configured for the current environment
  */
 export function createGeminiClient(): GoogleGenAI {
@@ -91,13 +76,22 @@ export function createGeminiClient(): GoogleGenAI {
 
     console.log(`[Gemini] Using Vertex AI in ${location} (project: ${project})`)
 
-    // Set up credentials for Google Auth
-    setupGoogleAuthCredentials(credentialsJson)
+    // Pass the service account credentials explicitly. This is required because
+    // @google/genai auto-reads GEMINI_API_KEY/GOOGLE_API_KEY from the env, and an
+    // EMPTY string ("") is treated as a set API key (it's `!== undefined`), which
+    // makes the SDK use (empty) API-key auth instead of Vertex ADC -> 401
+    // CREDENTIALS_MISSING. Providing googleAuthOptions.credentials forces the SDK
+    // to clear that api key and authenticate via the service account.
+    const credentials = loadServiceAccountCredentials(credentialsJson)
 
     return new GoogleGenAI({
       vertexai: true,
       project,
       location,
+      googleAuthOptions: {
+        credentials: credentials as { client_email?: string; private_key?: string },
+        projectId: project,
+      },
     })
   } else {
     // AI Studio Mode - Use API key
